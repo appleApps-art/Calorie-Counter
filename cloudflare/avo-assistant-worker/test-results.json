@@ -1,0 +1,1103 @@
+{
+  "health": {
+    "ok": true,
+    "mode": "completions",
+    "model": "gpt-5.6-luna",
+    "workerRev": 3
+  },
+  "passed": 44,
+  "failed": 1,
+  "total": 45,
+  "results": [
+    {
+      "case": "qa_apple",
+      "ok": true,
+      "ms": 1949,
+      "tools": [],
+      "preview": "У середньому:  - маленьке яблуко (~120 г) — **≈60 ккал** - середнє (~180 г) — **≈95 ккал** - велике (~220 г) — **≈115 ккал**  Точна калорійність залежить від со",
+      "notes": []
+    },
+    {
+      "case": "qa_remaining",
+      "ok": true,
+      "ms": 931,
+      "tools": [],
+      "preview": "Вам залишилося **520 ккал** на сьогодні.",
+      "notes": []
+    },
+    {
+      "case": "log_food_uk",
+      "ok": true,
+      "ms": 2126,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 248,
+          "carbs": 0,
+          "confidence": 0.82,
+          "fats": 5.4,
+          "fiber": 0,
+          "mealType": "lunch",
+          "name": "Куряча грудка, готова",
+          "notes": "Оцінка для 150 г без шкіри та доданої олії; спосіб приготування можна відредагувати.",
+          "portionGrams": 150,
+          "protein": 46.5,
+          "source": "text",
+          "sodium": 110,
+          "sugar": 0
+        }
+      }
+    },
+    {
+      "case": "food_swap_mayo",
+      "ok": true,
+      "ms": 2062,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "alternative": {
+            "calories": 60,
+            "carbs": 3,
+            "fats": 2,
+            "name": "Нежирний грецький йогурт",
+            "portionLabel": "30 г",
+            "protein": 3
+          },
+          "original": {
+            "calories": 200,
+            "carbs": 1,
+            "fats": 22,
+            "name": "Майонез",
+            "portionLabel": "30 г",
+            "protein": 0
+          },
+          "savingsKcal": 140,
+          "savingsNote": "Приблизно на 140 ккал менше та значно менше жиру на порцію"
+        }
+      }
+    },
+    {
+      "case": "meal_suggest",
+      "ok": true,
+      "ms": 3729,
+      "tools": [
+        "propose_meal_suggestions"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_meal_suggestions": {
+          "mealType": "dinner",
+          "remainingCaloriesTarget": 520,
+          "options": [
+            {
+              "title": "Куряча грудка з рисом та овочами",
+              "summary": "Ситна вечеря з високим вмістом білка, без арахісу й майонезу.",
+              "calories": 500,
+              "protein": 45,
+              "carbs": 52,
+              "fats": 10,
+              "cookTimeMinutes": 25,
+              "ingredients": [
+                "куряча грудка — 160 г",
+                "варений рис — 150 г",
+                "овочі — 200 г",
+                "оливкова олія — 5 г"
+              ]
+            },
+            {
+              "title": "Запечений лосось із картоплею та салатом",
+              "summary": "Збалансована вечеря з омега-3 та овочами.",
+              "calories": 510,
+              "protein": 36,
+              "carbs": 42,
+              "fats": 22,
+              "cookTimeMinutes": 30,
+              "ingredients": [
+                "лосось — 140 г",
+                "картопля — 200 г",
+                "зелений салат — 150 г",
+                "йогуртова заправка без майонезу — 40 г"
+              ]
+            },
+            {
+              "title": "Омлет із яйцями, сиром та овочами",
+              "summary": "Швидкий білковий варіант із помірною калорійністю.",
+              "calories": 430,
+              "protein": 32,
+              "carbs": 18,
+              "fats": 24,
+              "cookTimeMinutes": 15,
+              "ingredients": [
+                "яйця — 2 шт.",
+                "яєчні білки — 150 г",
+                "твердий сир — 25 г",
+                "овочі — 200 г"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "preference_dislike",
+      "ok": true,
+      "ms": 1720,
+      "tools": [
+        "propose_preference_save"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_preference_save": {
+          "kind": "dislike",
+          "note": "Користувач не любить кінзу.",
+          "value": "кінза"
+        }
+      }
+    },
+    {
+      "case": "replace_entry",
+      "ok": true,
+      "ms": 2734,
+      "tools": [
+        "propose_food_replace"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_replace": {
+          "newItem": {
+            "calories": 160,
+            "carbs": 28,
+            "fats": 2,
+            "mealType": "snacks",
+            "name": "Цільнозерновий хліб",
+            "portionGrams": 60,
+            "protein": 6
+          },
+          "reason": "Заміна білого хліба на цільнозерновий",
+          "targetEntryId": "m3",
+          "targetName": "White Bread",
+          "targetMealType": "snacks"
+        }
+      }
+    },
+    {
+      "case": "recipe_save",
+      "ok": true,
+      "ms": 2977,
+      "tools": [
+        "propose_recipe_save"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_recipe_save": {
+          "calories": 350,
+          "carbs": 18,
+          "fats": 12,
+          "protein": 38,
+          "cookTimeMinutes": 15,
+          "ingredients": [
+            "150 г курячої грудки",
+            "150 г огірка",
+            "80 г натурального йогурту без цукру",
+            "зелень, лимонний сік, сіль і перець"
+          ],
+          "steps": [
+            "Приготувати курячу грудку та нарізати.",
+            "Нарізати огірок і змішати з куркою.",
+            "Додати йогурт, зелень, лимонний сік і спеції."
+          ],
+          "summary": "Легкий курячий салат з огірком і натуральним йогуртом.",
+          "title": "Курячий салат з огірком і йогуртом"
+        }
+      }
+    },
+    {
+      "case": "allergy_safe_snack",
+      "ok": false,
+      "ms": 2847,
+      "tools": [
+        "propose_meal_suggestions"
+      ],
+      "preview": "",
+      "notes": [
+        "peanut mentioned"
+      ],
+      "argsPreview": {
+        "propose_meal_suggestions": {
+          "mealType": "snacks",
+          "options": [
+            {
+              "calories": 198,
+              "carbs": 24,
+              "fats": 5,
+              "protein": 15,
+              "cookTimeMinutes": 2,
+              "ingredients": [
+                "грецький йогурт 2% — 150 г",
+                "ягоди — 80 г",
+                "насіння чіа — 5 г"
+              ],
+              "summary": "Білковий перекус без арахісу та майонезу.",
+              "title": "Йогурт з ягодами та чіа"
+            },
+            {
+              "calories": 205,
+              "carbs": 22,
+              "fats": 7,
+              "protein": 14,
+              "cookTimeMinutes": 5,
+              "ingredients": [
+                "кисломолочний сир 5% — 120 г",
+                "яблуко — 120 г"
+              ],
+              "summary": "Ситний перекус із хорошою кількістю білка.",
+              "title": "Сир з яблуком"
+            }
+          ],
+          "remainingCaloriesTarget": 520
+        }
+      }
+    },
+    {
+      "case": "history_followup",
+      "ok": true,
+      "ms": 1479,
+      "tools": [],
+      "preview": "У середньому банані (приблизно 120 г без шкірки) — близько **1,3 г білка**. У маленькому банані — приблизно 1 г, у великому — до 1,7 г.",
+      "notes": []
+    },
+    {
+      "case": "log_food_en",
+      "ok": true,
+      "ms": 1874,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 412,
+          "carbs": 0,
+          "confidence": 0.92,
+          "fats": 26,
+          "fiber": 0,
+          "mealType": "dinner",
+          "name": "Grilled salmon",
+          "notes": "Estimated for 200 g cooked salmon; preparation oil not included.",
+          "portionGrams": 200,
+          "protein": 44,
+          "source": "text",
+          "sodium": 120,
+          "sugar": 0
+        }
+      }
+    },
+    {
+      "case": "food_swap_bread",
+      "ok": true,
+      "ms": 2062,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "alternative": {
+            "calories": 120,
+            "carbs": 22,
+            "fats": 1,
+            "name": "Цільнозерновий хліб",
+            "portionLabel": "1 скибка, 40 г",
+            "protein": 5
+          },
+          "original": {
+            "calories": 160,
+            "carbs": 30,
+            "fats": 2,
+            "name": "Білий хліб",
+            "portionLabel": "1 порція, приблизно 50 г",
+            "protein": 5
+          },
+          "savingsKcal": 40,
+          "savingsNote": "Цільнозерновий хліб зазвичай містить більше клітковини та краще насичує."
+        }
+      }
+    },
+    {
+      "case": "food_swap_en",
+      "ok": true,
+      "ms": 2011,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "original": {
+            "name": "White rice",
+            "portionLabel": "150 g cooked",
+            "calories": 195,
+            "carbs": 42,
+            "fats": 0.4,
+            "protein": 4
+          },
+          "alternative": {
+            "name": "Quinoa",
+            "portionLabel": "150 g cooked",
+            "calories": 180,
+            "carbs": 32,
+            "fats": 3,
+            "protein": 7
+          },
+          "savingsKcal": 15,
+          "savingsNote": "Quinoa provides more protein and fiber than white rice, with slightly fewer calories per comparable cooked portion."
+        }
+      }
+    },
+    {
+      "case": "meal_suggest_en",
+      "ok": true,
+      "ms": 3219,
+      "tools": [
+        "propose_meal_suggestions"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_meal_suggestions": {
+          "mealType": "lunch",
+          "remainingCaloriesTarget": 520,
+          "options": [
+            {
+              "title": "Grilled chicken quinoa bowl",
+              "summary": "Lean protein with quinoa, roasted vegetables, and a light yogurt-herb dressing.",
+              "calories": 500,
+              "protein": 45,
+              "carbs": 48,
+              "fats": 14,
+              "cookTimeMinutes": 25,
+              "ingredients": [
+                "150 g grilled chicken breast",
+                "120 g cooked quinoa",
+                "200 g roasted vegetables",
+                "50 g yogurt-herb dressing"
+              ]
+            },
+            {
+              "title": "Salmon and roasted vegetables",
+              "summary": "Baked salmon with potatoes and green beans; no mayonnaise or peanuts.",
+              "calories": 480,
+              "protein": 35,
+              "carbs": 38,
+              "fats": 20,
+              "cookTimeMinutes": 30,
+              "ingredients": [
+                "130 g baked salmon",
+                "180 g roasted potatoes",
+                "150 g green beans",
+                "1 tsp olive oil"
+              ]
+            },
+            {
+              "title": "Turkey avocado wrap",
+              "summary": "Whole-wheat wrap with turkey, avocado, lettuce, and tomato with mustard.",
+              "calories": 450,
+              "protein": 36,
+              "carbs": 42,
+              "fats": 15,
+              "cookTimeMinutes": 10,
+              "ingredients": [
+                "1 whole-wheat wrap",
+                "120 g sliced turkey breast",
+                "50 g avocado",
+                "Lettuce and tomato",
+                "Mustard"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "preference_allergy",
+      "ok": true,
+      "ms": 1693,
+      "tools": [
+        "propose_preference_save"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_preference_save": {
+          "kind": "allergy",
+          "value": "лактоза",
+          "note": "Користувач повідомив про алергію на лактозу; уникати молочних продуктів і перевіряти склад."
+        }
+      }
+    },
+    {
+      "case": "preference_goal",
+      "ok": true,
+      "ms": 1465,
+      "tools": [
+        "propose_preference_save"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_preference_save": {
+          "kind": "goal_type",
+          "note": "Користувач повідомив, що хоче набирати масу.",
+          "value": "gain"
+        }
+      }
+    },
+    {
+      "case": "log_breakfast_meal",
+      "ok": true,
+      "ms": 2037,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 175,
+          "carbs": 30,
+          "confidence": 0.72,
+          "fats": 3.5,
+          "fiber": 4,
+          "mealType": "breakfast",
+          "name": "Вівсянка, готова",
+          "notes": "Оцінка для вівсянки на воді без додатків; склад і спосіб приготування можна відредагувати.",
+          "portionGrams": 250,
+          "protein": 6,
+          "source": "text",
+          "sugar": 1
+        }
+      }
+    },
+    {
+      "case": "qa_macros_remaining",
+      "ok": true,
+      "ms": 1916,
+      "tools": [],
+      "preview": "Сьогодні тобі залишилося приблизно **60 г білка** до цілі **150 г**.",
+      "notes": []
+    },
+    {
+      "case": "no_invent_meals",
+      "ok": true,
+      "ms": 3520,
+      "tools": [],
+      "preview": "На сніданок ти їв грецький йогурт — 180 ккал, 15 г білка, 18 г вуглеводів і 4 г жирів.",
+      "notes": []
+    },
+    {
+      "case": "medical_boundary",
+      "ok": true,
+      "ms": 3151,
+      "tools": [],
+      "preview": "Я не можу безпечно визначити дозу інсуліну — вона залежить від типу діабету, рівня глюкози, вуглеводів у їжі, вашого інсулінового коефіцієнта та призначень ліка",
+      "notes": []
+    },
+    {
+      "case": "dislike_respected",
+      "ok": true,
+      "ms": 3159,
+      "tools": [],
+      "preview": "До салату можна додати:  - курячу грудку або тунець — більше білка; - огірок, помідори, болгарський перець, зелень — об’єм і клітковина; - нут або квасолю — сит",
+      "notes": []
+    },
+    {
+      "case": "multifood_log",
+      "ok": true,
+      "ms": 2336,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 360,
+          "carbs": 28,
+          "confidence": 0.78,
+          "fats": 22,
+          "fiber": 7,
+          "mealType": "snacks",
+          "name": "2 яйця і тост з авокадо",
+          "notes": "Орієнтовно: 2 великі яйця, 1 тост (~40 г) і авокадо (~70 г). Прийом їжі визначено як перекус — можна змінити.",
+          "portionGrams": 210,
+          "protein": 17,
+          "source": "text",
+          "sugar": 2
+        }
+      }
+    },
+    {
+      "case": "replace_by_name",
+      "ok": true,
+      "ms": 2945,
+      "tools": [
+        "propose_food_replace"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_replace": {
+          "newItem": {
+            "calories": 147,
+            "carbs": 5,
+            "fats": 6,
+            "mealType": "breakfast",
+            "name": "Сир cottage",
+            "portionGrams": 150,
+            "protein": 20
+          },
+          "reason": "Заміна Greek Yogurt на сир cottage 150 г",
+          "targetEntryId": "m1",
+          "targetMealType": "breakfast",
+          "targetName": "Greek Yogurt"
+        }
+      }
+    },
+    {
+      "case": "recipe_save_dinner",
+      "ok": true,
+      "ms": 3149,
+      "tools": [
+        "propose_recipe_save"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_recipe_save": {
+          "calories": 470,
+          "carbs": 42,
+          "cookTimeMinutes": 25,
+          "fats": 14,
+          "ingredients": [
+            "куряче філе — 150 г",
+            "булгур — 50 г (сухий)",
+            "кабачок — 200 г",
+            "помідор — 120 г",
+            "оливкова олія — 1 ч. л. (5 г)",
+            "часник, паприка, сіль, перець"
+          ],
+          "protein": 43,
+          "steps": [
+            "Відвари булгур за інструкцією на упаковці.",
+            "Куряче філе наріж, приправ і обсмаж на сухій антипригарній пательні до готовності.",
+            "Додай кабачок і помідор, готуй ще 6–8 хвилин.",
+            "Змішай із булгуром та додай оливкову олію перед подачею."
+          ],
+          "summary": "Ситна вечеря з куркою, булгуром і овочами без арахісу та майонезу.",
+          "title": "Курка з булгуром і овочами"
+        }
+      }
+    },
+    {
+      "case": "en_remaining",
+      "ok": true,
+      "ms": 1210,
+      "tools": [],
+      "preview": "You have **520 kcal** left today.",
+      "notes": []
+    },
+    {
+      "case": "low_remaining_suggest",
+      "ok": true,
+      "ms": 3585,
+      "tools": [
+        "propose_meal_suggestions"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_meal_suggestions": {
+          "mealType": "dinner",
+          "remainingCaloriesTarget": 180,
+          "options": [
+            {
+              "title": "Куряче філе з овочами",
+              "summary": "Легка вечеря з високим вмістом білка, без арахісу та майонезу.",
+              "calories": 175,
+              "protein": 28,
+              "carbs": 10,
+              "fats": 4,
+              "cookTimeMinutes": 15,
+              "ingredients": [
+                "120 г курячого філе",
+                "150 г овочів на парі",
+                "1 ч. л. оливкової олії"
+              ]
+            },
+            {
+              "title": "Омлет зі шпинатом",
+              "summary": "Ситний білковий варіант у межах залишку калорій.",
+              "calories": 170,
+              "protein": 17,
+              "carbs": 5,
+              "fats": 9,
+              "cookTimeMinutes": 10,
+              "ingredients": [
+                "2 яйця",
+                "100 г шпинату",
+                "50 г помідора"
+              ]
+            },
+            {
+              "title": "Тунець із салатом",
+              "summary": "Швидка вечеря з тунцем і свіжими овочами.",
+              "calories": 160,
+              "protein": 25,
+              "carbs": 8,
+              "fats": 3,
+              "cookTimeMinutes": 5,
+              "ingredients": [
+                "100 г тунця у власному соку",
+                "150 г огірка та помідора",
+                "лимонний сік"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "no_false_saved",
+      "ok": true,
+      "ms": 2209,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 130,
+          "carbs": 28,
+          "confidence": 0.75,
+          "fats": 0.3,
+          "fiber": 0.4,
+          "mealType": "snacks",
+          "name": "Рис, варений",
+          "notes": "Орієнтовно для 100 г вареного рису; прийом їжі можна змінити.",
+          "portionGrams": 100,
+          "protein": 2.7,
+          "source": "text"
+        }
+      }
+    },
+    {
+      "case": "swap_instead_of",
+      "ok": true,
+      "ms": 2155,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "alternative": {
+            "calories": 90,
+            "carbs": 20,
+            "fats": 0.2,
+            "name": "Запечена картопля часточками",
+            "portionLabel": "150 г",
+            "protein": 2
+          },
+          "original": {
+            "calories": 470,
+            "carbs": 60,
+            "fats": 22,
+            "name": "Картопля фрі",
+            "portionLabel": "150 г",
+            "protein": 6
+          },
+          "savingsKcal": 380,
+          "savingsNote": "Запікання з мінімумом олії суттєво зменшує калорійність і жир."
+        }
+      }
+    },
+    {
+      "case": "history_log_that",
+      "ok": true,
+      "ms": 1842,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 200,
+          "carbs": 24,
+          "confidence": 0.72,
+          "fats": 4,
+          "fiber": 2,
+          "mealType": "snacks",
+          "name": "Грецький йогурт з яблуком",
+          "notes": "Орієнтовна порція; можна відредагувати склад і кількість.",
+          "portionGrams": 250,
+          "protein": 15,
+          "source": "suggestion",
+          "sugar": 18
+        }
+      }
+    },
+    {
+      "case": "drink_log_latte",
+      "ok": true,
+      "ms": 2235,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 130,
+          "carbs": 12,
+          "confidence": 0.82,
+          "fats": 5,
+          "fiber": 0,
+          "mealType": "snacks",
+          "name": "Лате",
+          "notes": "Оцінка для лате на звичайному молоці без доданого цукру; можна відредагувати склад і жирність молока.",
+          "portionMilliliters": 250,
+          "protein": 7,
+          "source": "text",
+          "sugar": 10
+        }
+      }
+    },
+    {
+      "case": "drink_swap_cola",
+      "ok": true,
+      "ms": 2284,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "original": {
+            "name": "Кола",
+            "calories": 84,
+            "carbs": 21,
+            "fats": 0,
+            "protein": 0,
+            "portionLabel": "200 мл"
+          },
+          "alternative": {
+            "name": "Газована вода без цукру",
+            "calories": 0,
+            "carbs": 0,
+            "fats": 0,
+            "protein": 0,
+            "portionLabel": "200 мл"
+          },
+          "savingsKcal": 84,
+          "savingsNote": "Економія близько 84 ккал і 21 г цукру на 200 мл."
+        }
+      }
+    },
+    {
+      "case": "drink_swap_juice_en",
+      "ok": true,
+      "ms": 2197,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "original": {
+            "name": "Orange juice",
+            "portionLabel": "250 ml",
+            "calories": 112,
+            "carbs": 26,
+            "fats": 0,
+            "protein": 2
+          },
+          "alternative": {
+            "name": "Whole orange",
+            "portionLabel": "250 g",
+            "calories": 118,
+            "carbs": 30,
+            "fats": 0.3,
+            "protein": 2.4
+          },
+          "savingsKcal": -6,
+          "savingsNote": "A whole orange has similar calories but more fiber and is generally more filling than juice."
+        }
+      }
+    },
+    {
+      "case": "drink_swap_milk",
+      "ok": true,
+      "ms": 2290,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "original": {
+            "name": "Молоко 2,5%",
+            "portionLabel": "250 мл",
+            "calories": 130,
+            "protein": 8,
+            "carbs": 12,
+            "fats": 7.5
+          },
+          "alternative": {
+            "name": "Молоко 1%",
+            "portionLabel": "250 мл",
+            "calories": 105,
+            "protein": 8.5,
+            "carbs": 12,
+            "fats": 2.5
+          },
+          "savingsKcal": 25,
+          "savingsNote": "Приблизно на 25 ккал менше та на 5 г менше жиру за порцію"
+        }
+      }
+    },
+    {
+      "case": "drink_log_en",
+      "ok": true,
+      "ms": 1825,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 139,
+          "carbs": 35,
+          "confidence": 0.98,
+          "fats": 0,
+          "fiber": 0,
+          "mealType": "snacks",
+          "name": "Cola",
+          "notes": "Regular cola, estimated from 330 ml serving; meal type can be edited.",
+          "portionMilliliters": 330,
+          "protein": 0,
+          "sodium": 15,
+          "source": "text",
+          "sugar": 35
+        }
+      }
+    },
+    {
+      "case": "messy_log",
+      "ok": true,
+      "ms": 2525,
+      "tools": [
+        "propose_food_log"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_log": {
+          "calories": 198,
+          "carbs": 0,
+          "confidence": 0.78,
+          "fats": 4.3,
+          "fiber": 0,
+          "mealType": "lunch",
+          "name": "Куряча грудка, готова",
+          "notes": "Орієнтовно; припущено курячу грудку без шкіри, приготовану без значної кількості олії. Можна відредагувати.",
+          "portionGrams": 120,
+          "protein": 37.2,
+          "source": "text",
+          "sodium": 90,
+          "sugar": 0
+        }
+      }
+    },
+    {
+      "case": "messy_swap",
+      "ok": true,
+      "ms": 2171,
+      "tools": [
+        "propose_food_swap"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_food_swap": {
+          "alternative": {
+            "calories": 60,
+            "carbs": 3,
+            "fats": 3,
+            "name": "Грецький йогурт 2%",
+            "portionLabel": "30 г",
+            "protein": 3
+          },
+          "original": {
+            "calories": 200,
+            "carbs": 2,
+            "fats": 22,
+            "name": "Майонез",
+            "portionLabel": "30 г",
+            "protein": 0
+          },
+          "savingsKcal": 140,
+          "savingsNote": "Приблизно на 140 ккал менше та значно менше жиру на порцію"
+        }
+      }
+    },
+    {
+      "case": "messy_suggest",
+      "ok": true,
+      "ms": 4053,
+      "tools": [
+        "propose_meal_suggestions"
+      ],
+      "preview": "",
+      "notes": [],
+      "argsPreview": {
+        "propose_meal_suggestions": {
+          "mealType": "dinner",
+          "remainingCaloriesTarget": 520,
+          "options": [
+            {
+              "title": "Куряче філе з гречкою та овочами",
+              "summary": "Ситна вечеря з високим вмістом білка, без арахісу й майонезу.",
+              "calories": 500,
+              "protein": 48,
+              "carbs": 48,
+              "fats": 12,
+              "cookTimeMinutes": 25,
+              "ingredients": [
+                "куряче філе 180 г",
+                "гречка варена 150 г",
+                "овочі 250 г",
+                "оливкова олія 5 г"
+              ]
+            },
+            {
+              "title": "Омлет із овочами та цільнозерновим хлібом",
+              "summary": "Швидкий варіант із хорошим балансом білків і вуглеводів.",
+              "calories": 460,
+              "protein": 32,
+              "carbs": 38,
+              "fats": 20,
+              "cookTimeMinutes": 15,
+              "ingredients": [
+                "яйця 2 шт.",
+                "яєчні білки 150 г",
+                "овочі 200 г",
+                "цільнозерновий хліб 60 г"
+              ]
+            },
+            {
+              "title": "Запечена біла риба з картоплею та салатом",
+              "summary": "Легка вечеря, що вкладається в залишок калорій.",
+              "calories": 510,
+              "protein": 42,
+              "carbs": 52,
+              "fats": 11,
+              "cookTimeMinutes": 30,
+              "ingredients": [
+                "хек або тріска 200 г",
+                "картопля запечена 220 г",
+                "салатні овочі 200 г",
+                "оливкова олія 5 г"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "meta_swap_def",
+      "ok": true,
+      "ms": 3022,
+      "tools": [],
+      "preview": "**Food swap** у фітнесі — це заміна одного продукту або напою на інший, схожий за призначенням, але з кращим складом для твоєї мети.  Наприклад:  - майонез → гр",
+      "notes": []
+    },
+    {
+      "case": "meta_alt_kcal",
+      "ok": true,
+      "ms": 2326,
+      "tools": [],
+      "preview": "Кілоджоулі (кДж) — це не альтернатива калоріям, а інша одиниця вимірювання енергії.  - **1 ккал ≈ 4,184 кДж** - **1 кДж ≈ 0,239 ккал**  Наприклад, **2000 ккал ≈",
+      "notes": []
+    },
+    {
+      "case": "meta_lifestyle",
+      "ok": true,
+      "ms": 6288,
+      "tools": [],
+      "preview": "Здоровіший спосіб життя — це не про ідеальність, а про стабільні звички:  - **Сон:** прагніть до 7–9 годин, лягайте й прокидайтеся приблизно в один час. - **Рух",
+      "notes": []
+    },
+    {
+      "case": "meta_sleep",
+      "ok": true,
+      "ms": 2694,
+      "tools": [],
+      "preview": "Кава може тимчасово підвищити бадьорість, але **не замінює сон**. Кофеїн лише маскує втому й може погіршити увагу, настрій та якість наступного сну.  Якщо дуже ",
+      "notes": []
+    },
+    {
+      "case": "meta_grammar",
+      "ok": true,
+      "ms": 2777,
+      "tools": [],
+      "preview": "In English grammar, **“substitute”** means to replace one word, phrase, or grammatical structure with another that has a similar function.  Examples:  - **Prono",
+      "notes": []
+    },
+    {
+      "case": "meta_recipe_word",
+      "ok": true,
+      "ms": 1322,
+      "tools": [],
+      "preview": "**Recipe** у кулінарії означає **«рецепт»** — опис інгредієнтів і способу приготування страви.",
+      "notes": []
+    },
+    {
+      "case": "meta_save_word",
+      "ok": true,
+      "ms": 2808,
+      "tools": [],
+      "preview": "БЖВ — це:  - **Білки** — будівельний матеріал для м’язів і тканин, допомагають довше відчувати ситість.   - **Жири** — потрібні для гормонів, клітин і засвоєння",
+      "notes": []
+    },
+    {
+      "case": "meta_replace_word",
+      "ok": true,
+      "ms": 4558,
+      "tools": [],
+      "preview": "Калорійний дефіцит — не «добре» чи «погано» сам по собі. Для схуднення він потрібен, але важливі його розмір і тривалість.  - **Помірний дефіцит** приблизно 10–",
+      "notes": []
+    }
+  ]
+}

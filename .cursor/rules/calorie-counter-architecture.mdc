@@ -1,0 +1,118 @@
+---
+description: Calorie Counter architecture, UIKit+XIB MVVM, and adaptive layout rules
+alwaysApply: true
+---
+
+# Calorie Counter Project Rules
+
+Always follow this architecture and adaptive layout when changing this project.
+
+## Architecture (mandatory)
+
+**Stack:** Modular MVVM + Coordinators + thin Domain/Data  
+**UI:** UIKit + XIB only (no programmatic Auto Layout / SnapKit-style layout unless explicitly requested)  
+**Storage:** Local-first Core Data (no networking/backend unless asked)  
+**DI:** Lightweight `DIContainer` (no 3rd-party DI)  
+**Min iOS:** 17.0  
+**Target path:** `Calorie Counter/Calorie Counter/`
+
+### Layers & data flow
+
+```
+SceneDelegate → AppCoordinator → MainTabBarController
+Feature VC (XIB) → ViewModel → UseCase → Repository → CoreDataStack
+```
+
+- **View** — UI only; outlets, bindings, user actions forward to ViewModel
+- **ViewModel** — screen state/actions via `Observable`; no UIKit, no navigation pushes
+- **UseCase** — business rules / orchestration
+- **Repository** — persistence API; domain models in, Core Data out (via mappers)
+- **Coordinator/Router** — all navigation; ViewModel never owns `UINavigationController`
+
+### Folder layout
+
+- `App/` — AppDelegate, SceneDelegate, AppCoordinator, DIContainer
+- `Core/Base` — BaseViewController, Observable
+- `Core/Extensions` — shared helpers
+- `Core/UI` — DesignMetrics, adapt*, AdaptiveConstraint/Label/StackView/View
+- `Navigation/` — MainTabBarController, Tab
+- `Features/Home|Recipes|AIAssistant|Progress|Settings|FoodLogging`
+- `Domain/Models` — pure Swift models (not NSManagedObject)
+- `Domain/UseCases`
+- `Data/CoreData` — stack, `.xcdatamodeld`, mappers
+- `Data/Repositories` — protocols + implementations
+- `Resources/` — Assets, LaunchScreen, Info.plist
+
+### Feature / screen pattern
+
+Every screen:
+
+1. `SomethingViewController.swift` + `SomethingViewController.xib`
+2. `SomethingViewModel.swift`
+3. Optional feature `SomethingCoordinator.swift` for nested flows
+
+Rules:
+
+- UI structure + constraints live in the XIB
+- Logic, bindings, delegates live in Swift
+- Inherit `BaseViewController`; load nib by name
+- Wire dependencies from `DIContainer` / coordinator — not singletons from VCs
+- Domain models stay separate from `CD*` Core Data entities; map in `Data/CoreData/Mappers`
+- No code comments unless the user explicitly asks
+- No Main.storyboard; window is created in `SceneDelegate`
+
+### Tabs (Information Architecture)
+
+1. Home — diary, macros, water, quick log
+2. Recipes — catalog, AI generation, saved
+3. AI Assistant — chat / suggestions
+4. Progress — charts, habits, photos
+5. Settings — goals, Health, subscription, theme
+
+Shared logging flow stubs live in `Features/FoodLogging/`.
+
+### Do / Don't
+
+- Do put new screens under the matching `Features/` module
+- Do add repository protocols before implementations
+- Do keep navigation in coordinators
+- Don't put Core Data / UIKit types in Domain models
+- Don't push/present from ViewModel
+- Don't invent a new architecture (VIPER/TCA/etc.) unless asked
+
+## Adaptive sizing (mandatory for all UI sizes)
+
+Design canvas: iPhone **393×852**.
+
+Use only:
+
+- `CGFloat.adaptWidth(_:)` — horizontal insets, widths, leading/trailing, corner radius
+- `CGFloat.adaptHeight(_:)` — vertical insets, heights, top/bottom, spacing, fonts
+- `CGFloat.adaptFont(_:)` — font point sizes in code
+
+iPad: same canvas with clamped scales (`padMaxWidthScale` / `padMaxHeightScale`). Bounds from key window (split-view aware). Never hardcode device sizes outside `DesignMetrics`.
+
+### In Swift
+
+```swift
+view.heightAnchor.constraint(equalToConstant: .adaptHeight(48))
+label.font = .systemFont(ofSize: .adaptFont(17), weight: .semibold)
+```
+
+### In XIB (Attributes Inspector)
+
+`AdaptiveConstraint` adapts the constraint **constant** for both position (x/y) and size.
+
+| Constraint type | Flag |
+|---|---|
+| leading, trailing, centerX, width | `Adapt To Width` |
+| top, bottom, centerY, height | `Adapt To Height` |
+
+1. Constraint → Identity Inspector → Custom Class = `AdaptiveConstraint`
+2. Turn on `Adapt To Width` or `Adapt To Height` per table
+3. Constant = Figma/design points (e.g. 24)
+4. Labels → `AdaptiveLabel`
+5. Stack views → `AdaptiveStackView` (`Adapt Spacing` ON)
+6. Corner radius views → `AdaptiveView` + `Adapt Corner Radius` / `Design Corner Radius`
+
+Always use `AdaptiveConstraint` for positional offsets and explicit width/height constants. Never leave raw design constants on a plain `NSLayoutConstraint`.

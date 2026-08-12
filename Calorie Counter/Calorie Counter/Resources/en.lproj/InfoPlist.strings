@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Camera access is used to scan food barcodes and log meals from photos.";
+"NSMicrophoneUsageDescription" = "Microphone access is used to log food by voice.";
+"NSPhotoLibraryUsageDescription" = "Photo library access is used to save progress photos and analyze meal photos.";
+"NSHealthShareUsageDescription" = "Health data is used to read weight and activity for your calorie plan.";
+"NSHealthUpdateUsageDescription" = "Health data is updated when you log weight, water, or workouts.";

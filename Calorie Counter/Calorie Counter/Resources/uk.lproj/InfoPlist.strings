@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Камера потрібна, щоб сканувати штрихкоди та записувати їжу з фото.";
+"NSMicrophoneUsageDescription" = "Мікрофон потрібен, щоб записувати їжу голосом.";
+"NSPhotoLibraryUsageDescription" = "Доступ до фото потрібен, щоб зберігати фото прогресу та аналізувати страви.";
+"NSHealthShareUsageDescription" = "Дані Health використовуються, щоб читати вагу та активність для вашого плану калорій.";
+"NSHealthUpdateUsageDescription" = "Дані Health оновлюються, коли ви записуєте вагу, воду або тренування.";

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="CDFoodEntry" representedClassName="CDFoodEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="calories" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="carbs" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="fats" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="fiber" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="mealType" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="portionGrams" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="portionMilliliters" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="protein" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sodium" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="source" optional="YES" attributeType="String"/>
+        <attribute name="sugar" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CDWaterEntry" representedClassName="CDWaterEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="amountMilliliters" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CDWeightEntry" representedClassName="CDWeightEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="weightKilograms" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CDUserGoals" representedClassName="CDUserGoals" syncable="YES" codeGenerationType="class">
+        <attribute name="calorieTarget" attributeType="Double" defaultValueString="2000" usesScalarValueType="YES"/>
+        <attribute name="carbsTarget" attributeType="Double" defaultValueString="200" usesScalarValueType="YES"/>
+        <attribute name="fatsTarget" attributeType="Double" defaultValueString="65" usesScalarValueType="YES"/>
+        <attribute name="fiberTarget" attributeType="Double" defaultValueString="25" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="proteinTarget" attributeType="Double" defaultValueString="150" usesScalarValueType="YES"/>
+        <attribute name="sodiumTarget" attributeType="Double" defaultValueString="2300" usesScalarValueType="YES"/>
+        <attribute name="sugarTarget" attributeType="Double" defaultValueString="50" usesScalarValueType="YES"/>
+        <attribute name="waterTargetMilliliters" attributeType="Double" defaultValueString="2500" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CDSavedRecipe" representedClassName="CDSavedRecipe" syncable="YES" codeGenerationType="class">
+        <attribute name="calories" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="carbs" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="externalId" attributeType="String"/>
+        <attribute name="fats" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageURLString" attributeType="String"/>
+        <attribute name="ingredientsJSON" attributeType="String"/>
+        <attribute name="protein" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="readyInMinutes" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="servings" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceName" attributeType="String"/>
+        <attribute name="stepsJSON" attributeType="String"/>
+        <attribute name="summary" attributeType="String"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CDUserProfile" representedClassName="CDUserProfile" syncable="YES" codeGenerationType="class">
+        <attribute name="activityLevel" optional="YES" attributeType="String"/>
+        <attribute name="age" optional="YES" attributeType="Integer 32" usesScalarValueType="NO"/>
+        <attribute name="avatarFileName" optional="YES" attributeType="String"/>
+        <attribute name="goalType" optional="YES" attributeType="String"/>
+        <attribute name="heightCm" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="onboardingCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="onboardingStep" optional="YES" attributeType="String"/>
+        <attribute name="sex" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="weightKg" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CDUserPreference" representedClassName="CDUserPreference" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="kind" attributeType="String"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="value" attributeType="String"/>
+    </entity>
+    <entity name="CDWorkoutEntry" representedClassName="CDWorkoutEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="caloriesBurned" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="durationMinutes" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+    </entity>
+    <entity name="CDProgressPhoto" representedClassName="CDProgressPhoto" syncable="YES" codeGenerationType="class">
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="fileName" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="kind" attributeType="String"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="pose" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="CDChatMessage" representedClassName="CDChatMessage" syncable="YES" codeGenerationType="class">
+        <attribute name="content" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="role" attributeType="String"/>
+    </entity>
+    <entity name="CDRewardState" representedClassName="CDRewardState" syncable="YES" codeGenerationType="class">
+        <attribute name="currentStreak" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastFoodLogDay" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="longestStreak" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="totalXP" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="unlockedBadgeIDsJSON" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CDXPEvent" representedClassName="CDXPEvent" syncable="YES" codeGenerationType="class">
+        <attribute name="amount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="kind" attributeType="String"/>
+        <attribute name="relatedID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    </entity>
+</model>
