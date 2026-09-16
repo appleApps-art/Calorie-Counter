@@ -6,6 +6,7 @@ protocol WeightEntryRepositoryProtocol {
     func fetchEntries(for date: Date) throws -> [WeightEntry]
     func fetchEntries(from start: Date, to end: Date) throws -> [WeightEntry]
     func save(_ entry: WeightEntry) throws
+    func delete(id: UUID) throws
 }
 
 final class WeightEntryRepository: WeightEntryRepositoryProtocol {
@@ -49,5 +50,16 @@ final class WeightEntryRepository: WeightEntryRepositoryProtocol {
         let object = try context.fetch(request).first ?? CDWeightEntry(context: context)
         WeightEntryMapper.apply(entry, to: object)
         try coreDataStack.saveContext()
+    }
+
+    func delete(id: UUID) throws {
+        let context = coreDataStack.viewContext
+        let request = CDWeightEntry.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        if let object = try context.fetch(request).first {
+            context.delete(object)
+            try coreDataStack.saveContext()
+        }
     }
 }

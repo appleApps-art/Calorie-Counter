@@ -2,7 +2,8 @@ import Foundation
 
 final class DIContainer {
     let coreDataStack: CoreDataStack
-    private let reminderRefreshHook = ReminderRefreshHook()
+    private let reminderRefreshHook = CallbackHook()
+    private let badgeEvaluationHook = CallbackHook()
 
     private lazy var foodEntryRepositoryBase: FoodEntryRepositoryProtocol = FoodEntryRepository(
         coreDataStack: coreDataStack
@@ -16,26 +17,48 @@ final class DIContainer {
 
     private(set) lazy var foodEntryRepository: FoodEntryRepositoryProtocol = DiaryChangeNotifyingFoodEntryRepository(
         base: foodEntryRepositoryBase,
-        onChange: { [reminderRefreshHook] in
-            reminderRefreshHook.call()
+        onChange: { [weak self] in
+            self?.notifyDiaryChanged()
         }
     )
     private(set) lazy var waterEntryRepository: WaterEntryRepositoryProtocol = DiaryChangeNotifyingWaterEntryRepository(
         base: waterEntryRepositoryBase,
-        onChange: { [reminderRefreshHook] in
-            reminderRefreshHook.call()
+        onChange: { [weak self] in
+            self?.notifyDiaryChanged()
         }
     )
     private(set) lazy var weightEntryRepository: WeightEntryRepositoryProtocol = DiaryChangeNotifyingWeightEntryRepository(
         base: weightEntryRepositoryBase,
-        onChange: { [reminderRefreshHook] in
-            reminderRefreshHook.call()
+        onChange: { [weak self] in
+            self?.notifyDiaryChanged()
+        }
+    )
+    private(set) lazy var workoutEntryRepository: WorkoutEntryRepositoryProtocol = DiaryChangeNotifyingWorkoutEntryRepository(
+        base: workoutEntryRepositoryBase,
+        onChange: { [weak self] in
+            self?.notifyDiaryChanged()
         }
     )
     private(set) lazy var userGoalsRepository: UserGoalsRepositoryProtocol = UserGoalsRepository(
         coreDataStack: coreDataStack
     )
+    private(set) lazy var healthDailyActivityRepository: HealthDailyActivityStoring = HealthDailyActivityRepository(
+        coreDataStack: coreDataStack,
+        onChange: { [weak self] in self?.notifyDiaryChanged() }
+    )
+    private(set) lazy var refreshNutritionGoalsUseCase = RefreshNutritionGoalsUseCase(
+        profileRepository: userProfileRepository,
+        goalsRepository: userGoalsRepository,
+        settingsStore: appSettingsStore,
+        weightRepository: weightEntryRepository
+    )
     private(set) lazy var recipeRepository: RecipeRepositoryProtocol = RecipeRepository(
+        coreDataStack: coreDataStack
+    )
+    private(set) lazy var pantryRepository: PantryRepositoryProtocol = PantryRepository(
+        coreDataStack: coreDataStack
+    )
+    private(set) lazy var mealPlanRepository: MealPlanRepositoryProtocol = MealPlanRepository(
         coreDataStack: coreDataStack
     )
     private(set) lazy var userProfileRepository: UserProfileRepositoryProtocol = UserProfileRepository(
@@ -44,7 +67,7 @@ final class DIContainer {
     private(set) lazy var userPreferenceRepository: UserPreferenceRepositoryProtocol = UserPreferenceRepository(
         coreDataStack: coreDataStack
     )
-    private(set) lazy var workoutEntryRepository: WorkoutEntryRepositoryProtocol = WorkoutEntryRepository(
+    private lazy var workoutEntryRepositoryBase: WorkoutEntryRepositoryProtocol = WorkoutEntryRepository(
         coreDataStack: coreDataStack
     )
     private(set) lazy var progressPhotoRepository: ProgressPhotoRepositoryProtocol = ProgressPhotoRepository(
@@ -61,7 +84,12 @@ final class DIContainer {
         foodEntryRepository: foodEntryRepository,
         waterEntryRepository: waterEntryRepository,
         userGoalsRepository: userGoalsRepository,
-        workoutEntryRepository: workoutEntryRepository
+        workoutEntryRepository: workoutEntryRepository,
+        healthActivityStore: healthDailyActivityRepository,
+        refreshGoals: { [weak self] in try self?.refreshNutritionGoalsUseCase.execute() }
+    )
+    private(set) lazy var fetchSavedFoodsUseCase: FetchSavedFoodsUseCase = FetchSavedFoodsUseCase(
+        foodEntryRepository: foodEntryRepository
     )
     private(set) lazy var buildAIAssistantUserContextUseCase: BuildAIAssistantUserContextUseCase = BuildAIAssistantUserContextUseCase(
         fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
@@ -75,26 +103,86 @@ final class DIContainer {
     private(set) lazy var spoonacularService: SpoonacularServiceProtocol = SpoonacularService(
         configuration: .production
     )
+    private(set) lazy var openFoodFactsService: OpenFoodFactsService = OpenFoodFactsService()
+    private(set) lazy var aiFoodSearchService: AIFoodSearching = {
+        #if DEBUG
+        if QALaunchConfiguration.isActive {
+            return QAFoodSearchService()
+        }
+        #endif
+        return AIFoodSearchService()
+    }()
     private(set) lazy var searchRecipesUseCase: SearchRecipesUseCase = SearchRecipesUseCase(
-        spoonacularService: spoonacularService
+        spoonacularService: spoonacularService,
+        aiFoodSearchService: aiFoodSearchService
+    )
+    private(set) lazy var recipeSectionsService: RecipeSectionsFetching = {
+        #if DEBUG
+        if QALaunchConfiguration.isActive {
+            return QARecipeSectionsService()
+        }
+        #endif
+        return RecipeSectionsService()
+    }()
+    private(set) lazy var fetchRecipeBrowseSectionsUseCase: FetchRecipeBrowseSectionsUseCase = FetchRecipeBrowseSectionsUseCase(
+        service: recipeSectionsService
+    )
+    private(set) lazy var fetchPantryItemsUseCase: FetchPantryItemsUseCase = FetchPantryItemsUseCase(
+        pantryRepository: pantryRepository
+    )
+    private(set) lazy var savePantryItemUseCase: SavePantryItemUseCase = SavePantryItemUseCase(
+        pantryRepository: pantryRepository
+    )
+    private(set) lazy var deletePantryItemsUseCase: DeletePantryItemsUseCase = DeletePantryItemsUseCase(
+        pantryRepository: pantryRepository
+    )
+    private(set) lazy var fetchMealPlansUseCase: FetchMealPlansUseCase = FetchMealPlansUseCase(
+        mealPlanRepository: mealPlanRepository
+    )
+    private(set) lazy var createRecipeUseCase: CreateRecipeUseCase = CreateRecipeUseCase(
+        searchRecipesUseCase: searchRecipesUseCase,
+        recipeRepository: recipeRepository
+    )
+    private(set) lazy var createMealPlanUseCase: CreateMealPlanUseCase = CreateMealPlanUseCase(
+        mealPlanRepository: mealPlanRepository,
+        spoonacularService: spoonacularService,
+        fetchUserPreferencesUseCase: fetchUserPreferencesUseCase,
+        fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
+        pantryRepository: pantryRepository
     )
     private(set) lazy var searchFoodProductsUseCase: SearchFoodProductsUseCase = SearchFoodProductsUseCase(
-        spoonacularService: spoonacularService
+        spoonacularService: spoonacularService,
+        aiFoodSearchService: aiFoodSearchService,
+        openFoodFactsService: openFoodFactsService,
+        textFoodAnalysisService: textFoodAnalysisService
     )
     private(set) lazy var appSettingsStore: AppSettingsStoring = AppSettingsStore()
     private(set) lazy var healthSyncService: HealthSyncing = HealthKitSyncService()
-    private(set) lazy var subscriptionService: SubscriptionStatusProviding = StoreKitSubscriptionService()
+    private(set) lazy var subscriptionService: AdaptySubscriptionService = AdaptySubscriptionService()
+    private(set) lazy var notificationInboxStore: NotificationInboxStoring = NotificationInboxStore()
+    private(set) lazy var paywallFactory: SubscriptionPaywallPresenting = AdaptyPaywallFactory(
+        service: subscriptionService
+    )
     private(set) lazy var progressPhotoFileStore: ProgressPhotoFileStoring = LocalImageFileStore(folderName: "ProgressPhotos")
     private(set) lazy var avatarFileStore: LocalImageFileStoring = LocalImageFileStore(folderName: "ProfileAvatar")
 
-    private(set) lazy var evaluateBadgesUseCase: EvaluateBadgesUseCase = EvaluateBadgesUseCase(
-        rewardsRepository: rewardsRepository,
-        foodEntryRepository: foodEntryRepository,
-        waterEntryRepository: waterEntryRepository,
-        weightEntryRepository: weightEntryRepository,
-        workoutEntryRepository: workoutEntryRepository,
-        progressPhotoRepository: progressPhotoRepository
-    )
+    private(set) lazy var evaluateBadgesUseCase: EvaluateBadgesUseCase = {
+        let useCase = EvaluateBadgesUseCase(
+            rewardsRepository: rewardsRepository,
+            foodEntryRepository: foodEntryRepository,
+            waterEntryRepository: waterEntryRepository,
+            weightEntryRepository: weightEntryRepository,
+            workoutEntryRepository: workoutEntryRepository,
+            progressPhotoRepository: progressPhotoRepository,
+            userGoalsRepository: userGoalsRepository
+        )
+        badgeEvaluationHook.handler = { [weak useCase] in
+            DispatchQueue.main.async {
+                _ = try? useCase?.execute()
+            }
+        }
+        return useCase
+    }()
     private(set) lazy var awardXPUseCase: AwardXPUseCase = AwardXPUseCase(
         rewardsRepository: rewardsRepository,
         evaluateBadgesUseCase: evaluateBadgesUseCase
@@ -106,22 +194,40 @@ final class DIContainer {
     private(set) lazy var fetchRewardStateUseCase: FetchRewardStateUseCase = FetchRewardStateUseCase(
         rewardsRepository: rewardsRepository
     )
+    private(set) lazy var markBadgeSeenUseCase: MarkBadgeSeenUseCase = MarkBadgeSeenUseCase(
+        rewardsRepository: rewardsRepository
+    )
+    private(set) lazy var fetchRewardsScreenUseCase: FetchRewardsScreenUseCase = FetchRewardsScreenUseCase(
+        evaluateStreakUseCase: evaluateStreakUseCase,
+        evaluateBadgesUseCase: evaluateBadgesUseCase,
+        rewardsRepository: rewardsRepository
+    )
 
+    private(set) lazy var analytics: AnalyticsTracking = Analytics.tracker
     private(set) lazy var logFoodUseCase: LogFoodUseCase = LogFoodUseCase(
         foodEntryRepository: foodEntryRepository,
-        awardXPUseCase: awardXPUseCase
+        awardXPUseCase: awardXPUseCase,
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore,
+        analytics: analytics
     )
     private(set) lazy var updateFoodEntryUseCase: UpdateFoodEntryUseCase = UpdateFoodEntryUseCase(
-        foodEntryRepository: foodEntryRepository
+        foodEntryRepository: foodEntryRepository,
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore
     )
     private(set) lazy var deleteFoodEntryUseCase: DeleteFoodEntryUseCase = DeleteFoodEntryUseCase(
-        foodEntryRepository: foodEntryRepository
+        foodEntryRepository: foodEntryRepository,
+        healthSync: healthSyncService,
+        analytics: analytics
     )
     private(set) lazy var deleteWaterEntryUseCase: DeleteWaterEntryUseCase = DeleteWaterEntryUseCase(
-        waterEntryRepository: waterEntryRepository
+        waterEntryRepository: waterEntryRepository,
+        healthSync: healthSyncService
     )
     private(set) lazy var deleteWorkoutEntryUseCase: DeleteWorkoutEntryUseCase = DeleteWorkoutEntryUseCase(
-        workoutEntryRepository: workoutEntryRepository
+        workoutEntryRepository: workoutEntryRepository,
+        healthSync: healthSyncService
     )
     private(set) lazy var fetchWeightHistoryUseCase: FetchWeightHistoryUseCase = FetchWeightHistoryUseCase(
         weightEntryRepository: weightEntryRepository
@@ -129,22 +235,34 @@ final class DIContainer {
     private(set) lazy var scaleFoodPortionUseCase: ScaleFoodPortionUseCase = ScaleFoodPortionUseCase()
     private(set) lazy var replaceFoodEntryUseCase: ReplaceFoodEntryUseCase = ReplaceFoodEntryUseCase(
         foodEntryRepository: foodEntryRepository,
-        awardXPUseCase: awardXPUseCase
+        awardXPUseCase: awardXPUseCase,
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore
     )
     private(set) lazy var logWaterUseCase: LogWaterUseCase = LogWaterUseCase(
         waterEntryRepository: waterEntryRepository,
         awardXPUseCase: awardXPUseCase,
         healthSync: healthSyncService,
-        appSettingsStore: appSettingsStore
+        appSettingsStore: appSettingsStore,
+        analytics: analytics
     )
     private(set) lazy var logWeightUseCase: LogWeightUseCase = LogWeightUseCase(
         weightEntryRepository: weightEntryRepository,
         awardXPUseCase: awardXPUseCase,
         healthSync: healthSyncService,
-        appSettingsStore: appSettingsStore
+        appSettingsStore: appSettingsStore,
+        analytics: analytics,
+        onWeightLogged: { [weak self] entry in
+            guard let self,
+                  let latest = try self.weightEntryRepository.fetchEntries().max(by: { $0.date < $1.date }),
+                  latest.id == entry.id else { return }
+            try self.refreshNutritionGoalsUseCase.applyLatestWeight(latest)
+            self.notifyDiaryChanged()
+        }
     )
     private(set) lazy var saveUserGoalsUseCase: SaveUserGoalsUseCase = SaveUserGoalsUseCase(
-        userGoalsRepository: userGoalsRepository
+        userGoalsRepository: userGoalsRepository,
+        appSettingsStore: appSettingsStore
     )
     private(set) lazy var calculateNutritionPlanUseCase: CalculateNutritionPlanUseCase = CalculateNutritionPlanUseCase()
     private(set) lazy var fetchOnboardingStateUseCase: FetchOnboardingStateUseCase = FetchOnboardingStateUseCase(
@@ -152,7 +270,9 @@ final class DIContainer {
         avatarFileStore: avatarFileStore
     )
     private(set) lazy var saveUserProfileUseCase: SaveUserProfileUseCase = SaveUserProfileUseCase(
-        userProfileRepository: userProfileRepository
+        userProfileRepository: userProfileRepository,
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore
     )
     private(set) lazy var saveUserAvatarUseCase: SaveUserAvatarUseCase = SaveUserAvatarUseCase(
         userProfileRepository: userProfileRepository,
@@ -172,7 +292,9 @@ final class DIContainer {
     private(set) lazy var updateProfileAndGoalsUseCase: UpdateProfileAndGoalsUseCase = UpdateProfileAndGoalsUseCase(
         userProfileRepository: userProfileRepository,
         userGoalsRepository: userGoalsRepository,
-        calculateNutritionPlanUseCase: calculateNutritionPlanUseCase
+        calculateNutritionPlanUseCase: calculateNutritionPlanUseCase,
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore
     )
     private(set) lazy var saveUserPreferenceUseCase: SaveUserPreferenceUseCase = SaveUserPreferenceUseCase(
         userPreferenceRepository: userPreferenceRepository
@@ -184,12 +306,14 @@ final class DIContainer {
         workoutEntryRepository: workoutEntryRepository,
         awardXPUseCase: awardXPUseCase,
         healthSync: healthSyncService,
-        appSettingsStore: appSettingsStore
+        appSettingsStore: appSettingsStore,
+        analytics: analytics
     )
     private(set) lazy var saveProgressPhotoUseCase: SaveProgressPhotoUseCase = SaveProgressPhotoUseCase(
         progressPhotoRepository: progressPhotoRepository,
         fileStore: progressPhotoFileStore,
-        awardXPUseCase: awardXPUseCase
+        awardXPUseCase: awardXPUseCase,
+        analytics: analytics
     )
     private(set) lazy var deleteProgressPhotoUseCase: DeleteProgressPhotoUseCase = DeleteProgressPhotoUseCase(
         progressPhotoRepository: progressPhotoRepository,
@@ -199,8 +323,8 @@ final class DIContainer {
         userPreferenceRepository: userPreferenceRepository
     )
     private(set) lazy var importHealthWeightUseCase: ImportHealthWeightUseCase = ImportHealthWeightUseCase(
-        healthSync: healthSyncService,
-        logWeightUseCase: logWeightUseCase
+        syncHealthDataUseCase: syncHealthDataUseCase,
+        weightEntryRepository: weightEntryRepository
     )
     private(set) lazy var fetchProgressPhotosUseCase: FetchProgressPhotosUseCase = FetchProgressPhotosUseCase(
         progressPhotoRepository: progressPhotoRepository,
@@ -222,7 +346,12 @@ final class DIContainer {
         workoutEntryRepository: workoutEntryRepository,
         fetchProgressPhotosUseCase: fetchProgressPhotosUseCase,
         rewardsRepository: rewardsRepository,
-        evaluateStreakUseCase: evaluateStreakUseCase
+        evaluateStreakUseCase: evaluateStreakUseCase,
+        userGoalsRepository: userGoalsRepository,
+        fetchOnboardingStateUseCase: fetchOnboardingStateUseCase,
+        calculateNutritionPlanUseCase: calculateNutritionPlanUseCase,
+        healthActivityStore: healthDailyActivityRepository,
+        refreshGoals: { [weak self] in try self?.refreshNutritionGoalsUseCase.execute() }
     )
     private(set) lazy var persistChatHistoryUseCase: PersistChatHistoryUseCase = PersistChatHistoryUseCase(
         chatHistoryRepository: chatHistoryRepository
@@ -248,8 +377,27 @@ final class DIContainer {
         healthSync: healthSyncService,
         appSettingsStore: appSettingsStore
     )
+    private(set) lazy var syncHealthDataUseCase: SyncHealthDataUseCase = SyncHealthDataUseCase(
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore,
+        waterEntryRepository: waterEntryRepository,
+        weightEntryRepository: weightEntryRepository,
+        workoutEntryRepository: workoutEntryRepository,
+        foodEntryRepository: foodEntryRepository,
+        userProfileRepository: userProfileRepository,
+        activityStore: healthDailyActivityRepository,
+        onProfileUpdated: { [weak self] profile in
+            try self?.refreshNutritionGoalsUseCase.execute(profile: profile)
+        },
+        onProfileSaved: { [weak self] in self?.notifyDiaryChanged() }
+    )
+    private(set) lazy var healthSyncController: HealthSyncController = HealthSyncController(
+        healthSync: healthSyncService,
+        appSettingsStore: appSettingsStore,
+        requestAuthorizationUseCase: requestHealthSyncAuthorizationUseCase,
+        syncHealthDataUseCase: syncHealthDataUseCase
+    )
 
-    private(set) lazy var openFoodFactsService: OpenFoodFactsService = OpenFoodFactsService()
     private(set) lazy var spoonacularBarcodeLookupService: SpoonacularBarcodeLookupService = SpoonacularBarcodeLookupService(
         spoonacularService: spoonacularService
     )
@@ -327,6 +475,12 @@ final class DIContainer {
         self.coreDataStack = coreDataStack
     }
 
+    private func notifyDiaryChanged() {
+        reminderRefreshHook.call()
+        badgeEvaluationHook.call()
+        NotificationCenter.default.post(name: .bityDiaryDidChange, object: nil)
+    }
+
     func makeHomeViewModel() -> HomeViewModel {
         HomeViewModel(
             fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
@@ -337,8 +491,16 @@ final class DIContainer {
             logWorkoutUseCase: logWorkoutUseCase,
             logWeightUseCase: logWeightUseCase,
             deleteWaterEntryUseCase: deleteWaterEntryUseCase,
-            deleteWorkoutEntryUseCase: deleteWorkoutEntryUseCase
+            deleteWorkoutEntryUseCase: deleteWorkoutEntryUseCase,
+            appSettingsStore: appSettingsStore,
+            fetchOnboardingStateUseCase: fetchOnboardingStateUseCase,
+            calculateNutritionPlanUseCase: calculateNutritionPlanUseCase,
+            evaluateStreakUseCase: evaluateStreakUseCase
         )
+    }
+
+    func makeRewardsViewModel() -> RewardsViewModel {
+        RewardsViewModel(fetchRewardsScreenUseCase: fetchRewardsScreenUseCase)
     }
 
     func makeProgressViewModel() -> ProgressViewModel {
@@ -347,8 +509,7 @@ final class DIContainer {
             logWeightUseCase: logWeightUseCase,
             saveProgressPhotoUseCase: saveProgressPhotoUseCase,
             deleteProgressPhotoUseCase: deleteProgressPhotoUseCase,
-            fetchProgressPhotosUseCase: fetchProgressPhotosUseCase,
-            fetchRewardStateUseCase: fetchRewardStateUseCase
+            refreshSubscriptionStatusUseCase: refreshSubscriptionStatusUseCase
         )
     }
 
@@ -372,6 +533,16 @@ final class DIContainer {
         )
     }
 
+    func makeOnboardingFlowViewModel() -> OnboardingFlowViewModel {
+        OnboardingFlowViewModel(
+            fetchOnboardingStateUseCase: fetchOnboardingStateUseCase,
+            saveUserProfileUseCase: saveUserProfileUseCase,
+            calculateNutritionPlanUseCase: calculateNutritionPlanUseCase,
+            completeOnboardingUseCase: completeOnboardingUseCase,
+            requestHealthSyncAuthorizationUseCase: requestHealthSyncAuthorizationUseCase
+        )
+    }
+
     func makeOnboardingViewModel() -> OnboardingViewModel {
         OnboardingViewModel(
             fetchOnboardingStateUseCase: fetchOnboardingStateUseCase,
@@ -386,17 +557,47 @@ final class DIContainer {
         )
     }
 
-    func makeVoiceFoodLoggingViewModel() -> VoiceFoodLoggingViewModel {
+    func makeVoiceFoodLoggingViewModel(
+        mealType: MealType = .snacks,
+        date: Date = Date()
+    ) -> VoiceFoodLoggingViewModel {
         VoiceFoodLoggingViewModel(
             recorder: voiceFoodAudioRecorder,
             transcribeFoodVoiceUseCase: transcribeFoodVoiceUseCase,
-            analyzeVoiceFoodUseCase: analyzeVoiceFoodUseCase,
-            logFoodUseCase: logFoodUseCase
+            analyzeTextFoodUseCase: analyzeTextFoodUseCase,
+            mealType: mealType,
+            date: date
         )
+    }
+
+    func makeAIAssistantViewModel(
+        recipeContext: Recipe? = nil,
+        initialInput: String? = nil,
+        isPersistentSession: Bool = false
+    ) -> AIAssistantViewModel {
+        AIAssistantViewModel(
+            aiAssistantService: aiAssistantService,
+            fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
+            logWaterUseCase: logWaterUseCase,
+            recipeContext: recipeContext,
+            initialInput: initialInput,
+            buildAIAssistantUserContextUseCase: buildAIAssistantUserContextUseCase,
+            parseAIAssistantActionsUseCase: parseAIAssistantActionsUseCase,
+            confirmAIAssistantActionUseCase: confirmAIAssistantActionUseCase,
+            persistChatHistoryUseCase: isPersistentSession ? persistChatHistoryUseCase : nil,
+            deleteFoodEntryUseCase: deleteFoodEntryUseCase,
+            searchFoodProductsUseCase: searchFoodProductsUseCase,
+            voiceRecorder: voiceFoodAudioRecorder,
+            transcribeFoodVoiceUseCase: transcribeFoodVoiceUseCase
+        )
+    }
+
+    func makeSubscriptionCoordinator() -> SubscriptionCoordinator {
+        SubscriptionCoordinator(factory: paywallFactory)
     }
 }
 
-private final class ReminderRefreshHook {
+private final class CallbackHook {
     var handler: (() -> Void)?
 
     func call() {

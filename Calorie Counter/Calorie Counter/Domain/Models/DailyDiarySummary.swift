@@ -7,21 +7,38 @@ struct DailyDiarySummary: Equatable {
     let workouts: [WorkoutEntry]
     let waterMilliliters: Double
     let goals: UserGoals
+    var healthActivity: HealthDailyActivity? = nil
+
+    var eatenEntries: [FoodEntry] {
+        foodEntries.filter(\.isEaten)
+    }
 
     var totalCalories: Double {
-        foodEntries.reduce(0) { $0 + $1.calories }
+        eatenEntries.reduce(0) { $0 + $1.calories }
     }
 
     var totalProtein: Double {
-        foodEntries.reduce(0) { $0 + $1.protein }
+        eatenEntries.reduce(0) { $0 + $1.protein }
     }
 
     var totalCarbs: Double {
-        foodEntries.reduce(0) { $0 + $1.carbs }
+        eatenEntries.reduce(0) { $0 + $1.carbs }
     }
 
     var totalFats: Double {
-        foodEntries.reduce(0) { $0 + $1.fats }
+        eatenEntries.reduce(0) { $0 + $1.fats }
+    }
+
+    var totalFiber: Double {
+        eatenEntries.reduce(0) { $0 + $1.fiber }
+    }
+
+    var totalSugar: Double {
+        eatenEntries.reduce(0) { $0 + $1.sugar }
+    }
+
+    var totalSodium: Double {
+        eatenEntries.reduce(0) { $0 + $1.sodium }
     }
 
     var remainingCalories: Double {
@@ -45,7 +62,7 @@ struct DailyDiarySummary: Equatable {
     }
 
     var burnedCalories: Double {
-        workouts.reduce(0) { $0 + $1.caloriesBurned }
+        ActivityEnergyCalculator.total(workouts: workouts, healthActivity: healthActivity)
     }
 
     var netCalories: Double {
@@ -58,9 +75,9 @@ struct DailyDiarySummary: Equatable {
             protein: totalProtein,
             carbs: totalCarbs,
             fats: totalFats,
-            fiber: foodEntries.reduce(0) { $0 + $1.fiber },
-            sugar: foodEntries.reduce(0) { $0 + $1.sugar },
-            sodium: foodEntries.reduce(0) { $0 + $1.sodium }
+            fiber: totalFiber,
+            sugar: totalSugar,
+            sodium: totalSodium
         )
     }
 

@@ -10,14 +10,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: windowScene)
         let container = DIContainer()
+        #if DEBUG
+        QASession.prepare(container: container)
+        #endif
         let coordinator = AppCoordinator(window: window, container: container)
         self.window = window
         self.container = container
         self.appCoordinator = coordinator
+        AppAppearance.apply(container.appSettingsStore.settings.appearanceMode)
         coordinator.start()
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         container?.reminderScheduleController.refreshOnForeground()
+        container?.healthSyncController.refreshOnForeground()
+        appCoordinator?.handleSceneDidBecomeActive()
     }
 }

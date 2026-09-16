@@ -52,14 +52,19 @@ enum SavedRecipeMapper {
             fats: object.fats,
             ingredients: ingredients,
             steps: steps,
-            sourceName: object.sourceName
+            sourceName: object.sourceName,
+            origin: FoodProductSource(apiValue: object.origin),
+            weightGrams: object.weightGrams?.doubleValue,
+            volumeMilliliters: object.volumeMilliliters?.doubleValue,
+            foodType: FoodType(rawValue: object.foodType ?? ""),
+            hasCompleteNutrition: object.hasCompleteNutrition?.boolValue
         )
     }
 
     static func apply(_ recipe: Recipe, to object: CDSavedRecipe) {
         object.id = recipe.id
         object.externalId = recipe.externalId
-        object.title = recipe.title
+        object.title = recipe.title.isEmpty ? L10n.tr("recipes.generic") : recipe.title
         object.summary = recipe.summary
         object.imageURLString = recipe.imageURL?.absoluteString
         object.readyInMinutes = Int32(recipe.readyInMinutes ?? 0)
@@ -69,6 +74,11 @@ enum SavedRecipeMapper {
         object.carbs = recipe.carbs ?? 0
         object.fats = recipe.fats ?? 0
         object.sourceName = recipe.sourceName
+        object.origin = recipe.origin.rawValue
+        object.foodType = recipe.foodType?.rawValue
+        object.hasCompleteNutrition = recipe.hasCompleteNutrition.map { NSNumber(value: $0) }
+        object.weightGrams = recipe.weightGrams.map { NSNumber(value: $0) }
+        object.volumeMilliliters = recipe.volumeMilliliters.map { NSNumber(value: $0) }
         object.updatedAt = Date()
 
         let ingredientDTOs = recipe.ingredients.map {
@@ -83,10 +93,14 @@ enum SavedRecipeMapper {
         if let data = try? JSONEncoder().encode(ingredientDTOs),
            let json = String(data: data, encoding: .utf8) {
             object.ingredientsJSON = json
+        } else {
+            object.ingredientsJSON = "[]"
         }
         if let data = try? JSONEncoder().encode(recipe.steps),
            let json = String(data: data, encoding: .utf8) {
             object.stepsJSON = json
+        } else {
+            object.stepsJSON = "[]"
         }
     }
 }

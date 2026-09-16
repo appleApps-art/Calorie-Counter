@@ -15,16 +15,28 @@
         <attribute name="protein" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="sodium" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="source" optional="YES" attributeType="String"/>
+        <attribute name="healthSampleID" optional="YES" attributeType="String"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="imageURLString" optional="YES" attributeType="String"/>
+        <attribute name="isEaten" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="sugar" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="ingredientsJSON" optional="YES" attributeType="String"/>
+        <attribute name="stepsJSON" optional="YES" attributeType="String"/>
+        <attribute name="catalogExternalId" optional="YES" attributeType="String"/>
+        <attribute name="catalogKind" optional="YES" attributeType="String"/>
     </entity>
     <entity name="CDWaterEntry" representedClassName="CDWaterEntry" syncable="YES" codeGenerationType="class">
         <attribute name="amountMilliliters" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="healthSampleID" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="source" optional="YES" attributeType="String"/>
     </entity>
     <entity name="CDWeightEntry" representedClassName="CDWeightEntry" syncable="YES" codeGenerationType="class">
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="healthSampleID" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="source" optional="YES" attributeType="String"/>
         <attribute name="weightKilograms" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
     </entity>
     <entity name="CDUserGoals" representedClassName="CDUserGoals" syncable="YES" codeGenerationType="class">
@@ -41,19 +53,40 @@
     <entity name="CDSavedRecipe" representedClassName="CDSavedRecipe" syncable="YES" codeGenerationType="class">
         <attribute name="calories" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="carbs" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="externalId" attributeType="String"/>
+        <attribute name="externalId" optional="YES" attributeType="String"/>
         <attribute name="fats" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="imageURLString" attributeType="String"/>
-        <attribute name="ingredientsJSON" attributeType="String"/>
+        <attribute name="imageURLString" optional="YES" attributeType="String"/>
+        <attribute name="ingredientsJSON" optional="YES" attributeType="String"/>
         <attribute name="protein" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="readyInMinutes" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="servings" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="sourceName" attributeType="String"/>
-        <attribute name="stepsJSON" attributeType="String"/>
-        <attribute name="summary" attributeType="String"/>
+        <attribute name="sourceName" optional="YES" attributeType="String"/>
+        <attribute name="origin" optional="YES" attributeType="String"/>
+        <attribute name="stepsJSON" optional="YES" attributeType="String"/>
+        <attribute name="summary" optional="YES" attributeType="String"/>
         <attribute name="title" attributeType="String"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CDPantryItem" representedClassName="CDPantryItem" syncable="YES" codeGenerationType="class">
+        <attribute name="amount" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="imageURLString" optional="YES" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="quantityText" optional="YES" attributeType="String"/>
+        <attribute name="unit" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="useBy" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CDMealPlan" representedClassName="CDMealPlan" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageURLString" optional="YES" attributeType="String"/>
+        <attribute name="recipesJSON" optional="YES" attributeType="String"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="weeks" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
     </entity>
     <entity name="CDUserProfile" representedClassName="CDUserProfile" syncable="YES" codeGenerationType="class">
         <attribute name="activityLevel" optional="YES" attributeType="String"/>
@@ -66,6 +99,7 @@
         <attribute name="onboardingStep" optional="YES" attributeType="String"/>
         <attribute name="sex" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="targetWeightKg" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
         <attribute name="weightKg" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
     </entity>
     <entity name="CDUserPreference" representedClassName="CDUserPreference" syncable="YES" codeGenerationType="class">
@@ -79,8 +113,10 @@
         <attribute name="caloriesBurned" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="durationMinutes" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="healthSampleID" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
+        <attribute name="source" optional="YES" attributeType="String"/>
     </entity>
     <entity name="CDProgressPhoto" representedClassName="CDProgressPhoto" syncable="YES" codeGenerationType="class">
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
@@ -103,6 +139,7 @@
         <attribute name="longestStreak" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="totalXP" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="unlockedBadgeIDsJSON" optional="YES" attributeType="String"/>
+        <attribute name="seenBadgeIDsJSON" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
     <entity name="CDXPEvent" representedClassName="CDXPEvent" syncable="YES" codeGenerationType="class">

@@ -6,7 +6,7 @@ protocol AppSettingsStoring: AnyObject {
 
 final class AppSettingsStore: AppSettingsStoring {
     private let defaults: UserDefaults
-    private let key = "avo.app.settings"
+    private let key = "bity.app.settings"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults

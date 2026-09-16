@@ -44,10 +44,12 @@ final class OnboardingViewController: BaseViewController {
             self?.statusLabel.isHidden = value.isEmpty
         }
         viewModel.nextButtonTitle.bind { [weak self] value in
-            self?.nextButton.setTitle(value, for: .normal)
+            guard let self else { return }
+            OnboardingStyle.stylePrimaryButton(self.nextButton, title: value)
         }
         viewModel.canAdvance.bind { [weak self] canAdvance in
             self?.nextButton.isEnabled = canAdvance
+            self?.nextButton.alpha = canAdvance ? 1 : 0.5
         }
         viewModel.showsBack.bind { [weak self] shows in
             self?.backButton.isHidden = !shows
@@ -65,17 +67,18 @@ final class OnboardingViewController: BaseViewController {
 
     private func configureControls() {
         backButton.setTitle(L10n.tr("common.back"), for: .normal)
+        backButton.setTitleColor(AppColor.textBody, for: .normal)
+        backButton.titleLabel?.font = .systemFont(ofSize: .adaptFont(17), weight: .semibold)
         ageTextField.placeholder = L10n.tr("onboarding.placeholder.age")
         heightTextField.placeholder = L10n.tr("onboarding.placeholder.height")
         weightTextField.placeholder = L10n.tr("onboarding.placeholder.weight")
         ageTextField.keyboardType = .numberPad
         heightTextField.keyboardType = .decimalPad
         weightTextField.keyboardType = .decimalPad
-
+        OnboardingStyle.stylePrimaryButton(nextButton, title: L10n.tr("common.next"))
         fill(goalSegmentedControl, titles: GoalType.allCases.map(\.localizedTitle))
         fill(sexSegmentedControl, titles: BiologicalSex.allCases.map(\.localizedTitle))
         fill(activitySegmentedControl, titles: ActivityLevel.allCases.map(\.localizedTitle))
-
         goalSegmentedControl.addTarget(self, action: #selector(goalChanged), for: .valueChanged)
         sexSegmentedControl.addTarget(self, action: #selector(sexChanged), for: .valueChanged)
         activitySegmentedControl.addTarget(self, action: #selector(activityChanged), for: .valueChanged)
@@ -92,6 +95,7 @@ final class OnboardingViewController: BaseViewController {
             control.insertSegment(withTitle: title, at: index, animated: false)
         }
         control.selectedSegmentIndex = UISegmentedControl.noSegment
+        control.selectedSegmentTintColor = AppColor.primarySoft
     }
 
     private func syncInputs(from profile: UserProfile) {

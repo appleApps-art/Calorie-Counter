@@ -5,20 +5,27 @@ final class FetchDailyDiaryUseCase {
     private let waterEntryRepository: WaterEntryRepositoryProtocol
     private let userGoalsRepository: UserGoalsRepositoryProtocol
     private let workoutEntryRepository: WorkoutEntryRepositoryProtocol?
+    private let healthActivityStore: HealthDailyActivityStoring?
+    private let refreshGoals: (() throws -> Void)?
 
     init(
         foodEntryRepository: FoodEntryRepositoryProtocol,
         waterEntryRepository: WaterEntryRepositoryProtocol,
         userGoalsRepository: UserGoalsRepositoryProtocol,
-        workoutEntryRepository: WorkoutEntryRepositoryProtocol? = nil
+        workoutEntryRepository: WorkoutEntryRepositoryProtocol? = nil,
+        healthActivityStore: HealthDailyActivityStoring? = nil,
+        refreshGoals: (() throws -> Void)? = nil
     ) {
         self.foodEntryRepository = foodEntryRepository
         self.waterEntryRepository = waterEntryRepository
         self.userGoalsRepository = userGoalsRepository
         self.workoutEntryRepository = workoutEntryRepository
+        self.healthActivityStore = healthActivityStore
+        self.refreshGoals = refreshGoals
     }
 
     func execute(for date: Date = Date()) throws -> DailyDiarySummary {
+        try refreshGoals?()
         let foodEntries = try foodEntryRepository.fetchEntries(for: date)
         let waterEntries = try waterEntryRepository.fetchEntries(for: date)
         let goals = try userGoalsRepository.fetchGoals()
@@ -33,7 +40,8 @@ final class FetchDailyDiaryUseCase {
             waterEntries: waterEntries,
             workouts: workouts,
             waterMilliliters: waterMilliliters,
-            goals: goals
+            goals: goals,
+            healthActivity: try healthActivityStore?.fetch(from: start, to: end).first
         )
     }
 }

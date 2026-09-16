@@ -31,6 +31,12 @@ enum OpenFoodFactsServiceError: LocalizedError {
     }
 }
 
+protocol OpenFoodFactsSearching {
+    func searchProducts(query: String, number: Int) async throws -> [FoodProduct]
+    func searchCategory(tag: String, number: Int) async throws -> [FoodProduct]
+    func lookup(barcode: String) async throws -> BarcodeProduct
+}
+
 struct OpenFoodFactsProductResponse: Decodable {
     let status: Int?
     let code: String?
@@ -40,6 +46,7 @@ struct OpenFoodFactsProductResponse: Decodable {
 struct OpenFoodFactsProduct: Decodable {
     let productName: String?
     let productNameEn: String?
+    let productNameUk: String?
     let brands: String?
     let quantity: String?
     let servingSize: String?
@@ -50,12 +57,64 @@ struct OpenFoodFactsProduct: Decodable {
     enum CodingKeys: String, CodingKey {
         case productName = "product_name"
         case productNameEn = "product_name_en"
+        case productNameUk = "product_name_uk"
         case brands
         case quantity
         case servingSize = "serving_size"
         case imageUrl = "image_url"
         case imageFrontUrl = "image_front_url"
         case nutriments
+    }
+}
+
+struct OpenFoodFactsSearchResponse: Decodable {
+    let products: [OpenFoodFactsSearchItem]?
+}
+
+struct OpenFoodFactsSearchItem: Decodable {
+    let code: String?
+    let productName: String?
+    let productNameEn: String?
+    let productNameUk: String?
+    let brands: String?
+    let imageUrl: String?
+    let imageFrontUrl: String?
+    let nutriments: OpenFoodFactsNutriments?
+
+    enum CodingKeys: String, CodingKey {
+        case code
+        case id = "_id"
+        case productName = "product_name"
+        case productNameEn = "product_name_en"
+        case productNameUk = "product_name_uk"
+        case brands
+        case imageUrl = "image_url"
+        case imageFrontUrl = "image_front_url"
+        case nutriments
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        code = Self.decodeFlexibleString(container, key: .code)
+            ?? Self.decodeFlexibleString(container, key: .id)
+        productName = try container.decodeIfPresent(String.self, forKey: .productName)
+        productNameEn = try container.decodeIfPresent(String.self, forKey: .productNameEn)
+        productNameUk = try container.decodeIfPresent(String.self, forKey: .productNameUk)
+        brands = try container.decodeIfPresent(String.self, forKey: .brands)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        imageFrontUrl = try container.decodeIfPresent(String.self, forKey: .imageFrontUrl)
+        nutriments = try container.decodeIfPresent(OpenFoodFactsNutriments.self, forKey: .nutriments)
+    }
+
+    private static func decodeFlexibleString(_ container: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> String? {
+        if let value = try? container.decodeIfPresent(String.self, forKey: key) {
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        if let value = try? container.decodeIfPresent(Int.self, forKey: key) {
+            return String(value)
+        }
+        return nil
     }
 }
 
@@ -68,6 +127,9 @@ struct OpenFoodFactsNutriments: Decodable {
     let carbohydratesServing: Double?
     let fat100g: Double?
     let fatServing: Double?
+    let fiber100g: Double?
+    let sugars100g: Double?
+    let sodium100g: Double?
 
     enum CodingKeys: String, CodingKey {
         case energyKcal100g = "energy-kcal_100g"
@@ -78,6 +140,9 @@ struct OpenFoodFactsNutriments: Decodable {
         case carbohydratesServing = "carbohydrates_serving"
         case fat100g = "fat_100g"
         case fatServing = "fat_serving"
+        case fiber100g = "fiber_100g"
+        case sugars100g = "sugars_100g"
+        case sodium100g = "sodium_100g"
     }
 
     init(from decoder: Decoder) throws {
@@ -90,6 +155,9 @@ struct OpenFoodFactsNutriments: Decodable {
         carbohydratesServing = Self.decodeFlexibleDouble(container, key: .carbohydratesServing)
         fat100g = Self.decodeFlexibleDouble(container, key: .fat100g)
         fatServing = Self.decodeFlexibleDouble(container, key: .fatServing)
+        fiber100g = Self.decodeFlexibleDouble(container, key: .fiber100g)
+        sugars100g = Self.decodeFlexibleDouble(container, key: .sugars100g)
+        sodium100g = Self.decodeFlexibleDouble(container, key: .sodium100g)
     }
 
     private static func decodeFlexibleDouble(_ container: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> Double? {
@@ -106,7 +174,7 @@ struct OpenFoodFactsNutriments: Decodable {
     }
 }
 
-final class OpenFoodFactsService: BarcodeProductLookingUp {
+final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearching {
     private let configuration: OpenFoodFactsAPIConfiguration
     private let session: URLSession
     private let decoder: JSONDecoder
@@ -131,7 +199,7 @@ final class OpenFoodFactsService: BarcodeProductLookingUp {
         components.queryItems = [
             URLQueryItem(
                 name: "fields",
-                value: "code,product_name,product_name_en,brands,quantity,serving_size,image_url,image_front_url,nutriments"
+                value: "code,product_name,product_name_en,product_name_uk,brands,quantity,serving_size,image_url,image_front_url,nutriments"
             )
         ]
         guard let url = components.url else {
@@ -140,7 +208,7 @@ final class OpenFoodFactsService: BarcodeProductLookingUp {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("AvoCalorieCounter/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+        request.setValue("BityCalorieCounter/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         let data: Data
@@ -172,9 +240,11 @@ final class OpenFoodFactsService: BarcodeProductLookingUp {
             throw BarcodeLookupError.notFound
         }
 
-        let name = [product.productName, product.productNameEn]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .first { !$0.isEmpty }
+        let name = OpenFoodFactsLocalizedName.pick(
+            productName: product.productName,
+            productNameEn: product.productNameEn,
+            productNameUk: product.productNameUk
+        )
         guard let name else {
             throw BarcodeLookupError.notFound
         }
@@ -200,5 +270,169 @@ final class OpenFoodFactsService: BarcodeProductLookingUp {
             fatsPerServing: nutrients?.fatServing,
             source: .openFoodFacts
         )
+    }
+
+    func searchProducts(query: String, number: Int) async throws -> [FoodProduct] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        guard var components = URLComponents(url: configuration.baseURL, resolvingAgainstBaseURL: false) else {
+            throw OpenFoodFactsServiceError.invalidURL
+        }
+        components.path = "/cgi/search.pl"
+        components.queryItems = [
+            URLQueryItem(name: "search_terms", value: trimmed),
+            URLQueryItem(name: "search_simple", value: "1"),
+            URLQueryItem(name: "action", value: "process"),
+            URLQueryItem(name: "json", value: "1"),
+            URLQueryItem(name: "page_size", value: String(min(max(number, 1), 20))),
+            URLQueryItem(name: "fields", value: Self.searchFields),
+        ]
+        guard let url = components.url else {
+            throw OpenFoodFactsServiceError.invalidURL
+        }
+        return try await fetchSearchProducts(url: url)
+    }
+
+    func searchCategory(tag: String, number: Int) async throws -> [FoodProduct] {
+        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        guard var components = URLComponents(url: configuration.baseURL, resolvingAgainstBaseURL: false) else {
+            throw OpenFoodFactsServiceError.invalidURL
+        }
+        components.path = "/api/v2/search"
+        components.queryItems = [
+            URLQueryItem(name: "categories_tags", value: trimmed),
+            URLQueryItem(name: "fields", value: Self.searchFields),
+            URLQueryItem(name: "page_size", value: String(min(max(number, 1), 24))),
+            URLQueryItem(name: "sort_by", value: "unique_scans_n"),
+        ]
+        guard let url = components.url else {
+            throw OpenFoodFactsServiceError.invalidURL
+        }
+        return try await fetchSearchProducts(url: url)
+    }
+
+    private static let searchFields = "code,product_name,product_name_en,product_name_uk,brands,image_url,image_front_url,nutriments"
+
+    private func fetchSearchProducts(url: URL) async throws -> [FoodProduct] {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 20
+        request.setValue("BityCalorieCounter/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        var lastError: OpenFoodFactsServiceError = .invalidResponse
+        for _ in 0..<2 {
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await session.data(for: request)
+            } catch {
+                lastError = .transport(underlying: error)
+                continue
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                lastError = .invalidResponse
+                continue
+            }
+            if http.statusCode == 429 || http.statusCode == 503 {
+                lastError = .invalidResponse
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                continue
+            }
+            guard (200...299).contains(http.statusCode) else {
+                throw OpenFoodFactsServiceError.invalidResponse
+            }
+
+            let decoded: OpenFoodFactsSearchResponse
+            do {
+                decoded = try decoder.decode(OpenFoodFactsSearchResponse.self, from: data)
+            } catch {
+                throw OpenFoodFactsServiceError.decodingFailed
+            }
+
+            return (decoded.products ?? []).compactMap(Self.mapSearchProduct)
+        }
+        throw lastError
+    }
+
+    private static func mapSearchProduct(_ item: OpenFoodFactsSearchItem) -> FoodProduct? {
+        let name = OpenFoodFactsLocalizedName.pick(
+            productName: item.productName,
+            productNameEn: item.productNameEn,
+            productNameUk: item.productNameUk
+        ).flatMap(decodedText)
+        guard let name else { return nil }
+        let barcode = item.code?.filter(\.isNumber)
+        guard let barcode, !barcode.isEmpty else { return nil }
+        guard let calories = item.nutriments?.energyKcal100g else { return nil }
+        let image = item.imageFrontUrl ?? item.imageUrl
+        return FoodProduct(
+            id: UUID(),
+            externalId: barcode,
+            name: name,
+            brand: decodedText(item.brands),
+            kind: .product,
+            imageURL: image.flatMap { FoodImageURL.isPlaceholder($0) ? nil : URL(string: $0) },
+            calories: calories,
+            protein: item.nutriments?.proteins100g,
+            carbs: item.nutriments?.carbohydrates100g,
+            fats: item.nutriments?.fat100g,
+            fiber: item.nutriments?.fiber100g,
+            sugar: item.nutriments?.sugars100g,
+            sodium: item.nutriments?.sodium100g.map { $0 * 1000 },
+            amount: 100,
+            unit: "g",
+            source: .openFoodFacts,
+            foodType: .product
+        )
+    }
+
+    private static func decodedText(_ raw: String?) -> String? {
+        guard var text = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
+            return nil
+        }
+        let replacements = [
+            "&quot;": "\"",
+            "&amp;": "&",
+            "&lt;": "<",
+            "&gt;": ">",
+            "&#39;": "'",
+            "&apos;": "'",
+            "&nbsp;": " ",
+        ]
+        for (from, to) in replacements {
+            text = text.replacingOccurrences(of: from, with: to)
+        }
+        return text
+    }
+}
+
+enum OpenFoodFactsLocalizedName {
+    static func pick(
+        productName: String?,
+        productNameEn: String?,
+        productNameUk: String?,
+        locale: String = Locale.deviceIdentifier
+    ) -> String? {
+        let language = locale
+            .replacingOccurrences(of: "_", with: "-")
+            .split(separator: "-")
+            .first
+            .map(String.init)?
+            .lowercased() ?? "en"
+        let ranked: [String?]
+        if language == "uk" {
+            ranked = [productNameUk, productName, productNameEn]
+        } else {
+            ranked = [productName, productNameEn, productNameUk]
+        }
+        return ranked
+            .compactMap { value in
+                let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                return trimmed.isEmpty ? nil : trimmed
+            }
+            .first
     }
 }

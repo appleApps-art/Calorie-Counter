@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light" />
+    <dependencies>
+        <deployment identifier="iOS" />
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506" />
+        <capability name="Safe area layout guides" minToolsVersion="9.0" />
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0" />
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="LogWorkoutViewController" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="backButton" destination="le-back" id="le-o-back" />
+                <outlet property="caloriesCard" destination="le-kcal-card" id="le-o-kcalc" />
+                <outlet property="caloriesField" destination="le-kcal-field" id="le-o-kcalf" />
+                <outlet property="caloriesHeaderLabel" destination="le-kcal-h" id="le-o-kcalh" />
+                <outlet property="caloriesUnitLabel" destination="le-kcal-unit" id="le-o-kcalu" />
+                <outlet property="changeDateButton" destination="le-cdate" id="le-o-cdate" />
+                <outlet property="dateBadgeLabel" destination="le-dbadge" id="le-o-dbadge" />
+                <outlet property="dateHeaderLabel" destination="le-dh" id="le-o-dh" />
+                <outlet property="durationCard" destination="le-dur-card" id="le-o-durc" />
+                <outlet property="durationHeaderLabel" destination="le-dur-h" id="le-o-durh" />
+                <outlet property="durationPicker" destination="le-picker" id="le-o-picker" />
+                <outlet property="nameCard" destination="le-name-card" id="le-o-namec" />
+                <outlet property="nameField" destination="le-name-field" id="le-o-namef" />
+                <outlet property="nameHeaderLabel" destination="le-name-h" id="le-o-nameh" />
+                <outlet property="saveButton" destination="le-save" id="le-o-save" />
+                <outlet property="scrollView" destination="le-scroll" id="le-o-scroll" />
+                <outlet property="titleLabel" destination="le-title" id="le-o-title" />
+                <outlet property="typeCard" destination="le-type-card" id="le-o-typec" />
+                <outlet property="typeHeaderLabel" destination="le-type-h" id="le-o-typeh" />
+                <outlet property="view" destination="le-root" id="le-o-view" />
+                <outletCollection property="typeButtons" destination="le-c0" id="le-oc0" />
+                <outletCollection property="typeButtons" destination="le-c1" id="le-oc1" />
+                <outletCollection property="typeButtons" destination="le-c2" id="le-oc2" />
+                <outletCollection property="typeButtons" destination="le-c3" id="le-oc3" />
+                <outletCollection property="typeButtons" destination="le-c4" id="le-oc4" />
+                <outletCollection property="typeButtons" destination="le-c5" id="le-oc5" />
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder" />
+        <view contentMode="scaleToFill" id="le-root">
+            <rect key="frame" x="0.0" y="0.0" width="402" height="992" />
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" />
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="le-bg" customClass="HomeBackgroundView" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="usesHomeWash" value="NO" />
+                    </userDefinedRuntimeAttributes>
+                </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-back">
+                    <constraints>
+                        <constraint firstAttribute="width" constant="44" id="le-bw" />
+                        <constraint firstAttribute="height" constant="44" id="le-bh" />
+                    </constraints>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Log Exercise" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17" />
+                    <color key="textColor" name="BityTextPrimary" />
+                    <nil key="highlightedColor" />
+                </label>
+                <scrollView clipsSubviews="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" keyboardDismissMode="interactive" translatesAutoresizingMaskIntoConstraints="NO" id="le-scroll">
+                    <subviews>
+                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="le-content" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                            <subviews>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="le-type-sec" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Exercise Type" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-type-h" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="38" id="le-thh" />
+                                            </constraints>
+                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                        </label>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="le-type-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="le-chips" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <subviews>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="le-row0" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <subviews>
+                                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-c0" tag="0">
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="34" id="le-ch0" />
+                                                                    </constraints>
+                                                                    <state key="normal" />
+                                                                </button>
+                                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-c1" tag="1">
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="34" id="le-ch1" />
+                                                                    </constraints>
+                                                                    <state key="normal" />
+                                                                </button>
+                                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-c2" tag="2">
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="34" id="le-ch2" />
+                                                                    </constraints>
+                                                                    <state key="normal" />
+                                                                </button>
+                                                            </subviews>
+                                                            <userDefinedRuntimeAttributes>
+                                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                                            </userDefinedRuntimeAttributes>
+                                                        </stackView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="le-row1" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <subviews>
+                                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-c3" tag="3">
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="34" id="le-ch3" />
+                                                                    </constraints>
+                                                                    <state key="normal" />
+                                                                </button>
+                                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-c4" tag="4">
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="34" id="le-ch4" />
+                                                                    </constraints>
+                                                                    <state key="normal" />
+                                                                </button>
+                                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-c5" tag="5">
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="34" id="le-ch5" />
+                                                                    </constraints>
+                                                                    <state key="normal" />
+                                                                </button>
+                                                            </subviews>
+                                                            <userDefinedRuntimeAttributes>
+                                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                                            </userDefinedRuntimeAttributes>
+                                                        </stackView>
+                                                    </subviews>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                                    </userDefinedRuntimeAttributes>
+                                                </stackView>
+                                            </subviews>
+                                            <color key="backgroundColor" name="BityCard" />
+                                            <constraints>
+                                                <constraint firstItem="le-chips" firstAttribute="leading" secondItem="le-type-card" secondAttribute="leading" constant="16" id="le-chipl" />
+                                                <constraint firstItem="le-type-card" firstAttribute="trailing" secondItem="le-chips" secondAttribute="trailing" constant="16" id="le-chipr" />
+                                                <constraint firstItem="le-chips" firstAttribute="top" secondItem="le-type-card" secondAttribute="top" constant="16" id="le-chipt" />
+                                                <constraint firstItem="le-type-card" firstAttribute="bottom" secondItem="le-chips" secondAttribute="bottom" constant="16" id="le-chipb" />
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="NO" />
+                                                <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                    <real key="value" value="24" />
+                                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES" />
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO" />
+                                            </userDefinedRuntimeAttributes>
+                                        </view>
+                                    </subviews>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                    </userDefinedRuntimeAttributes>
+                                </stackView>
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="le-name-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Type of Exercise" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-name-h" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="28" id="le-name-h-height" />
+                                            </constraints>
+                                        </label>
+                                        <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="le-name-field">
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="52" id="le-nfh" />
+                                            </constraints>
+                                            <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17" />
+                                            <textInputTraits key="textInputTraits" returnKeyType="done" />
+                                        </textField>
+                                    </subviews>
+                                    <color key="backgroundColor" name="BityCard" />
+                                    <constraints>
+                                        <constraint firstItem="le-name-h" firstAttribute="leading" secondItem="le-name-card" secondAttribute="leading" constant="16" id="le-nhl" />
+                                        <constraint firstItem="le-name-card" firstAttribute="trailing" secondItem="le-name-h" secondAttribute="trailing" constant="16" id="le-nhr" />
+                                        <constraint firstItem="le-name-h" firstAttribute="top" secondItem="le-name-card" secondAttribute="top" constant="12" id="le-nht" />
+                                        <constraint firstItem="le-name-field" firstAttribute="leading" secondItem="le-name-card" secondAttribute="leading" constant="16" id="le-nfl" />
+                                        <constraint firstItem="le-name-card" firstAttribute="trailing" secondItem="le-name-field" secondAttribute="trailing" constant="16" id="le-nfr" />
+                                        <constraint firstItem="le-name-field" firstAttribute="top" secondItem="le-name-h" secondAttribute="bottom" constant="0" id="le-nft" />
+                                        <constraint firstItem="le-name-card" firstAttribute="bottom" secondItem="le-name-field" secondAttribute="bottom" constant="0" id="le-nfb" />
+                                    </constraints>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="NO" />
+                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                            <real key="value" value="16" />
+                                        </userDefinedRuntimeAttribute>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES" />
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO" />
+                                    </userDefinedRuntimeAttributes>
+                                </view>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="le-dsec">
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Log Date" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-dh" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="38" id="le-dhh" />
+                                            </constraints>
+                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                        </label>
+                                        <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="le-drow" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Today" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-dbadge" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="34" id="le-dbh" />
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17" />
+                                                    <color key="textColor" name="BityTextPrimary" />
+                                                    <nil key="highlightedColor" />
+                                                </label>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-cdate">
+                                                    <state key="normal" title="Change date" />
+                                                </button>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="le-date-spacer" />
+                                            </subviews>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                            </userDefinedRuntimeAttributes>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="52" id="le-date-row-height" />
+                                            </constraints>
+                                        </stackView>
+                                    </subviews>
+                                </stackView>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="le-dur-sec" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Duration" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-dur-h" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="38" id="le-durhh" />
+                                            </constraints>
+                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                        </label>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="le-dur-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="countDownTimer" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="le-picker">
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="216" id="le-pickh" />
+                                                    </constraints>
+                                                </datePicker>
+                                            </subviews>
+                                            <color key="backgroundColor" name="BityCard" />
+                                            <constraints>
+                                                <constraint firstItem="le-picker" firstAttribute="leading" secondItem="le-dur-card" secondAttribute="leading" constant="16" id="le-pl" />
+                                                <constraint firstItem="le-dur-card" firstAttribute="trailing" secondItem="le-picker" secondAttribute="trailing" constant="16" id="le-pr" />
+                                                <constraint firstItem="le-picker" firstAttribute="top" secondItem="le-dur-card" secondAttribute="top" constant="0" id="le-pt" />
+                                                <constraint firstItem="le-dur-card" firstAttribute="bottom" secondItem="le-picker" secondAttribute="bottom" constant="0" id="le-pb" />
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="NO" />
+                                                <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                    <real key="value" value="24" />
+                                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES" />
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO" />
+                                            </userDefinedRuntimeAttributes>
+                                        </view>
+                                    </subviews>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                    </userDefinedRuntimeAttributes>
+                                </stackView>
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="le-kcal-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Calories Burned" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-kcal-h" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="28" id="le-kcal-h-height" />
+                                            </constraints>
+                                        </label>
+                                        <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="le-kcal-field">
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="52" id="le-kfh" />
+                                            </constraints>
+                                            <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17" />
+                                            <textInputTraits key="textInputTraits" keyboardType="decimalPad" />
+                                        </textField>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="kcal" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="le-kcal-unit" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                        </label>
+                                    </subviews>
+                                    <color key="backgroundColor" name="BityCard" />
+                                    <constraints>
+                                        <constraint firstItem="le-kcal-h" firstAttribute="leading" secondItem="le-kcal-card" secondAttribute="leading" constant="16" id="le-khl" />
+                                        <constraint firstItem="le-kcal-card" firstAttribute="trailing" secondItem="le-kcal-h" secondAttribute="trailing" constant="16" id="le-khr" />
+                                        <constraint firstItem="le-kcal-h" firstAttribute="top" secondItem="le-kcal-card" secondAttribute="top" constant="12" id="le-kht" />
+                                        <constraint firstItem="le-kcal-field" firstAttribute="leading" secondItem="le-kcal-card" secondAttribute="leading" constant="16" id="le-kfl" />
+                                        <constraint firstItem="le-kcal-field" firstAttribute="top" secondItem="le-kcal-h" secondAttribute="bottom" constant="0" id="le-kft" />
+                                        <constraint firstItem="le-kcal-card" firstAttribute="bottom" secondItem="le-kcal-field" secondAttribute="bottom" constant="0" id="le-kfb" />
+                                        <constraint firstItem="le-kcal-unit" firstAttribute="leading" secondItem="le-kcal-field" secondAttribute="trailing" constant="6" id="le-kul" />
+                                        <constraint firstItem="le-kcal-unit" firstAttribute="centerY" secondItem="le-kcal-field" secondAttribute="centerY" id="le-kucy" />
+                                        <constraint firstItem="le-kcal-card" firstAttribute="trailing" secondItem="le-kcal-unit" secondAttribute="trailing" constant="16" id="le-kur" />
+                                    </constraints>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="NO" />
+                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                            <real key="value" value="16" />
+                                        </userDefinedRuntimeAttribute>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES" />
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO" />
+                                    </userDefinedRuntimeAttributes>
+                                </view>
+                            </subviews>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                            </userDefinedRuntimeAttributes>
+                        </stackView>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="le-content" firstAttribute="top" secondItem="le-content-guide" secondAttribute="top" constant="16" id="le-ct" />
+                        <constraint firstItem="le-content" firstAttribute="leading" secondItem="le-content-guide" secondAttribute="leading" id="le-cl" />
+                        <constraint firstItem="le-content" firstAttribute="trailing" secondItem="le-content-guide" secondAttribute="trailing" id="le-cr" />
+                        <constraint firstItem="le-content" firstAttribute="bottom" secondItem="le-content-guide" secondAttribute="bottom" constant="-32" id="le-cb" />
+                        <constraint firstItem="le-content" firstAttribute="width" secondItem="le-frame-guide" secondAttribute="width" id="le-cw" />
+                        <constraint firstItem="le-type-sec" firstAttribute="width" secondItem="le-content" secondAttribute="width" constant="-32" id="le-typew" />
+                        <constraint firstItem="le-name-card" firstAttribute="width" secondItem="le-type-sec" secondAttribute="width" id="le-namew" />
+                        <constraint firstItem="le-dsec" firstAttribute="width" secondItem="le-type-sec" secondAttribute="width" id="le-datew" />
+                        <constraint firstItem="le-dur-sec" firstAttribute="width" secondItem="le-type-sec" secondAttribute="width" id="le-durw" />
+                        <constraint firstItem="le-kcal-card" firstAttribute="width" secondItem="le-type-sec" secondAttribute="width" id="le-kcalw" />
+                    </constraints>
+                    <viewLayoutGuide key="contentLayoutGuide" id="le-content-guide" />
+                    <viewLayoutGuide key="frameLayoutGuide" id="le-frame-guide" />
+                </scrollView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="le-save">
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="le-saveh" />
+                    </constraints>
+                    <state key="normal" title="Save" />
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="le-safe" />
+            <color key="backgroundColor" name="BityGray6" />
+            <constraints>
+                <constraint firstItem="le-bg" firstAttribute="top" secondItem="le-root" secondAttribute="top" id="le-bgt" />
+                <constraint firstItem="le-bg" firstAttribute="leading" secondItem="le-root" secondAttribute="leading" id="le-bgl" />
+                <constraint firstAttribute="trailing" secondItem="le-bg" secondAttribute="trailing" id="le-bgr" />
+                <constraint firstAttribute="bottom" secondItem="le-bg" secondAttribute="bottom" id="le-bgb" />
+                <constraint firstItem="le-back" firstAttribute="leading" secondItem="le-root" secondAttribute="leading" constant="16" id="le-bl" />
+                <constraint firstItem="le-back" firstAttribute="top" secondItem="le-safe" secondAttribute="top" id="le-bt" constant="8" />
+                <constraint firstItem="le-title" firstAttribute="centerX" secondItem="le-root" secondAttribute="centerX" id="le-tcx" />
+                <constraint firstItem="le-title" firstAttribute="centerY" secondItem="le-back" secondAttribute="centerY" id="le-tcy" />
+                <constraint firstItem="le-scroll" firstAttribute="top" secondItem="le-back" secondAttribute="bottom" constant="10" id="le-st" />
+                <constraint firstItem="le-scroll" firstAttribute="leading" secondItem="le-root" secondAttribute="leading" id="le-sl" />
+                <constraint firstAttribute="trailing" secondItem="le-scroll" secondAttribute="trailing" id="le-sr" />
+                <constraint firstItem="le-save" firstAttribute="top" secondItem="le-scroll" secondAttribute="bottom" constant="8" id="le-savet" />
+                <constraint firstItem="le-save" firstAttribute="leading" secondItem="le-root" secondAttribute="leading" constant="16" id="le-savel" />
+                <constraint firstItem="le-root" firstAttribute="trailing" secondItem="le-save" secondAttribute="trailing" constant="16" id="le-saver" />
+                <constraint firstItem="le-safe" firstAttribute="bottom" secondItem="le-save" secondAttribute="bottom" constant="0" priority="999" id="le-saveb" />
+            </constraints>
+            <point key="canvasLocation" x="139" y="20" />
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="BityCard">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityGray6">
+            <color red="0.949" green="0.949" blue="0.969" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityTextPrimary">
+            <color red="0.102" green="0.102" blue="0.102" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityTextSecondary">
+            <color red="0.235" green="0.235" blue="0.263" alpha="0.6" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+    </resources>
+</document>

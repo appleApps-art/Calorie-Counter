@@ -26,9 +26,10 @@ final class AIAssistantService: AIAssistantServiceProtocol {
         }
 
         var urlRequest = URLRequest(url: url)
+        urlRequest.timeoutInterval = 90
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        urlRequest.setValue("AvoiOS/1.0", forHTTPHeaderField: "User-Agent")
+        urlRequest.setValue("BityiOS/1.0", forHTTPHeaderField: "User-Agent")
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             urlRequest.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         }

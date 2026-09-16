@@ -9,6 +9,7 @@ enum UserProfileMapper {
             age: object.age?.intValue,
             heightCm: object.heightCm?.doubleValue,
             weightKg: object.weightKg?.doubleValue,
+            targetWeightKg: object.targetWeightKg?.doubleValue,
             activityLevel: object.activityLevel.flatMap(ActivityLevel.init(rawValue:)),
             goalType: object.goalType.flatMap(GoalType.init(rawValue:)),
             avatarFileName: object.avatarFileName,
@@ -25,6 +26,7 @@ enum UserProfileMapper {
         object.age = profile.age.map { NSNumber(value: $0) }
         object.heightCm = profile.heightCm.map { NSNumber(value: $0) }
         object.weightKg = profile.weightKg.map { NSNumber(value: $0) }
+        object.targetWeightKg = profile.targetWeightKg.map { NSNumber(value: $0) }
         object.activityLevel = profile.activityLevel?.rawValue
         object.goalType = profile.goalType?.rawValue
         object.avatarFileName = profile.avatarFileName
@@ -65,7 +67,9 @@ enum WorkoutEntryMapper {
             name: name,
             durationMinutes: object.durationMinutes,
             caloriesBurned: object.caloriesBurned,
-            date: date
+            date: date,
+            source: object.source,
+            healthSampleID: object.healthSampleID
         )
     }
 
@@ -75,6 +79,8 @@ enum WorkoutEntryMapper {
         object.durationMinutes = entry.durationMinutes
         object.caloriesBurned = entry.caloriesBurned
         object.date = entry.date
+        object.source = entry.source
+        object.healthSampleID = entry.healthSampleID
     }
 }
 
@@ -121,7 +127,13 @@ enum ChatMessageMapper {
         else {
             return nil
         }
-        return ChatHistoryMessage(id: id, role: role, content: content, createdAt: createdAt)
+        return ChatHistoryMessage(
+            id: id,
+            role: role,
+            content: content,
+            createdAt: createdAt,
+            conversationID: object.conversationID
+        )
     }
 
     static func apply(_ message: ChatHistoryMessage, to object: CDChatMessage) {
@@ -129,25 +141,26 @@ enum ChatMessageMapper {
         object.role = message.role
         object.content = message.content
         object.createdAt = message.createdAt
+        object.conversationID = message.conversationID
     }
 }
 
 enum RewardStateMapper {
     static func map(_ object: CDRewardState) -> RewardState {
-        let badges: [String]
-        if let raw = object.unlockedBadgeIDsJSON,
-           let data = raw.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode([String].self, from: data) {
-            badges = decoded
+        let unlocked = decodeIDs(object.unlockedBadgeIDsJSON)
+        let seen: [String]
+        if object.seenBadgeIDsJSON == nil {
+            seen = unlocked
         } else {
-            badges = []
+            seen = decodeIDs(object.seenBadgeIDsJSON)
         }
         return RewardState(
             totalXP: Int(object.totalXP),
             currentStreak: Int(object.currentStreak),
             longestStreak: Int(object.longestStreak),
             lastFoodLogDay: object.lastFoodLogDay,
-            unlockedBadgeIDs: badges,
+            unlockedBadgeIDs: unlocked,
+            seenBadgeIDs: seen,
             updatedAt: object.updatedAt ?? Date()
         )
     }
@@ -161,9 +174,20 @@ enum RewardStateMapper {
         object.longestStreak = Int32(state.longestStreak)
         object.lastFoodLogDay = state.lastFoodLogDay
         object.updatedAt = state.updatedAt
-        if let data = try? JSONEncoder().encode(state.unlockedBadgeIDs) {
-            object.unlockedBadgeIDsJSON = String(data: data, encoding: .utf8)
-        }
+        object.unlockedBadgeIDsJSON = encodeIDs(state.unlockedBadgeIDs)
+        object.seenBadgeIDsJSON = encodeIDs(state.seenBadgeIDs)
+    }
+
+    private static func decodeIDs(_ raw: String?) -> [String] {
+        guard let raw, let data = raw.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data)
+        else { return [] }
+        return decoded
+    }
+
+    private static func encodeIDs(_ ids: [String]) -> String? {
+        guard let data = try? JSONEncoder().encode(ids) else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 }
 

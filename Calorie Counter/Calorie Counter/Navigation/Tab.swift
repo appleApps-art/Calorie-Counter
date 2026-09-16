@@ -2,23 +2,27 @@ import UIKit
 
 enum Tab: Int, CaseIterable {
     case home
-    case recipes
-    case aiAssistant
     case progress
-    case settings
+    case aiAssistant
+    case recipes
+    case rewards
+
+    static var tabBarItems: [Tab] {
+        [.home, .progress, .aiAssistant, .recipes, .rewards]
+    }
 
     var title: String {
         switch self {
         case .home:
             return L10n.tr("tab.home")
-        case .recipes:
-            return L10n.tr("tab.recipes")
-        case .aiAssistant:
-            return L10n.tr("tab.ai")
         case .progress:
             return L10n.tr("tab.progress")
-        case .settings:
-            return L10n.tr("tab.settings")
+        case .aiAssistant:
+            return L10n.tr("tab.ai")
+        case .recipes:
+            return L10n.tr("tab.recipes")
+        case .rewards:
+            return L10n.tr("tab.rewards")
         }
     }
 
@@ -26,14 +30,24 @@ enum Tab: Int, CaseIterable {
         switch self {
         case .home:
             return "house.fill"
-        case .recipes:
-            return "fork.knife"
-        case .aiAssistant:
-            return "sparkles"
         case .progress:
             return "chart.line.uptrend.xyaxis"
-        case .settings:
-            return "gearshape.fill"
+        case .aiAssistant:
+            return "sparkles"
+        case .recipes:
+            return "book"
+        case .rewards:
+            return "trophy"
+        }
+    }
+
+    var analyticsName: String {
+        switch self {
+        case .home: return "home"
+        case .progress: return "progress"
+        case .aiAssistant: return "ai_assistant"
+        case .recipes: return "recipes"
+        case .rewards: return "rewards"
         }
     }
 }

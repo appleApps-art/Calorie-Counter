@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="FoodSearchSuggestionRowView" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="separatorView" destination="sep" id="o-sep"/>
+                <outlet property="titleLabel" destination="title" id="o-title"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="row">
+            <rect key="frame" x="0.0" y="0.0" width="338" height="52"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Food" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" name="BityTextPrimary"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="sep">
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.12" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="1" id="seph"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstAttribute="height" constant="52" id="rh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                            <real key="value" value="52"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstItem="title" firstAttribute="leading" secondItem="row" secondAttribute="leading" id="tl"/>
+                <constraint firstAttribute="trailing" secondItem="title" secondAttribute="trailing" id="tr"/>
+                <constraint firstItem="title" firstAttribute="centerY" secondItem="row" secondAttribute="centerY" id="ty"/>
+                <constraint firstItem="sep" firstAttribute="leading" secondItem="row" secondAttribute="leading" id="sl"/>
+                <constraint firstAttribute="trailing" secondItem="sep" secondAttribute="trailing" id="sr"/>
+                <constraint firstItem="sep" firstAttribute="top" secondItem="row" secondAttribute="top" id="st"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="139" y="20"/>
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="BityTextPrimary">
+            <color red="0.145" green="0.145" blue="0.161" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

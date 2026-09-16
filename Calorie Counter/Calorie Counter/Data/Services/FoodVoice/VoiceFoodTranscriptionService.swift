@@ -138,21 +138,11 @@ final class VoiceFoodTranscriptionService: VoiceFoodTranscriptionServiceProtocol
         }
 
         let resolvedMeal = MealType(rawValue: analysis.mealType ?? "") ?? mealType
-        let food = FoodPhotoAnalysis(
-            name: analysis.name,
-            mealType: resolvedMeal,
-            calories: analysis.calories,
-            protein: analysis.protein,
-            carbs: analysis.carbs,
-            fats: analysis.fats,
-            fiber: analysis.fiber ?? 0,
-            sugar: analysis.sugar ?? 0,
-            sodium: analysis.sodium ?? 0,
-            portionGrams: analysis.portionGrams,
-            portionMilliliters: analysis.portionMilliliters,
-            confidence: analysis.confidence ?? 0.5,
-            notes: analysis.notes ?? "",
-            assistantMessage: decoded.message ?? ""
+        let food = FoodPhotoAnalysisService.mappedAnalysis(
+            from: analysis,
+            fallbackMealType: resolvedMeal,
+            message: decoded.message ?? "",
+            defaultSource: analysis.source ?? "voice"
         )
 
         return VoiceFoodAnalysis(
@@ -177,7 +167,7 @@ final class VoiceFoodTranscriptionService: VoiceFoodTranscriptionServiceProtocol
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("AvoiOS/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("BityiOS/1.0", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 90
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             request.setValue(apiKey, forHTTPHeaderField: "x-api-key")

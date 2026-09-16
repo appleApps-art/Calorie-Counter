@@ -1,5 +1,9 @@
 import Foundation
 
+extension Notification.Name {
+    static let bityDiaryDidChange = Notification.Name("bity.diaryDidChange")
+}
+
 final class DiaryChangeNotifyingFoodEntryRepository: FoodEntryRepositoryProtocol {
     private let base: FoodEntryRepositoryProtocol
     private let onChange: () -> Void
@@ -7,6 +11,10 @@ final class DiaryChangeNotifyingFoodEntryRepository: FoodEntryRepositoryProtocol
     init(base: FoodEntryRepositoryProtocol, onChange: @escaping () -> Void) {
         self.base = base
         self.onChange = onChange
+    }
+
+    func fetchAll() throws -> [FoodEntry] {
+        try base.fetchAll()
     }
 
     func fetchEntries(for date: Date) throws -> [FoodEntry] {
@@ -83,6 +91,39 @@ final class DiaryChangeNotifyingWeightEntryRepository: WeightEntryRepositoryProt
 
     func save(_ entry: WeightEntry) throws {
         try base.save(entry)
+        onChange()
+    }
+
+    func delete(id: UUID) throws {
+        try base.delete(id: id)
+        onChange()
+    }
+}
+
+final class DiaryChangeNotifyingWorkoutEntryRepository: WorkoutEntryRepositoryProtocol {
+    private let base: WorkoutEntryRepositoryProtocol
+    private let onChange: () -> Void
+
+    init(base: WorkoutEntryRepositoryProtocol, onChange: @escaping () -> Void) {
+        self.base = base
+        self.onChange = onChange
+    }
+
+    func fetchEntries() throws -> [WorkoutEntry] {
+        try base.fetchEntries()
+    }
+
+    func fetchEntries(from start: Date, to end: Date) throws -> [WorkoutEntry] {
+        try base.fetchEntries(from: start, to: end)
+    }
+
+    func save(_ entry: WorkoutEntry) throws {
+        try base.save(entry)
+        onChange()
+    }
+
+    func delete(id: UUID) throws {
+        try base.delete(id: id)
         onChange()
     }
 }

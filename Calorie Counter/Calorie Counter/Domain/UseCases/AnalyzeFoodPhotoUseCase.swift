@@ -16,14 +16,16 @@ final class AnalyzeFoodPhotoUseCase {
         imageData: Data,
         mealType: MealType = .snacks,
         note: String? = nil,
-        includeDiaryContext: Bool = true
+        includeDiaryContext: Bool = true,
+        inventoryMode: Bool = false
     ) async throws -> FoodPhotoAnalysis {
-        let context = includeDiaryContext ? try buildAIAssistantUserContextUseCase.execute() : nil
+        let context = includeDiaryContext ? try? buildAIAssistantUserContextUseCase.execute() : nil
         return try await foodPhotoAnalysisService.analyze(
             imageData: imageData,
             mealType: mealType,
             note: note,
-            userContext: context
+            userContext: context,
+            inventoryMode: inventoryMode
         )
     }
 }

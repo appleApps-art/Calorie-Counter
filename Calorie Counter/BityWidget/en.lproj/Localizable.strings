@@ -1,0 +1,10 @@
+"widget.displayName" = "Today";
+"widget.description" = "Remaining calories, macros, and a shortcut to log food.";
+"widget.remaining" = "left";
+"widget.log" = "Log";
+"widget.protein" = "Protein";
+"widget.carbs" = "Carbs";
+"widget.fats" = "Fats";
+"widget.water" = "Water";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

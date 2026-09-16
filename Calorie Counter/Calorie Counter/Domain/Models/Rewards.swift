@@ -21,18 +21,18 @@ enum XPEventKind: String, Codable, Equatable {
 }
 
 enum RewardLevel: String, Equatable, CaseIterable {
-    case rookie = "Rookie"
-    case explorer = "Explorer"
-    case consistent = "Consistent"
-    case dedicated = "Dedicated"
-    case masterOfWellness = "Master of Wellness"
+    case rookie
+    case explorer
+    case consistent
+    case healthyExplorer
+    case masterOfWellness
 
     var localizedTitle: String {
         switch self {
         case .rookie: return L10n.tr("level.rookie")
         case .explorer: return L10n.tr("level.explorer")
         case .consistent: return L10n.tr("level.consistent")
-        case .dedicated: return L10n.tr("level.dedicated")
+        case .healthyExplorer: return L10n.tr("level.healthyExplorer")
         case .masterOfWellness: return L10n.tr("level.master")
         }
     }
@@ -41,10 +41,20 @@ enum RewardLevel: String, Equatable, CaseIterable {
         switch self {
         case .rookie: return 0
         case .explorer: return 100
-        case .consistent: return 300
-        case .dedicated: return 700
-        case .masterOfWellness: return 1500
+        case .consistent: return 200
+        case .healthyExplorer: return 300
+        case .masterOfWellness: return 500
         }
+    }
+
+    var number: Int {
+        (Self.allCases.firstIndex(of: self) ?? 0) + 1
+    }
+
+    var next: RewardLevel? {
+        let all = Self.allCases
+        guard let index = all.firstIndex(of: self), index + 1 < all.count else { return nil }
+        return all[index + 1]
     }
 
     static func level(for xp: Int) -> RewardLevel {
@@ -53,34 +63,105 @@ enum RewardLevel: String, Equatable, CaseIterable {
     }
 }
 
+enum RewardProgressUnit: Equatable {
+    case days
+    case weeks
+}
+
 enum RewardBadge: String, CaseIterable, Equatable {
-    case firstMeal = "first_meal"
     case mealTrackerMaster = "meal_tracker_master"
     case hydrationHero = "hydration_hero"
-    case weightLogger = "weight_logger"
-    case sevenDayStreak = "seven_day_streak"
-    case fourteenDayStreak = "fourteen_day_streak"
-    case swapStarter = "swap_starter"
-    case photoProgress = "photo_progress"
-    case workoutSpark = "workout_spark"
-    case proteinPro = "protein_pro"
-    case earlyBird = "early_bird"
-    case balancedDay = "balanced_day"
+    case consistentWeigher = "consistent_weigher"
+    case macroBalancer = "macro_balancer"
+    case fiberChampion = "fiber_champion"
+    case weekendWarrior = "weekend_warrior"
+    case proteinMaster = "protein_master"
+    case earlyBirdLogger = "early_bird_logger"
+    case smartChoice = "smart_choice"
+    case visualJourney = "visual_journey"
+    case noLateSnacks = "no_late_snacks"
+    case nutrientExplorer = "nutrient_explorer"
 
     var title: String {
+        L10n.tr(titleKey)
+    }
+
+    var celebrationTitle: String {
+        L10n.tr(celebrationKey)
+    }
+
+    var imageName: String {
         switch self {
-        case .firstMeal: return L10n.tr("badge.firstMeal")
-        case .mealTrackerMaster: return L10n.tr("badge.mealTrackerMaster")
-        case .hydrationHero: return L10n.tr("badge.hydrationHero")
-        case .weightLogger: return L10n.tr("badge.weightLogger")
-        case .sevenDayStreak: return L10n.tr("badge.sevenDayStreak")
-        case .fourteenDayStreak: return L10n.tr("badge.fourteenDayStreak")
-        case .swapStarter: return L10n.tr("badge.swapStarter")
-        case .photoProgress: return L10n.tr("badge.photoProgress")
-        case .workoutSpark: return L10n.tr("badge.workoutSpark")
-        case .proteinPro: return L10n.tr("badge.proteinPro")
-        case .earlyBird: return L10n.tr("badge.earlyBird")
-        case .balancedDay: return L10n.tr("badge.balancedDay")
+        case .mealTrackerMaster: return "BadgeMealTracker"
+        case .hydrationHero: return "BadgeHydration"
+        case .consistentWeigher: return "BadgeWeigher"
+        case .macroBalancer: return "BadgeMacro"
+        case .fiberChampion: return "BadgeFiber"
+        case .weekendWarrior: return "BadgeWeekend"
+        case .proteinMaster: return "BadgeProtein"
+        case .earlyBirdLogger: return "BadgeEarlyBird"
+        case .smartChoice: return "BadgeSmartChoice"
+        case .visualJourney: return "BadgeVisualJourney"
+        case .noLateSnacks: return "BadgeNoLateSnacks"
+        case .nutrientExplorer: return "BadgeNutrientExplorer"
+        }
+    }
+
+    var unit: RewardProgressUnit {
+        switch self {
+        case .consistentWeigher: return .weeks
+        default: return .days
+        }
+    }
+
+    var goal: Int {
+        switch self {
+        case .mealTrackerMaster: return 7
+        case .hydrationHero: return 7
+        case .consistentWeigher: return 3
+        case .macroBalancer: return 5
+        case .fiberChampion: return 7
+        case .weekendWarrior: return 2
+        case .proteinMaster: return 3
+        case .earlyBirdLogger: return 5
+        case .smartChoice: return 7
+        case .visualJourney: return 7
+        case .noLateSnacks: return 3
+        case .nutrientExplorer: return 7
+        }
+    }
+
+    private var titleKey: String {
+        switch self {
+        case .mealTrackerMaster: return "badge.mealTrackerMaster"
+        case .hydrationHero: return "badge.hydrationHero"
+        case .consistentWeigher: return "badge.consistentWeigher"
+        case .macroBalancer: return "badge.macroBalancer"
+        case .fiberChampion: return "badge.fiberChampion"
+        case .weekendWarrior: return "badge.weekendWarrior"
+        case .proteinMaster: return "badge.proteinMaster"
+        case .earlyBirdLogger: return "badge.earlyBirdLogger"
+        case .smartChoice: return "badge.smartChoice"
+        case .visualJourney: return "badge.visualJourney"
+        case .noLateSnacks: return "badge.noLateSnacks"
+        case .nutrientExplorer: return "badge.nutrientExplorer"
+        }
+    }
+
+    private var celebrationKey: String {
+        switch self {
+        case .mealTrackerMaster: return "rewards.celebration.mealTrackerMaster"
+        case .hydrationHero: return "rewards.celebration.hydrationHero"
+        case .consistentWeigher: return "rewards.celebration.consistentWeigher"
+        case .macroBalancer: return "rewards.celebration.macroBalancer"
+        case .fiberChampion: return "rewards.celebration.fiberChampion"
+        case .weekendWarrior: return "rewards.celebration.weekendWarrior"
+        case .proteinMaster: return "rewards.celebration.proteinMaster"
+        case .earlyBirdLogger: return "rewards.celebration.earlyBirdLogger"
+        case .smartChoice: return "rewards.celebration.smartChoice"
+        case .visualJourney: return "rewards.celebration.visualJourney"
+        case .noLateSnacks: return "rewards.celebration.noLateSnacks"
+        case .nutrientExplorer: return "rewards.celebration.nutrientExplorer"
         }
     }
 }
@@ -99,6 +180,7 @@ struct RewardState: Equatable {
     var longestStreak: Int
     var lastFoodLogDay: Date?
     var unlockedBadgeIDs: [String]
+    var seenBadgeIDs: [String]
     var updatedAt: Date
 
     var level: RewardLevel {
@@ -111,6 +193,7 @@ struct RewardState: Equatable {
         longestStreak: 0,
         lastFoodLogDay: nil,
         unlockedBadgeIDs: [],
+        seenBadgeIDs: [],
         updatedAt: Date()
     )
 }
@@ -119,4 +202,105 @@ struct StreakSnapshot: Equatable {
     var current: Int
     var longest: Int
     var lastFoodLogDay: Date?
+}
+
+struct BadgeProgress: Equatable {
+    let badge: RewardBadge
+    let current: Int
+    let goal: Int
+
+    var isComplete: Bool { current >= goal }
+    var showsLockedArt: Bool { current == 0 }
+    var fill: Double {
+        guard goal > 0 else { return 0 }
+        return min(1, Double(current) / Double(goal))
+    }
+
+    var listSubtitle: String {
+        if current == 0 {
+            return unitLabel(goal)
+        }
+        return progressLabel(current, goal)
+    }
+
+    var pillTitle: String {
+        let value = current > 0 ? current : goal
+        switch badge.unit {
+        case .weeks:
+            return L10n.format("rewards.weeksActivePill", value)
+        case .days:
+            return L10n.format("rewards.dayStreakPill", value)
+        }
+    }
+
+    var rewardDetail: String {
+        let value = current > 0 ? current : goal
+        switch badge.unit {
+        case .weeks:
+            return L10n.format("rewards.weeksStreakBadge", value)
+        case .days:
+            return L10n.format("rewards.dayStreakBadge", value)
+        }
+    }
+
+    var tickLabels: [String] {
+        (1...goal).map { index in
+            switch badge.unit {
+            case .weeks: return "W\(index)"
+            case .days: return "D\(index)"
+            }
+        }
+    }
+
+    static func awaitingCelebration(in badges: [BadgeProgress], seenIDs: [String]) -> [BadgeProgress] {
+        let seen = Set(seenIDs)
+        return badges.filter { $0.isComplete && !seen.contains($0.badge.rawValue) }
+    }
+
+    private func unitLabel(_ value: Int) -> String {
+        switch badge.unit {
+        case .weeks: return L10n.format("rewards.weeks", value)
+        case .days: return L10n.format("rewards.days", value)
+        }
+    }
+
+    private func progressLabel(_ current: Int, _ goal: Int) -> String {
+        switch badge.unit {
+        case .weeks: return L10n.format("rewards.weeksProgress", current, goal)
+        case .days: return L10n.format("rewards.daysProgress", current, goal)
+        }
+    }
+}
+
+struct RewardsScreenState: Equatable {
+    let xp: Int
+    let level: RewardLevel
+    let badges: [BadgeProgress]
+
+    var unlockedCount: Int {
+        badges.filter(\.isComplete).count
+    }
+
+    var totalCount: Int { badges.count }
+
+    var levelTitle: String {
+        L10n.format("rewards.levelTitle", level.number, level.localizedTitle)
+    }
+
+    var unlockedText: String {
+        L10n.format("rewards.unlockedCount", unlockedCount, totalCount)
+    }
+
+    var xpText: String {
+        if let next = level.next {
+            guard xp > 0 else { return "" }
+            return L10n.format("rewards.xpToLevel", xp, next.minimumXP, next.number)
+        }
+        return xp > 0 ? L10n.format("rewards.xpValue", xp) : ""
+    }
+
+    var levelFill: Double {
+        guard let next = level.next, next.minimumXP > 0 else { return 1 }
+        return min(1, Double(xp) / Double(next.minimumXP))
+    }
 }

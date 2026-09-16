@@ -1,6 +1,13 @@
 import Foundation
 import UIKit
 
+enum AIPhotoPhase: Equatable {
+    case idle
+    case identifying
+    case recognized
+    case result
+}
+
 final class FoodPhotoAnalysisViewModel {
     let statusText = Observable(L10n.tr("photo.status"))
     let resultTitleText = Observable("")
@@ -10,20 +17,94 @@ final class FoodPhotoAnalysisViewModel {
     let isAnalyzing = Observable(false)
     let canConfirmLog = Observable(false)
     let analysis = Observable<FoodPhotoAnalysis?>(nil)
+    let phase = Observable(AIPhotoPhase.idle)
+    let capturedImage = Observable<UIImage?>(nil)
+    let showsFullDetails = Observable(false)
 
     var onLogged: (() -> Void)?
+    var onClose: (() -> Void)?
+    var onSwitchMode: ((HomeQuickLogAction) -> Void)?
+    var onViewDetails: ((ProductDetailsDraft) -> Void)?
+    var onAddEntry: ((ProductDetailsDraft) -> Void)?
+    var onFridgeItemsReady: (([PantryItem]) -> Void)?
+
+    let inventoryMode: Bool
 
     private let analyzeFoodPhotoUseCase: AnalyzeFoodPhotoUseCase
-    private let logFoodUseCase: LogFoodUseCase
-    private var selectedMealType: MealType = .snacks
+    private let searchFoodProductsUseCase: SearchFoodProductsUseCase?
+    private var selectedMealType: MealType
+    private let diaryDate: Date
     private var note: String?
+    private var recognizedTask: Task<Void, Never>?
 
     init(
         analyzeFoodPhotoUseCase: AnalyzeFoodPhotoUseCase,
-        logFoodUseCase: LogFoodUseCase
+        searchFoodProductsUseCase: SearchFoodProductsUseCase? = nil,
+        mealType: MealType = .snacks,
+        date: Date = Date(),
+        inventoryMode: Bool = false
     ) {
         self.analyzeFoodPhotoUseCase = analyzeFoodPhotoUseCase
-        self.logFoodUseCase = logFoodUseCase
+        self.searchFoodProductsUseCase = searchFoodProductsUseCase
+        selectedMealType = mealType
+        diaryDate = date
+        self.inventoryMode = inventoryMode
+    }
+
+    var productSubtitleText: String {
+        guard let result = analysis.value else { return "" }
+        let portion: String?
+        if let milliliters = result.portionMilliliters {
+            portion = AppUnits.current.volumeText(milliliters)
+        } else if let grams = result.portionGrams {
+            portion = AppUnits.current.massText(grams)
+        } else {
+            portion = nil
+        }
+        if !result.notes.isEmpty, let portion {
+            return "\(result.notes) (\(portion))"
+        }
+        if !result.notes.isEmpty {
+            return result.notes
+        }
+        return portion ?? ""
+    }
+
+    var healthScoreTitleText: String {
+        guard let result = analysis.value else { return "" }
+        return L10n.format("photo.result.healthScore", result.nutritionFacts.score)
+    }
+
+    var caloriesValueText: String {
+        guard let result = analysis.value else { return "" }
+        return L10n.format("photo.result.kcalValue", Int(result.calories.rounded()))
+    }
+
+    var proteinValueText: String {
+        guard let result = analysis.value else { return "" }
+        return L10n.format("editMeal.gramsValue", Int(result.protein.rounded()))
+    }
+
+    var carbsValueText: String {
+        guard let result = analysis.value else { return "" }
+        return L10n.format("editMeal.gramsValue", Int(result.carbs.rounded()))
+    }
+
+    var fatValueText: String {
+        guard let result = analysis.value else { return "" }
+        return L10n.format("editMeal.gramsValue", Int(result.fats.rounded()))
+    }
+
+    var fullDetailsText: String {
+        guard let result = analysis.value else { return "" }
+        var lines = details(for: result).split(separator: "\n").map(String.init)
+        lines.append("\(L10n.tr("home.fiber")): \(L10n.format("editMeal.gramsValue", Int(result.fiber.rounded())))")
+        lines.append("\(L10n.tr("home.sugar")): \(L10n.format("editMeal.gramsValue", Int(result.sugar.rounded())))")
+        lines.append("\(L10n.tr("home.sodium")): \(L10n.format("photo.result.mgValue", Int(result.sodium.rounded())))")
+        if !confidenceText.value.isEmpty {
+            lines.append(confidenceText.value)
+        }
+        return lines.joined(separator: "\n")
     }
 
     func updateMealType(_ mealType: MealType) {
@@ -37,23 +118,103 @@ final class FoodPhotoAnalysisViewModel {
         }
     }
 
+    func closeTapped() {
+        recognizedTask?.cancel()
+        onClose?()
+    }
+
+    func dismissResultTapped() {
+        recognizedTask?.cancel()
+        showsFullDetails.value = false
+        capturedImage.value = nil
+        analysis.value = nil
+        phase.value = .idle
+    }
+
+    func switchMode(_ action: HomeQuickLogAction) {
+        recognizedTask?.cancel()
+        onSwitchMode?(action)
+    }
+
+    func viewDetailsTapped() {
+        guard let draft = makeDraft() else { return }
+        onViewDetails?(draft)
+    }
+
+    func confirmLogTapped() {
+        guard let draft = makeDraft() else { return }
+        onAddEntry?(draft)
+    }
+
+    func makeDraft() -> ProductDetailsDraft? {
+        guard let result = analysis.value else { return nil }
+        return ProductDetailsMath.draft(
+            from: result,
+            imageData: capturedImage.value?.jpegData(compressionQuality: 0.9),
+            mealType: result.mealType,
+            date: diaryDate
+        )
+    }
+
+    func beginCapture() {
+        guard phase.value == .idle else { return }
+        recognizedTask?.cancel()
+        showsFullDetails.value = false
+        capturedImage.value = nil
+        statusText.value = L10n.tr("photo.analyzing")
+        phase.value = .identifying
+    }
+
+    func captureFailed(_ error: Error) {
+        fail(with: error.localizedDescription)
+    }
+
     func analyze(imageData: Data) {
+        capturedImage.value = UIImage(data: imageData)
+        startAnalysis(imageData: imageData)
+    }
+
+    func analyze(image: UIImage) {
+        capturedImage.value = image
+        guard let data = image.jpegData(compressionQuality: 0.9) else {
+            fail(with: FoodPhotoAnalysisError.compressionFailed.localizedDescription)
+            return
+        }
+        startAnalysis(imageData: data)
+    }
+
+    private func startAnalysis(imageData: Data) {
         guard !isAnalyzing.value else { return }
+        recognizedTask?.cancel()
         isAnalyzing.value = true
         canConfirmLog.value = false
         analysis.value = nil
+        showsFullDetails.value = false
         resultTitleText.value = ""
         resultDetailsText.value = ""
         confidenceText.value = ""
+        nutritionScoreText.value = ""
         statusText.value = L10n.tr("photo.analyzing")
+        phase.value = .identifying
 
         Task { @MainActor in
             do {
                 let result = try await analyzeFoodPhotoUseCase.execute(
                     imageData: imageData,
                     mealType: selectedMealType,
-                    note: note
+                    note: note,
+                    inventoryMode: inventoryMode
                 )
+                if inventoryMode {
+                    analysis.value = result
+                    var items = PantryItem.from(analysis: result)
+                    if let searchFoodProductsUseCase {
+                        items = await searchFoodProductsUseCase.attachProductPhotos(to: items)
+                    }
+                    isAnalyzing.value = false
+                    onFridgeItemsReady?(items)
+                    return
+                }
                 analysis.value = result
                 resultTitleText.value = result.name
                 resultDetailsText.value = details(for: result)
@@ -62,32 +223,31 @@ final class FoodPhotoAnalysisViewModel {
                 nutritionScoreText.value = L10n.format("home.scoreFormat", facts.score, facts.grade.rawValue)
                 canConfirmLog.value = true
                 statusText.value = result.assistantMessage.isEmpty ? L10n.tr("textLog.readyToConfirm") : result.assistantMessage
+                phase.value = .recognized
+                scheduleResultPresentation()
             } catch {
-                analysis.value = nil
-                canConfirmLog.value = false
-                statusText.value = error.localizedDescription
+                fail(with: error.localizedDescription)
             }
             isAnalyzing.value = false
         }
     }
 
-    func analyze(image: UIImage) {
-        guard let data = image.jpegData(compressionQuality: 0.9) else {
-            statusText.value = FoodPhotoAnalysisError.compressionFailed.localizedDescription
-            return
+    private func scheduleResultPresentation() {
+        recognizedTask?.cancel()
+        recognizedTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            guard !Task.isCancelled, phase.value == .recognized else { return }
+            phase.value = .result
         }
-        analyze(imageData: data)
     }
 
-    func confirmLogTapped() {
-        guard let result = analysis.value else { return }
-        do {
-            try logFoodUseCase.execute(result.toFoodEntry(source: "photo"))
-            statusText.value = L10n.tr("textLog.foodLogged")
-            onLogged?()
-        } catch {
-            statusText.value = error.localizedDescription
-        }
+    private func fail(with message: String) {
+        analysis.value = nil
+        capturedImage.value = nil
+        canConfirmLog.value = false
+        statusText.value = message
+        phase.value = .idle
+        Analytics.tracker.track(.foodLogFailed(method: "photo"))
     }
 
     private func details(for result: FoodPhotoAnalysis) -> String {

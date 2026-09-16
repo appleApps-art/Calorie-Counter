@@ -9,3 +9,13 @@ enum L10n {
         String(format: tr(key), locale: Locale.current, arguments: arguments)
     }
 }
+
+extension Locale {
+    nonisolated static var deviceIdentifier: String {
+        if let language = (CFLocaleCopyPreferredLanguages() as NSArray).firstObject as? NSString {
+            let value = language as String
+            if !value.isEmpty { return value }
+        }
+        return "en"
+    }
+}

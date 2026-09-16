@@ -51,7 +51,7 @@ final class TextFoodAnalysisService: TextFoodAnalysisServiceProtocol {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("AvoiOS/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("BityiOS/1.0", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 60
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
@@ -83,7 +83,7 @@ final class TextFoodAnalysisService: TextFoodAnalysisServiceProtocol {
 
         let decoded: FoodPhotoAnalyzeAPIResponse
         do {
-            decoded = try decoder.decode(FoodPhotoAnalyzeAPIResponse.self, from: data)
+            decoded = try FoodPhotoAnalyzeAPIResponse.decode(from: data, using: decoder)
         } catch {
             let raw = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
             throw FoodPhotoAnalysisError.analysisFailed(message: raw)
@@ -102,21 +102,11 @@ final class TextFoodAnalysisService: TextFoodAnalysisServiceProtocol {
         }
 
         let resolvedMeal = MealType(rawValue: analysis.mealType ?? "") ?? mealType
-        return FoodPhotoAnalysis(
-            name: analysis.name,
-            mealType: resolvedMeal,
-            calories: analysis.calories,
-            protein: analysis.protein,
-            carbs: analysis.carbs,
-            fats: analysis.fats,
-            fiber: analysis.fiber ?? 0,
-            sugar: analysis.sugar ?? 0,
-            sodium: analysis.sodium ?? 0,
-            portionGrams: analysis.portionGrams,
-            portionMilliliters: analysis.portionMilliliters,
-            confidence: analysis.confidence ?? 0.5,
-            notes: analysis.notes ?? "",
-            assistantMessage: decoded.message ?? ""
+        return FoodPhotoAnalysisService.mappedAnalysis(
+            from: analysis,
+            fallbackMealType: resolvedMeal,
+            message: decoded.message ?? "",
+            defaultSource: analysis.source ?? "text"
         )
     }
 }

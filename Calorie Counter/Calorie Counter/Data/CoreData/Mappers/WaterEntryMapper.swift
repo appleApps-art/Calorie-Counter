@@ -6,7 +6,9 @@ enum WaterEntryMapper {
         return WaterEntry(
             id: id,
             amountMilliliters: object.amountMilliliters,
-            date: date
+            date: date,
+            source: object.source,
+            healthSampleID: object.healthSampleID
         )
     }
 
@@ -14,5 +16,7 @@ enum WaterEntryMapper {
         object.id = entry.id
         object.amountMilliliters = entry.amountMilliliters
         object.date = entry.date
+        object.source = entry.source
+        object.healthSampleID = entry.healthSampleID
     }
 }

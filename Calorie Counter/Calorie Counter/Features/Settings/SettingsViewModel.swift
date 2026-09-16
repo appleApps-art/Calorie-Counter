@@ -7,15 +7,29 @@ final class SettingsViewModel {
     let healthText = Observable("")
     let subscriptionText = Observable("")
     let statusText = Observable("")
+    let nutritionGoalError = Observable("")
     let settings = Observable(AppSettings.default)
     let goals = Observable<UserGoals?>(nil)
     let profile = Observable(UserProfile.empty)
     let preferences = Observable(UserPreferenceProfile.empty)
     let subscription = Observable(SubscriptionStatus.free)
     let products = Observable<[SubscriptionProduct]>([])
+    let paywallAvailable = Observable(false)
     let reminderConfiguration = Observable(ReminderScheduleConfiguration.default)
     let isHealthAvailable = Observable(false)
     let avatarURL = Observable<URL?>(nil)
+
+    let appearanceMode = Observable(AppearanceMode.system)
+    let usesMetric = Observable(true)
+    let userIDText = Observable("")
+    let nutritionGoalText = Observable("")
+    let weightGoalText = Observable("")
+    let themeText = Observable("")
+    let healthStatusText = Observable("")
+    let healthDetailText = Observable("")
+    let healthAuthorization = Observable(HealthAuthorizationSnapshot.unavailable)
+    let showsUpgrade = Observable(true)
+    let showsShareApp = Observable(true)
 
     private let fetchDailyDiaryUseCase: FetchDailyDiaryUseCase
     private let saveUserGoalsUseCase: SaveUserGoalsUseCase
@@ -67,12 +81,18 @@ final class SettingsViewModel {
         self.healthSync = healthSync
     }
 
-    func viewDidLoad() {
-        reload()
+    func refreshSubscription() {
         Task { @MainActor in
             subscription.value = await refreshSubscriptionStatusUseCase.execute()
             publishSubscription()
-            products.value = (try? await refreshSubscriptionStatusUseCase.products()) ?? []
+            publishAccount()
+            if let offer = try? await refreshSubscriptionStatusUseCase.loadPlacement(.settings) {
+                products.value = offer.products
+                paywallAvailable.value = offer.hasPaywallBuilder
+            } else {
+                products.value = (try? await refreshSubscriptionStatusUseCase.products()) ?? []
+                paywallAvailable.value = false
+            }
         }
     }
 
@@ -103,8 +123,64 @@ final class SettingsViewModel {
         } catch {
             statusText.value = error.localizedDescription
         }
-        publishSettings()
         publishSubscription()
+        publishAccount()
+        refreshHealthAuthorization()
+    }
+
+    func saveNutritionGoal(_ goal: GoalType) {
+        nutritionGoalError.value = ""
+        var next = profile.value
+        next.goalType = goal
+        do {
+            _ = try updateProfileAndGoalsUseCase.execute(next, applyNutritionGoal: true)
+            reload()
+        } catch {
+            nutritionGoalError.value = error.localizedDescription
+        }
+    }
+
+    func saveWeightGoal(_ kilograms: Double) {
+        var next = profile.value
+        next.targetWeightKg = kilograms
+        saveProfile(next)
+    }
+
+    func resolvedWeightGoalKilograms() -> Double? {
+        CalculateNutritionPlanUseCase.resolvedTargetWeightKilograms(profile: profile.value)
+    }
+
+    func saveAppearance(_ mode: AppearanceMode) {
+        var next = settings.value
+        next.appearanceMode = mode
+        updateAppSettingsUseCase.execute(next)
+        reload()
+    }
+
+    func setUsesMetric(_ isMetric: Bool) {
+        var next = settings.value
+        next.usesMetric = isMetric
+        updateAppSettingsUseCase.execute(next)
+        reload()
+    }
+
+    func disconnectHealth() {
+        healthAuthorization.value = .disconnected
+        var next = settings.value
+        next.healthSyncEnabled = false
+        next.healthSyncUserDisabled = true
+        updateAppSettingsUseCase.execute(next)
+        settings.value = next
+        Analytics.tracker.track(.healthSyncToggled(enabled: false))
+        Analytics.tracker.setUserProperties(["health_sync_enabled": false])
+        publishSettings()
+        Task {
+            await healthSync.stopSyncing()
+        }
+    }
+
+    func isHealthConnected() -> Bool {
+        healthAuthorization.value.isConnected
     }
 
     func saveGoals(_ next: UserGoals) {
@@ -147,13 +223,25 @@ final class SettingsViewModel {
         }
     }
 
-    func updateHealthSync(enabled: Bool, weight: Bool, water: Bool, workouts: Bool) {
+    func updateHealthSync(
+        enabled: Bool,
+        weight: Bool,
+        water: Bool,
+        workouts: Bool,
+        food: Bool = true,
+        profile: Bool = true
+    ) {
         var next = settings.value
         next.healthSyncEnabled = enabled
+        next.healthSyncUserDisabled = !enabled
         next.healthSyncWeight = weight
         next.healthSyncWater = water
         next.healthSyncWorkouts = workouts
+        next.healthSyncFood = food
+        next.healthSyncProfile = profile
         updateAppSettingsUseCase.execute(next)
+        Analytics.tracker.track(.healthSyncToggled(enabled: enabled))
+        Analytics.tracker.setUserProperties(["health_sync_enabled": enabled])
         reload()
     }
 
@@ -173,7 +261,7 @@ final class SettingsViewModel {
         Task { @MainActor in
             do {
                 if let entry = try await importHealthWeightUseCase.execute() {
-                    statusText.value = L10n.format("settings.importedWeight", entry.weightKilograms)
+                    statusText.value = L10n.format("settings.importedWeightValue", AppUnits.current.weightText(entry.weightKilograms))
                 } else {
                     statusText.value = L10n.tr("settings.noHealthWeight")
                 }
@@ -235,10 +323,76 @@ final class SettingsViewModel {
     }
 
     private func publishSettings() {
-        healthText.value = settings.value.healthSyncEnabled
+        let connected = healthAuthorization.value.isConnected
+        healthText.value = connected
             ? L10n.tr("settings.healthOn")
             : L10n.tr("settings.healthOff")
+        usesMetric.value = settings.value.usesMetric
+        appearanceMode.value = settings.value.appearanceMode
+        themeText.value = settings.value.appearanceMode.localizedTitle
+        healthStatusText.value = connected
+            ? L10n.tr("settings.health.connected")
+            : L10n.tr("settings.health.disconnected")
+        healthDetailText.value = healthSyncDetailText()
     }
+
+    private func publishAccount() {
+        userIDText.value = profile.value.id.uuidString
+        nutritionGoalText.value = nutritionTitle(for: profile.value.goalType)
+        weightGoalText.value = formattedWeight(resolvedWeightGoalKilograms())
+        let premium = subscription.value.isPremium
+        showsUpgrade.value = !premium
+        showsShareApp.value = !premium
+    }
+
+    func nutritionTitle(for goal: GoalType?) -> String {
+        switch goal {
+        case .lose: return L10n.tr("settings.nutrition.lose")
+        case .maintain: return L10n.tr("settings.nutrition.maintain")
+        case .gain: return L10n.tr("settings.nutrition.gain")
+        case .none: return ""
+        }
+    }
+
+    func formattedWeight(_ kilograms: Double?) -> String {
+        guard let kilograms else { return "" }
+        if settings.value.usesMetric {
+            return L10n.format("settings.weight.kg", Int(kilograms.rounded()))
+        }
+        let pounds = (kilograms * 2.2046226218).rounded()
+        return L10n.format("settings.weight.lb", Int(pounds))
+    }
+
+    func healthSyncDetailText() -> String {
+        if healthAuthorization.value.isConnected {
+            guard let date = settings.value.healthLastSyncedAt else { return "" }
+            if Calendar.current.isDateInToday(date) {
+                return Self.timeFormatter.string(from: date)
+            }
+            return Self.dateTimeFormatter.string(from: date)
+        }
+        return L10n.tr("settings.health.accessDenied")
+    }
+
+    private func refreshHealthAuthorization() {
+        healthAuthorization.value = requestHealthSyncAuthorizationUseCase.refreshFromStore()
+        settings.value = updateAppSettingsUseCase.current()
+        publishSettings()
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let dateTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
 
     private func publishSubscription() {
         let status = subscription.value

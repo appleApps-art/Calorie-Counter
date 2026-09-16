@@ -8,7 +8,7 @@ protocol ReminderPreferencesStoring: AnyObject {
 
 final class ReminderPreferencesStore: ReminderPreferencesStoring {
     private let defaults: UserDefaults
-    private let key = "avo.reminders.configuration"
+    private let key = "bity.reminders.configuration"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults

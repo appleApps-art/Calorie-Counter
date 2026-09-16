@@ -1,6 +1,6 @@
 import Foundation
 
-struct SpoonacularAPIConfiguration {
+nonisolated struct SpoonacularAPIConfiguration: Sendable {
     let baseURL: URL
     let apiKey: String?
 

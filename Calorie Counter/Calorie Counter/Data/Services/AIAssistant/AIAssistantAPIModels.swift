@@ -13,6 +13,12 @@ struct AIAssistantUserContext: Codable, Equatable {
     var preferences: Preferences?
     var profile: Profile?
     var recipe: RecipeContext?
+    var mealEditing: MealEditingContext?
+
+    struct MealEditingContext: Codable, Equatable {
+        var mealType: String
+        var entryIDs: [String]
+    }
 
     struct Goals: Codable, Equatable {
         var calorieTarget: Double?
@@ -33,6 +39,7 @@ struct AIAssistantUserContext: Codable, Equatable {
         var carbs: Double?
         var fats: Double?
         var waterMilliliters: Double?
+        var localHour: Int?
         var meals: [Meal]?
     }
 
@@ -78,12 +85,35 @@ struct AIAssistantUserContext: Codable, Equatable {
     }
 }
 
+enum AIAssistantChatIntent: String, Codable {
+    case nutrition
+    case mealSuggestions
+    case foodSwap
+}
+
 struct AIAssistantChatRequest: Codable, Equatable {
     let message: String
     let history: [AIAssistantChatHistoryItem]
     let userContext: AIAssistantUserContext?
     let imageBase64: String?
     let imageMimeType: String?
+    let intent: AIAssistantChatIntent?
+
+    init(
+        message: String,
+        history: [AIAssistantChatHistoryItem],
+        userContext: AIAssistantUserContext?,
+        imageBase64: String?,
+        imageMimeType: String?,
+        intent: AIAssistantChatIntent? = nil
+    ) {
+        self.message = message
+        self.history = history
+        self.userContext = userContext
+        self.imageBase64 = imageBase64
+        self.imageMimeType = imageMimeType
+        self.intent = intent
+    }
 }
 
 struct AIAssistantToolCall: Codable, Equatable {
@@ -128,6 +158,7 @@ struct AIAssistantChatResponse: Codable, Equatable {
 enum AIAssistantServiceError: LocalizedError {
     case invalidURL
     case invalidResponse
+    case emptyResponse
     case server(message: String)
     case decodingFailed
     case transport(underlying: Error)
@@ -138,6 +169,8 @@ enum AIAssistantServiceError: LocalizedError {
             return "Invalid AI assistant URL"
         case .invalidResponse:
             return "Invalid AI assistant response"
+        case .emptyResponse:
+            return L10n.tr("ai.error.emptyResponse")
         case .server(let message):
             return message
         case .decodingFailed:

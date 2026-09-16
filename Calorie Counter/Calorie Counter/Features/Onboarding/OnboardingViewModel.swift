@@ -13,6 +13,7 @@ final class OnboardingViewModel {
     let showsBack = Observable(false)
     let showsGoalPicker = Observable(false)
     let showsQuestions = Observable(false)
+    let showsWelcome = Observable(true)
     let isCompleted = Observable(false)
     let avatarURL = Observable<URL?>(nil)
     let frontPhotoURL = Observable<URL?>(nil)
@@ -60,7 +61,8 @@ final class OnboardingViewModel {
             let stored = try fetchOnboardingStateUseCase.execute()
             apply(stored)
             applyBaseline(try fetchProgressPhotosUseCase.baselinePair())
-            step.value = stored.onboardingCompleted ? .completed : stored.onboardingStep
+            let resumeStep = stored.onboardingStep == .welcome ? .goal : stored.onboardingStep
+            step.value = stored.onboardingCompleted ? .completed : resumeStep
             isCompleted.value = stored.onboardingCompleted
             if stored.isReadyForPlan {
                 plan.value = calculateNutritionPlanUseCase.execute(profile: stored)
@@ -177,10 +179,8 @@ final class OnboardingViewModel {
 
     func back() {
         switch step.value {
-        case .welcome, .completed:
+        case .welcome, .goal, .completed:
             break
-        case .goal:
-            move(to: .welcome)
         case .questions:
             move(to: .goal)
         case .animation:
@@ -259,10 +259,13 @@ final class OnboardingViewModel {
     }
 
     private func publishContent() {
-        showsBack.value = step.value != .welcome && step.value != .completed
+        showsBack.value = step.value != .welcome && step.value != .goal && step.value != .completed
         showsGoalPicker.value = step.value == .goal
         showsQuestions.value = step.value == .questions
-        nextButtonTitle.value = step.value == .aiIntro ? L10n.tr("onboarding.start") : L10n.tr("common.next")
+        showsWelcome.value = step.value == .welcome
+        nextButtonTitle.value = (step.value == .welcome || step.value == .aiIntro)
+            ? L10n.tr("onboarding.start")
+            : L10n.tr("common.next")
 
         switch step.value {
         case .welcome:

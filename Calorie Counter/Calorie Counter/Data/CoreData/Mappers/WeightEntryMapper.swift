@@ -6,7 +6,9 @@ enum WeightEntryMapper {
         return WeightEntry(
             id: id,
             weightKilograms: object.weightKilograms,
-            date: date
+            date: date,
+            source: object.source,
+            healthSampleID: object.healthSampleID
         )
     }
 
@@ -14,5 +16,7 @@ enum WeightEntryMapper {
         object.id = entry.id
         object.weightKilograms = entry.weightKilograms
         object.date = entry.date
+        object.source = entry.source
+        object.healthSampleID = entry.healthSampleID
     }
 }

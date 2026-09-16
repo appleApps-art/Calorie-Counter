@@ -72,6 +72,7 @@ final class TextFoodLoggingViewModel {
                 canConfirmLog.value = false
                 showsResultCard.value = false
                 statusText.value = error.localizedDescription
+                Analytics.tracker.track(.foodLogFailed(method: "text"))
             }
             isAnalyzing.value = false
             canAnalyze.value = !inputText.isEmpty
@@ -123,6 +124,7 @@ final class TextFoodLoggingViewModel {
             onLogged?()
         } catch {
             statusText.value = error.localizedDescription
+            Analytics.tracker.track(.foodLogFailed(method: "text"))
         }
     }
 

@@ -12,9 +12,18 @@ final class AdaptiveConstraint: NSLayoutConstraint {
         didSet { refreshConstant() }
     }
 
+    @IBInspectable var designConstant: CGFloat = .greatestFiniteMagnitude {
+        didSet {
+            storedDesignConstant = designConstant
+            refreshConstant()
+        }
+    }
+
     override func awakeFromNib() {
         super.awakeFromNib()
-        storedDesignConstant = constant
+        if storedDesignConstant == nil {
+            storedDesignConstant = constant
+        }
         refreshConstant()
         startObservingSizeChanges()
     }
@@ -25,22 +34,38 @@ final class AdaptiveConstraint: NSLayoutConstraint {
         }
     }
 
-    func refreshConstant() {
-        let designValue = storedDesignConstant ?? constant
-        if storedDesignConstant == nil {
-            storedDesignConstant = designValue
-        }
+    func refreshConstant(in container: UIView? = nil) {
+        guard let designValue = resolvedDesignConstant else { return }
+        let view = container ?? owningView(firstItem) ?? owningView(secondItem)
+        let adapted: CGFloat
 
         switch (adaptToWidth, adaptToHeight) {
         case (true, false):
-            constant = .adaptWidth(designValue)
+            adapted = .adaptWidth(designValue, in: view)
         case (false, true):
-            constant = .adaptHeight(designValue)
+            adapted = .adaptHeight(designValue, in: view)
         case (true, true):
-            constant = .adaptWidth(designValue)
+            adapted = .adaptWidth(designValue, in: view)
         case (false, false):
-            constant = designValue
+            adapted = designValue
         }
+        // A 44-point tap target must not become smaller because the display is shorter.
+        let isControlSize = secondItem == nil && firstItem is UIControl
+            && (firstAttribute == .width || firstAttribute == .height)
+            && designValue >= 44
+        let value = isControlSize ? max(44, adapted) : adapted
+        if constant != value { constant = value }
+    }
+
+    private func owningView(_ item: AnyObject?) -> UIView? {
+        (item as? UIView) ?? (item as? UILayoutGuide)?.owningView
+    }
+
+    private var resolvedDesignConstant: CGFloat? {
+        if designConstant != .greatestFiniteMagnitude {
+            return designConstant
+        }
+        return storedDesignConstant
     }
 
     private func startObservingSizeChanges() {

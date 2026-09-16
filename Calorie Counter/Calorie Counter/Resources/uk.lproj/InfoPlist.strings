@@ -1,5 +1,6 @@
 "NSCameraUsageDescription" = "Камера потрібна, щоб сканувати штрихкоди та записувати їжу з фото.";
 "NSMicrophoneUsageDescription" = "Мікрофон потрібен, щоб записувати їжу голосом.";
+"NSSpeechRecognitionUsageDescription" = "Розпізнавання мови потрібне, щоб записувати їжу голосом.";
 "NSPhotoLibraryUsageDescription" = "Доступ до фото потрібен, щоб зберігати фото прогресу та аналізувати страви.";
-"NSHealthShareUsageDescription" = "Дані Health використовуються, щоб читати вагу та активність для вашого плану калорій.";
-"NSHealthUpdateUsageDescription" = "Дані Health оновлюються, коли ви записуєте вагу, воду або тренування.";
+"NSHealthShareUsageDescription" = "Дані зі Здоров’я використовуються, щоб імпортувати вагу, воду, тренування та харчування в щоденник.";
+"NSHealthUpdateUsageDescription" = "Здоров’я оновлюється, коли ви записуєте їжу, воду, вагу або тренування в Bity.";

@@ -1,0 +1,2128 @@
+{
+  "version": 2,
+  "sections": [
+    {
+      "id": "vegetablesGreens",
+      "items": [
+        {
+          "id": "catalog.spinach",
+          "name": {
+            "en": "Spinach",
+            "uk": "Шпинат"
+          },
+          "serving": {
+            "en": "1 cup (30 g)",
+            "uk": "1 чашка (30 г)"
+          },
+          "calories": 7,
+          "protein": 0.9,
+          "carbs": 1.1,
+          "fats": 0.1,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/37/Spinacia_oleracea_Spinazie_bloeiend.jpg"
+        },
+        {
+          "id": "catalog.broccoli",
+          "name": {
+            "en": "Broccoli",
+            "uk": "Броколі"
+          },
+          "serving": {
+            "en": "1 cup (90 g)",
+            "uk": "1 чашка (90 г)"
+          },
+          "calories": 31,
+          "protein": 2.5,
+          "carbs": 6,
+          "fats": 0.3,
+          "amount": 90,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/0/03/Broccoli_and_cross_section_edit.jpg"
+        },
+        {
+          "id": "catalog.cucumber",
+          "name": {
+            "en": "Cucumber",
+            "uk": "Огірок"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 15,
+          "protein": 0.7,
+          "carbs": 3.6,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/96/ARS_cucumber.jpg"
+        },
+        {
+          "id": "catalog.tomato",
+          "name": {
+            "en": "Tomato",
+            "uk": "Помідор"
+          },
+          "serving": {
+            "en": "1 medium (120 g)",
+            "uk": "1 середній (120 г)"
+          },
+          "calories": 22,
+          "protein": 1.1,
+          "carbs": 4.8,
+          "fats": 0.2,
+          "amount": 120,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg"
+        },
+        {
+          "id": "catalog.carrot",
+          "name": {
+            "en": "Carrot",
+            "uk": "Морква"
+          },
+          "serving": {
+            "en": "1 medium (60 g)",
+            "uk": "1 середня (60 г)"
+          },
+          "calories": 25,
+          "protein": 0.6,
+          "carbs": 6,
+          "fats": 0.1,
+          "amount": 60,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Vegetable-Carrot-Bundle-wStalks.jpg/960px-Vegetable-Carrot-Bundle-wStalks.jpg"
+        },
+        {
+          "id": "catalog.potato",
+          "name": {
+            "en": "Potato, boiled",
+            "uk": "Картопля варена"
+          },
+          "serving": {
+            "en": "1 medium (150 g)",
+            "uk": "1 середня (150 г)"
+          },
+          "calories": 130,
+          "protein": 3,
+          "carbs": 30,
+          "fats": 0.2,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Patates.jpg"
+        },
+        {
+          "id": "catalog.bellPepper",
+          "name": {
+            "en": "Bell pepper",
+            "uk": "Болгарський перець"
+          },
+          "serving": {
+            "en": "1 medium (120 g)",
+            "uk": "1 середній (120 г)"
+          },
+          "calories": 37,
+          "protein": 1.2,
+          "carbs": 7,
+          "fats": 0.4,
+          "amount": 120,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/8/85/Green-Yellow-Red-Pepper-2009.jpg"
+        },
+        {
+          "id": "catalog.onion",
+          "name": {
+            "en": "Onion",
+            "uk": "Цибуля"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 40,
+          "protein": 1.1,
+          "carbs": 9,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Mixed_onions.jpg"
+        },
+        {
+          "id": "catalog.cabbage",
+          "name": {
+            "en": "Cabbage",
+            "uk": "Капуста"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 25,
+          "protein": 1.3,
+          "carbs": 6,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Cabbage_and_cross_section_on_white.jpg"
+        },
+        {
+          "id": "catalog.lettuce",
+          "name": {
+            "en": "Iceberg lettuce",
+            "uk": "Салат айсберг"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 14,
+          "protein": 0.9,
+          "carbs": 3,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Iceberg_lettuce.jpg"
+        },
+        {
+          "id": "catalog.garlic",
+          "name": {
+            "en": "Garlic",
+            "uk": "Часник"
+          },
+          "serving": {
+            "en": "3 cloves (9 g)",
+            "uk": "3 зубчики (9 г)"
+          },
+          "calories": 13,
+          "protein": 0.6,
+          "carbs": 3,
+          "fats": 0.1,
+          "amount": 9,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/22/Garlic.jpg"
+        },
+        {
+          "id": "catalog.zucchini",
+          "name": {
+            "en": "Zucchini",
+            "uk": "Кабачок"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 17,
+          "protein": 1.2,
+          "carbs": 3.1,
+          "fats": 0.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Zucchini.jpg"
+        },
+        {
+          "id": "catalog.cauliflower",
+          "name": {
+            "en": "Cauliflower",
+            "uk": "Цвітна капуста"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 25,
+          "protein": 1.9,
+          "carbs": 5,
+          "fats": 0.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/25/Cauliflower.JPG"
+        },
+        {
+          "id": "catalog.mushrooms",
+          "name": {
+            "en": "White mushrooms",
+            "uk": "Печериці"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 22,
+          "protein": 3.1,
+          "carbs": 3.3,
+          "fats": 0.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Agaricus_bisporus.jpg"
+        },
+        {
+          "id": "catalog.avocado",
+          "name": {
+            "en": "Avocado",
+            "uk": "Авокадо"
+          },
+          "serving": {
+            "en": "1/2 fruit (100 g)",
+            "uk": "1/2 шт (100 г)"
+          },
+          "calories": 160,
+          "protein": 2,
+          "carbs": 8.5,
+          "fats": 15,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Avocado.jpeg"
+        },
+        {
+          "id": "catalog.greenBeans",
+          "name": {
+            "en": "Green beans",
+            "uk": "Квасоля стручкова"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 31,
+          "protein": 1.8,
+          "carbs": 7,
+          "fats": 0.2,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Heaps_of_beans.jpg"
+        },
+        {
+          "id": "catalog.beetroot",
+          "name": {
+            "en": "Beetroot",
+            "uk": "Буряк"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 43,
+          "protein": 1.6,
+          "carbs": 10,
+          "fats": 0.2,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Detroitdarkredbeets.png"
+        },
+        {
+          "id": "catalog.eggplant",
+          "name": {
+            "en": "Eggplant",
+            "uk": "Баклажан"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 25,
+          "protein": 1,
+          "carbs": 6,
+          "fats": 0.2,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/7/76/Solanum_melongena_24_08_2012_%281%29.JPG"
+        },
+        {
+          "id": "catalog.peas",
+          "name": {
+            "en": "Green peas",
+            "uk": "Горошок зелений"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 81,
+          "protein": 5.4,
+          "carbs": 14,
+          "fats": 0.4,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/1/11/Peas_in_pods_-_Studio.jpg"
+        },
+        {
+          "id": "catalog.celery",
+          "name": {
+            "en": "Celery",
+            "uk": "Селера"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 16,
+          "protein": 0.7,
+          "carbs": 3,
+          "fats": 0.2,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Celery_1.jpg"
+        },
+        {
+          "id": "catalog.pumpkin",
+          "name": {
+            "en": "Pumpkin",
+            "uk": "Гарбуз"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 26,
+          "protein": 1,
+          "carbs": 6.5,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/5/5c/FrenchMarketPumpkinsB.jpg"
+        },
+        {
+          "id": "catalog.radish",
+          "name": {
+            "en": "Radish",
+            "uk": "Редиска"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 16,
+          "protein": 0.7,
+          "carbs": 3.4,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Radish_3371103037_4ab07db0bf_o.jpg"
+        },
+        {
+          "id": "catalog.corn",
+          "name": {
+            "en": "Corn on the cob",
+            "uk": "Кукурудза"
+          },
+          "serving": {
+            "en": "1 ear (90 g)",
+            "uk": "1 качан (90 г)"
+          },
+          "calories": 86,
+          "protein": 3.3,
+          "carbs": 19,
+          "fats": 1.4,
+          "amount": 90,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Corn_on_the_cob.jpg"
+        },
+        {
+          "id": "catalog.sweetPotato",
+          "name": {
+            "en": "Sweet potato",
+            "uk": "Батат"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 86,
+          "protein": 1.6,
+          "carbs": 20,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/2b/SweetPotato.jpg"
+        },
+        {
+          "id": "catalog.olives",
+          "name": {
+            "en": "Green olives",
+            "uk": "Оливки"
+          },
+          "serving": {
+            "en": "5 olives (20 g)",
+            "uk": "5 шт (20 г)"
+          },
+          "calories": 29,
+          "protein": 0.2,
+          "carbs": 0.8,
+          "fats": 3,
+          "amount": 20,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/5/51/Green_olives.jpg"
+        },
+        {
+          "id": "catalog.leek",
+          "name": {
+            "en": "Leek",
+            "uk": "Цибуля-порей"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 61,
+          "protein": 1.5,
+          "carbs": 14,
+          "fats": 0.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/90/Leeks.JPG"
+        },
+        {
+          "id": "catalog.asparagus",
+          "name": {
+            "en": "Asparagus",
+            "uk": "Спаржа"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 20,
+          "protein": 2.2,
+          "carbs": 3.9,
+          "fats": 0.1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Asparagus-Bundle.jpg"
+        },
+        {
+          "id": "catalog.brusselsSprouts",
+          "name": {
+            "en": "Brussels sprouts",
+            "uk": "Брюссельська капуста"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 43,
+          "protein": 3.4,
+          "carbs": 9,
+          "fats": 0.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Rosenkohl.jpg"
+        },
+        {
+          "id": "catalog.pickle",
+          "name": {
+            "en": "Pickled cucumber",
+            "uk": "Солоний огірок"
+          },
+          "serving": {
+            "en": "1 pickle (50 g)",
+            "uk": "1 шт (50 г)"
+          },
+          "calories": 6,
+          "protein": 0.3,
+          "carbs": 1.2,
+          "fats": 0.1,
+          "amount": 50,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/22/Pickled_cucumbers.jpg"
+        }
+      ]
+    },
+    {
+      "id": "fruitsBerries",
+      "items": [
+        {
+          "id": "catalog.blueberry",
+          "name": {
+            "en": "Blueberries",
+            "uk": "Чорниця"
+          },
+          "serving": {
+            "en": "1 cup (150 g)",
+            "uk": "1 чашка (150 г)"
+          },
+          "calories": 85,
+          "protein": 1.1,
+          "carbs": 21,
+          "fats": 0.5,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/1/15/Blueberries.jpg"
+        },
+        {
+          "id": "catalog.strawberry",
+          "name": {
+            "en": "Strawberries",
+            "uk": "Полуниця"
+          },
+          "serving": {
+            "en": "1 cup (150 g)",
+            "uk": "1 чашка (150 г)"
+          },
+          "calories": 48,
+          "protein": 1,
+          "carbs": 11.5,
+          "fats": 0.4,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/960px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg"
+        },
+        {
+          "id": "catalog.banana",
+          "name": {
+            "en": "Banana",
+            "uk": "Банан"
+          },
+          "serving": {
+            "en": "1 medium (118 g)",
+            "uk": "1 середній (118 г)"
+          },
+          "calories": 105,
+          "protein": 1.3,
+          "carbs": 27,
+          "fats": 0.4,
+          "amount": 118,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/de/Bananavarieties.jpg"
+        },
+        {
+          "id": "catalog.apple",
+          "name": {
+            "en": "Apple",
+            "uk": "Яблуко"
+          },
+          "serving": {
+            "en": "1 medium (180 g)",
+            "uk": "1 середнє (180 г)"
+          },
+          "calories": 95,
+          "protein": 0.5,
+          "carbs": 25,
+          "fats": 0.3,
+          "amount": 180,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Pink_lady_and_cross_section.jpg"
+        },
+        {
+          "id": "catalog.orange",
+          "name": {
+            "en": "Orange",
+            "uk": "Апельсин"
+          },
+          "serving": {
+            "en": "1 medium (130 g)",
+            "uk": "1 середній (130 г)"
+          },
+          "calories": 62,
+          "protein": 1.2,
+          "carbs": 15,
+          "fats": 0.2,
+          "amount": 130,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Oranges_-_whole-halved-segment.jpg/960px-Oranges_-_whole-halved-segment.jpg"
+        },
+        {
+          "id": "catalog.grapes",
+          "name": {
+            "en": "Grapes",
+            "uk": "Виноград"
+          },
+          "serving": {
+            "en": "1 cup (150 g)",
+            "uk": "1 чашка (150 г)"
+          },
+          "calories": 104,
+          "protein": 1.1,
+          "carbs": 27,
+          "fats": 0.2,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Grapes%2C_Rostov-on-Don%2C_Russia.jpg/960px-Grapes%2C_Rostov-on-Don%2C_Russia.jpg"
+        },
+        {
+          "id": "catalog.pear",
+          "name": {
+            "en": "Pear",
+            "uk": "Груша"
+          },
+          "serving": {
+            "en": "1 medium (180 g)",
+            "uk": "1 середня (180 г)"
+          },
+          "calories": 102,
+          "protein": 0.6,
+          "carbs": 27,
+          "fats": 0.2,
+          "amount": 180,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Pears.jpg"
+        },
+        {
+          "id": "catalog.kiwi",
+          "name": {
+            "en": "Kiwi",
+            "uk": "Ківі"
+          },
+          "serving": {
+            "en": "1 fruit (75 g)",
+            "uk": "1 шт (75 г)"
+          },
+          "calories": 46,
+          "protein": 0.8,
+          "carbs": 11,
+          "fats": 0.4,
+          "amount": 75,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/A_half_cut_kiwifruit_in_West_Bengal%2C_India.jpg/960px-A_half_cut_kiwifruit_in_West_Bengal%2C_India.jpg"
+        },
+        {
+          "id": "catalog.watermelon",
+          "name": {
+            "en": "Watermelon",
+            "uk": "Кавун"
+          },
+          "serving": {
+            "en": "1 cup (150 g)",
+            "uk": "1 чашка (150 г)"
+          },
+          "calories": 45,
+          "protein": 0.9,
+          "carbs": 11,
+          "fats": 0.2,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/4/47/Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg"
+        },
+        {
+          "id": "catalog.lemon",
+          "name": {
+            "en": "Lemon",
+            "uk": "Лимон"
+          },
+          "serving": {
+            "en": "1 medium (58 g)",
+            "uk": "1 середній (58 г)"
+          },
+          "calories": 17,
+          "protein": 0.6,
+          "carbs": 5.4,
+          "fats": 0.2,
+          "amount": 58,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Lemon.jpg"
+        },
+        {
+          "id": "catalog.pineapple",
+          "name": {
+            "en": "Pineapple",
+            "uk": "Ананас"
+          },
+          "serving": {
+            "en": "1 cup (165 g)",
+            "uk": "1 чашка (165 г)"
+          },
+          "calories": 82,
+          "protein": 0.9,
+          "carbs": 22,
+          "fats": 0.2,
+          "amount": 165,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Pineapple.jpg"
+        },
+        {
+          "id": "catalog.mango",
+          "name": {
+            "en": "Mango",
+            "uk": "Манго"
+          },
+          "serving": {
+            "en": "1 cup (165 g)",
+            "uk": "1 чашка (165 г)"
+          },
+          "calories": 99,
+          "protein": 1.4,
+          "carbs": 25,
+          "fats": 0.6,
+          "amount": 165,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Mangos_-_single_and_halved.jpg/960px-Mangos_-_single_and_halved.jpg"
+        },
+        {
+          "id": "catalog.cherries",
+          "name": {
+            "en": "Cherries",
+            "uk": "Черешня"
+          },
+          "serving": {
+            "en": "1 cup (140 g)",
+            "uk": "1 чашка (140 г)"
+          },
+          "calories": 87,
+          "protein": 1.5,
+          "carbs": 22,
+          "fats": 0.3,
+          "amount": 140,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Cherry_season_%2848216568227%29.jpg"
+        },
+        {
+          "id": "catalog.raspberry",
+          "name": {
+            "en": "Raspberries",
+            "uk": "Малина"
+          },
+          "serving": {
+            "en": "1 cup (123 g)",
+            "uk": "1 чашка (123 г)"
+          },
+          "calories": 64,
+          "protein": 1.5,
+          "carbs": 15,
+          "fats": 0.8,
+          "amount": 123,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Raspberry_-_halved_%28Rubus_idaeus%29.jpg/960px-Raspberry_-_halved_%28Rubus_idaeus%29.jpg"
+        },
+        {
+          "id": "catalog.grapefruit",
+          "name": {
+            "en": "Grapefruit",
+            "uk": "Грейпфрут"
+          },
+          "serving": {
+            "en": "1/2 fruit (123 g)",
+            "uk": "1/2 шт (123 г)"
+          },
+          "calories": 52,
+          "protein": 0.9,
+          "carbs": 13,
+          "fats": 0.2,
+          "amount": 123,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Grapefruits_-_whole-halved-segments.jpg/960px-Grapefruits_-_whole-halved-segments.jpg"
+        },
+        {
+          "id": "catalog.peach",
+          "name": {
+            "en": "Peach",
+            "uk": "Персик"
+          },
+          "serving": {
+            "en": "1 medium (150 g)",
+            "uk": "1 середній (150 г)"
+          },
+          "calories": 58,
+          "protein": 1.4,
+          "carbs": 14,
+          "fats": 0.4,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Autumn_Red_peaches.jpg"
+        },
+        {
+          "id": "catalog.plum",
+          "name": {
+            "en": "Plum",
+            "uk": "Слива"
+          },
+          "serving": {
+            "en": "1 medium (66 g)",
+            "uk": "1 середня (66 г)"
+          },
+          "calories": 30,
+          "protein": 0.5,
+          "carbs": 7.5,
+          "fats": 0.2,
+          "amount": 66,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Plums.jpg"
+        },
+        {
+          "id": "catalog.apricot",
+          "name": {
+            "en": "Apricot",
+            "uk": "Абрикос"
+          },
+          "serving": {
+            "en": "3 fruits (105 g)",
+            "uk": "3 шт (105 г)"
+          },
+          "calories": 50,
+          "protein": 1.5,
+          "carbs": 12,
+          "fats": 0.4,
+          "amount": 105,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Apricots.jpg"
+        },
+        {
+          "id": "catalog.pomegranate",
+          "name": {
+            "en": "Pomegranate",
+            "uk": "Гранат"
+          },
+          "serving": {
+            "en": "100 g arils",
+            "uk": "100 г зерен"
+          },
+          "calories": 83,
+          "protein": 1.7,
+          "carbs": 19,
+          "fats": 1.2,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Pomegranate_fruit.jpg"
+        },
+        {
+          "id": "catalog.lime",
+          "name": {
+            "en": "Lime",
+            "uk": "Лайм"
+          },
+          "serving": {
+            "en": "1 fruit (67 g)",
+            "uk": "1 шт (67 г)"
+          },
+          "calories": 20,
+          "protein": 0.5,
+          "carbs": 7,
+          "fats": 0.1,
+          "amount": 67,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Limes.jpg"
+        },
+        {
+          "id": "catalog.cantaloupe",
+          "name": {
+            "en": "Cantaloupe",
+            "uk": "Диня"
+          },
+          "serving": {
+            "en": "150 g",
+            "uk": "150 г"
+          },
+          "calories": 51,
+          "protein": 1.3,
+          "carbs": 12,
+          "fats": 0.3,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Cantaloupe.jpg"
+        },
+        {
+          "id": "catalog.blackberry",
+          "name": {
+            "en": "Blackberries",
+            "uk": "Ожина"
+          },
+          "serving": {
+            "en": "1 cup (144 g)",
+            "uk": "1 чашка (144 г)"
+          },
+          "calories": 62,
+          "protein": 2,
+          "carbs": 14,
+          "fats": 0.7,
+          "amount": 144,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Blackberries.jpg"
+        },
+        {
+          "id": "catalog.dates",
+          "name": {
+            "en": "Dates",
+            "uk": "Фініки"
+          },
+          "serving": {
+            "en": "2 dates (48 g)",
+            "uk": "2 шт (48 г)"
+          },
+          "calories": 133,
+          "protein": 0.9,
+          "carbs": 36,
+          "fats": 0.2,
+          "amount": 48,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/61/Dates.jpg"
+        }
+      ]
+    },
+    {
+      "id": "meatPoultry",
+      "items": [
+        {
+          "id": "catalog.chickenBreast",
+          "name": {
+            "en": "Chicken breast, grilled",
+            "uk": "Куряча грудка, гриль"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 165,
+          "protein": 31,
+          "carbs": 0,
+          "fats": 3.6,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Max%27s_Roasted_Chicken_-_Evan_Swigart.jpg"
+        },
+        {
+          "id": "catalog.groundBeef90",
+          "name": {
+            "en": "Ground beef, 90% lean",
+            "uk": "Яловичий фарш, 90%"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 176,
+          "protein": 20,
+          "carbs": 0,
+          "fats": 10,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Hackfleisch-1.jpg/960px-Hackfleisch-1.jpg"
+        },
+        {
+          "id": "catalog.chickenThigh",
+          "name": {
+            "en": "Chicken thigh",
+            "uk": "Куряче стегно"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 209,
+          "protein": 26,
+          "carbs": 0,
+          "fats": 11,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Fried-Chicken-Set.jpg/960px-Fried-Chicken-Set.jpg"
+        },
+        {
+          "id": "catalog.turkeyBreast",
+          "name": {
+            "en": "Turkey breast",
+            "uk": "Індича грудка"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 135,
+          "protein": 30,
+          "carbs": 0,
+          "fats": 1,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Cooked_turkey_breast_-_November_2023_-_Sarah_Stierch.jpg/960px-Cooked_turkey_breast_-_November_2023_-_Sarah_Stierch.jpg"
+        },
+        {
+          "id": "catalog.porkTenderloin",
+          "name": {
+            "en": "Pork tenderloin",
+            "uk": "Свиняча вирізка"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 143,
+          "protein": 26,
+          "carbs": 0,
+          "fats": 4,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Pork_tenderloin_dish.png/960px-Pork_tenderloin_dish.png"
+        },
+        {
+          "id": "catalog.beefSirloin",
+          "name": {
+            "en": "Beef sirloin",
+            "uk": "Яловичина, вирізка"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 183,
+          "protein": 27,
+          "carbs": 0,
+          "fats": 8,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/-2020-11-20_Sirloin_steak%2C_Trimingham%2C_Norfolk_%281%29.JPG/960px--2020-11-20_Sirloin_steak%2C_Trimingham%2C_Norfolk_%281%29.JPG"
+        },
+        {
+          "id": "catalog.ham",
+          "name": {
+            "en": "Ham",
+            "uk": "Шинка"
+          },
+          "serving": {
+            "en": "1 slice (30 g)",
+            "uk": "1 скибка (30 г)"
+          },
+          "calories": 45,
+          "protein": 6,
+          "carbs": 0.5,
+          "fats": 2,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Ham_%284%29.jpg"
+        },
+        {
+          "id": "catalog.bacon",
+          "name": {
+            "en": "Bacon",
+            "uk": "Бекон"
+          },
+          "serving": {
+            "en": "2 slices (16 g)",
+            "uk": "2 скибки (16 г)"
+          },
+          "calories": 86,
+          "protein": 6,
+          "carbs": 0.2,
+          "fats": 6.6,
+          "amount": 16,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/31/Made20bacon.png"
+        },
+        {
+          "id": "catalog.porkChop",
+          "name": {
+            "en": "Pork chop",
+            "uk": "Свиняча відбивна"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 231,
+          "protein": 24,
+          "carbs": 0,
+          "fats": 14,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Pork_chops_167541218.jpg"
+        },
+        {
+          "id": "catalog.sausage",
+          "name": {
+            "en": "Sausage",
+            "uk": "Ковбаса"
+          },
+          "serving": {
+            "en": "1 piece (75 g)",
+            "uk": "1 шт (75 г)"
+          },
+          "calories": 226,
+          "protein": 9,
+          "carbs": 1.5,
+          "fats": 20,
+          "amount": 75,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/29/Wurstplatte.jpg"
+        },
+        {
+          "id": "catalog.chickenDrumstick",
+          "name": {
+            "en": "Chicken drumstick",
+            "uk": "Куряча ніжка"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 172,
+          "protein": 23,
+          "carbs": 0,
+          "fats": 8.4,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Uncooked_chicken_legs.jpg"
+        },
+        {
+          "id": "catalog.groundTurkey",
+          "name": {
+            "en": "Ground turkey",
+            "uk": "Фарш індички"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 150,
+          "protein": 19,
+          "carbs": 0,
+          "fats": 8,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Ground_turkey_%284515834437%29.jpg"
+        },
+        {
+          "id": "catalog.duckBreast",
+          "name": {
+            "en": "Duck breast",
+            "uk": "Качина грудка"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 201,
+          "protein": 23,
+          "carbs": 0,
+          "fats": 11,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/97/Duck_breast.jpg"
+        },
+        {
+          "id": "catalog.lambChop",
+          "name": {
+            "en": "Lamb chop",
+            "uk": "Бараняча котлета"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 250,
+          "protein": 25,
+          "carbs": 0,
+          "fats": 16,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/38/Raw_lamb_cutlets_with_shredded_ginger_and_rosemary.jpg"
+        }
+      ]
+    },
+    {
+      "id": "fishSeafood",
+      "items": [
+        {
+          "id": "catalog.salmon",
+          "name": {
+            "en": "Salmon fillet",
+            "uk": "Філе лосося"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 208,
+          "protein": 20,
+          "carbs": 0,
+          "fats": 13,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/7/7f/%22_15_-_ITALY_-_salmon_fillet_esselunga_dishes.jpg"
+        },
+        {
+          "id": "catalog.shrimp",
+          "name": {
+            "en": "Shrimp",
+            "uk": "Креветки"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 99,
+          "protein": 24,
+          "carbs": 0.2,
+          "fats": 0.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Cooked_shrimp.jpg/960px-Cooked_shrimp.jpg"
+        },
+        {
+          "id": "catalog.tuna",
+          "name": {
+            "en": "Tuna, canned in water",
+            "uk": "Тунець у власному соку"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 116,
+          "protein": 26,
+          "carbs": 0,
+          "fats": 0.8,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/21/Tuna_assortment.png"
+        },
+        {
+          "id": "catalog.cod",
+          "name": {
+            "en": "Cod",
+            "uk": "Тріска"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 82,
+          "protein": 18,
+          "carbs": 0,
+          "fats": 0.7,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/4/47/Cod_fillet.jpg"
+        },
+        {
+          "id": "catalog.tilapia",
+          "name": {
+            "en": "Tilapia",
+            "uk": "Тілапія"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 128,
+          "protein": 26,
+          "carbs": 0,
+          "fats": 2.7,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Fish_Fillet_Tilapia.jpg"
+        },
+        {
+          "id": "catalog.herring",
+          "name": {
+            "en": "Herring",
+            "uk": "Оселедець"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 158,
+          "protein": 18,
+          "carbs": 0,
+          "fats": 9,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/62/Filets_de_harengs_marin%C3%A9s.jpg"
+        },
+        {
+          "id": "catalog.mussels",
+          "name": {
+            "en": "Mussels",
+            "uk": "Мідії"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 172,
+          "protein": 24,
+          "carbs": 7,
+          "fats": 4.5,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/68/Moules_marini%C3%A8res.jpg"
+        },
+        {
+          "id": "catalog.sardines",
+          "name": {
+            "en": "Sardines, canned",
+            "uk": "Сардини консервовані"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 208,
+          "protein": 25,
+          "carbs": 0,
+          "fats": 11,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Canned_sardines.jpg"
+        }
+      ]
+    },
+    {
+      "id": "dairyEggs",
+      "items": [
+        {
+          "id": "catalog.egg",
+          "name": {
+            "en": "Egg",
+            "uk": "Яйце"
+          },
+          "serving": {
+            "en": "1 large (50 g)",
+            "uk": "1 велике (50 г)"
+          },
+          "calories": 72,
+          "protein": 6.3,
+          "carbs": 0.4,
+          "fats": 4.8,
+          "amount": 50,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Huevo_frito.jpg/960px-Huevo_frito.jpg"
+        },
+        {
+          "id": "catalog.butter",
+          "name": {
+            "en": "Butter",
+            "uk": "Вершкове масло"
+          },
+          "serving": {
+            "en": "1 tsp (5 g)",
+            "uk": "1 ч. л. (5 г)"
+          },
+          "calories": 36,
+          "protein": 0,
+          "carbs": 0,
+          "fats": 4,
+          "amount": 5,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Butter_at_the_Borough_Market.jpg/960px-Butter_at_the_Borough_Market.jpg"
+        },
+        {
+          "id": "catalog.greekYogurt",
+          "name": {
+            "en": "Greek yogurt",
+            "uk": "Грецький йогурт"
+          },
+          "serving": {
+            "en": "150 g",
+            "uk": "150 г"
+          },
+          "calories": 88,
+          "protein": 15,
+          "carbs": 6,
+          "fats": 0.7,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Labneh01.jpg"
+        },
+        {
+          "id": "catalog.milk",
+          "name": {
+            "en": "Milk, 2%",
+            "uk": "Молоко 2%"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 склянка (240 мл)"
+          },
+          "calories": 122,
+          "protein": 8,
+          "carbs": 12,
+          "fats": 5,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Glass_of_Milk_%2833657535532%29.jpg/960px-Glass_of_Milk_%2833657535532%29.jpg"
+        },
+        {
+          "id": "catalog.cottageCheese",
+          "name": {
+            "en": "Cottage cheese",
+            "uk": "Сир кисломолочний"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 98,
+          "protein": 11,
+          "carbs": 3.4,
+          "fats": 4.3,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/1/16/Cottagecheese200px.jpg"
+        },
+        {
+          "id": "catalog.kefir",
+          "name": {
+            "en": "Kefir",
+            "uk": "Кефір"
+          },
+          "serving": {
+            "en": "1 cup (200 ml)",
+            "uk": "1 склянка (200 мл)"
+          },
+          "calories": 82,
+          "protein": 6,
+          "carbs": 8,
+          "fats": 2.5,
+          "amount": 200,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/8/83/Kefir_in_a_glass.JPG"
+        },
+        {
+          "id": "catalog.hardCheese",
+          "name": {
+            "en": "Hard cheese",
+            "uk": "Твердий сир"
+          },
+          "serving": {
+            "en": "1 slice (30 g)",
+            "uk": "1 скибка (30 г)"
+          },
+          "calories": 120,
+          "protein": 7,
+          "carbs": 0.4,
+          "fats": 10,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/1/18/Somerset-Cheddar.jpg"
+        },
+        {
+          "id": "catalog.sourCream",
+          "name": {
+            "en": "Sour cream",
+            "uk": "Сметана"
+          },
+          "serving": {
+            "en": "2 tbsp (30 g)",
+            "uk": "2 ст. л. (30 г)"
+          },
+          "calories": 59,
+          "protein": 0.7,
+          "carbs": 1.3,
+          "fats": 5.8,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/60/Smetana.jpg"
+        },
+        {
+          "id": "catalog.plainYogurt",
+          "name": {
+            "en": "Plain yogurt",
+            "uk": "Йогурт натуральний"
+          },
+          "serving": {
+            "en": "150 g",
+            "uk": "150 г"
+          },
+          "calories": 95,
+          "protein": 5,
+          "carbs": 7,
+          "fats": 5,
+          "amount": 150,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Joghurt.jpg"
+        },
+        {
+          "id": "catalog.mozzarella",
+          "name": {
+            "en": "Mozzarella",
+            "uk": "Моцарела"
+          },
+          "serving": {
+            "en": "1 slice (30 g)",
+            "uk": "1 скибка (30 г)"
+          },
+          "calories": 85,
+          "protein": 6,
+          "carbs": 0.6,
+          "fats": 6.3,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Mozzarella_di_bufala3.jpg/960px-Mozzarella_di_bufala3.jpg"
+        },
+        {
+          "id": "catalog.feta",
+          "name": {
+            "en": "Feta",
+            "uk": "Фета"
+          },
+          "serving": {
+            "en": "30 g",
+            "uk": "30 г"
+          },
+          "calories": 75,
+          "protein": 4,
+          "carbs": 1.2,
+          "fats": 6,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/28/Feta_Cheese.jpg"
+        },
+        {
+          "id": "catalog.creamCheese",
+          "name": {
+            "en": "Cream cheese",
+            "uk": "Вершковий сир"
+          },
+          "serving": {
+            "en": "30 g",
+            "uk": "30 г"
+          },
+          "calories": 99,
+          "protein": 2,
+          "carbs": 1.6,
+          "fats": 10,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Philly_cream_cheese.jpg"
+        },
+        {
+          "id": "catalog.ricotta",
+          "name": {
+            "en": "Ricotta",
+            "uk": "Рікота"
+          },
+          "serving": {
+            "en": "100 g",
+            "uk": "100 г"
+          },
+          "calories": 174,
+          "protein": 11,
+          "carbs": 3,
+          "fats": 13,
+          "amount": 100,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/da/Ricotta_fresca.jpg"
+        },
+        {
+          "id": "catalog.parmesan",
+          "name": {
+            "en": "Parmesan",
+            "uk": "Пармезан"
+          },
+          "serving": {
+            "en": "20 g",
+            "uk": "20 г"
+          },
+          "calories": 84,
+          "protein": 8,
+          "carbs": 0.7,
+          "fats": 5.5,
+          "amount": 20,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Parmigiano_Reggiano.jpg"
+        }
+      ]
+    },
+    {
+      "id": "grainsCereals",
+      "items": [
+        {
+          "id": "catalog.oatmeal",
+          "name": {
+            "en": "Oatmeal, cooked",
+            "uk": "Вівсянка варена"
+          },
+          "serving": {
+            "en": "1 cup (230 g)",
+            "uk": "1 чашка (230 г)"
+          },
+          "calories": 166,
+          "protein": 6,
+          "carbs": 28,
+          "fats": 3.6,
+          "amount": 230,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/39/Oatmeal.jpg"
+        },
+        {
+          "id": "catalog.whiteRice",
+          "name": {
+            "en": "White rice, cooked",
+            "uk": "Білий рис варений"
+          },
+          "serving": {
+            "en": "1 cup (160 g)",
+            "uk": "1 чашка (160 г)"
+          },
+          "calories": 206,
+          "protein": 4.3,
+          "carbs": 45,
+          "fats": 0.4,
+          "amount": 160,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a3/White_rice.jpg"
+        },
+        {
+          "id": "catalog.brownRice",
+          "name": {
+            "en": "Brown rice, cooked",
+            "uk": "Бурий рис варений"
+          },
+          "serving": {
+            "en": "1 cup (195 g)",
+            "uk": "1 чашка (195 г)"
+          },
+          "calories": 216,
+          "protein": 5,
+          "carbs": 45,
+          "fats": 1.8,
+          "amount": 195,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Brown_rice.jpg/960px-Brown_rice.jpg"
+        },
+        {
+          "id": "catalog.buckwheat",
+          "name": {
+            "en": "Buckwheat, cooked",
+            "uk": "Гречка варена"
+          },
+          "serving": {
+            "en": "1 cup (170 g)",
+            "uk": "1 чашка (170 г)"
+          },
+          "calories": 155,
+          "protein": 5.7,
+          "carbs": 33,
+          "fats": 1,
+          "amount": 170,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Grechka.jpg/960px-Grechka.jpg"
+        },
+        {
+          "id": "catalog.pasta",
+          "name": {
+            "en": "Pasta, cooked",
+            "uk": "Паста варена"
+          },
+          "serving": {
+            "en": "1 cup (140 g)",
+            "uk": "1 чашка (140 г)"
+          },
+          "calories": 220,
+          "protein": 8,
+          "carbs": 43,
+          "fats": 1.3,
+          "amount": 140,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/%28Pasta%29_by_David_Adam_Kess_%28pic.2%29.jpg/960px-%28Pasta%29_by_David_Adam_Kess_%28pic.2%29.jpg"
+        },
+        {
+          "id": "catalog.wheatBread",
+          "name": {
+            "en": "Whole wheat bread",
+            "uk": "Цільнозерновий хліб"
+          },
+          "serving": {
+            "en": "1 slice (30 g)",
+            "uk": "1 скибка (30 г)"
+          },
+          "calories": 81,
+          "protein": 4,
+          "carbs": 14,
+          "fats": 1.1,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Whole_wheat_bread.jpg/960px-Whole_wheat_bread.jpg"
+        },
+        {
+          "id": "catalog.whiteBread",
+          "name": {
+            "en": "White bread",
+            "uk": "Білий хліб"
+          },
+          "serving": {
+            "en": "1 slice (25 g)",
+            "uk": "1 скибка (25 г)"
+          },
+          "calories": 67,
+          "protein": 2,
+          "carbs": 12,
+          "fats": 0.8,
+          "amount": 25,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Wei%C3%9Fbrot-1.jpg"
+        },
+        {
+          "id": "catalog.ryeBread",
+          "name": {
+            "en": "Rye bread",
+            "uk": "Житній хліб"
+          },
+          "serving": {
+            "en": "1 slice (32 g)",
+            "uk": "1 скибка (32 г)"
+          },
+          "calories": 83,
+          "protein": 2.7,
+          "carbs": 15,
+          "fats": 1.1,
+          "amount": 32,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Market_Bread%2C_Riga%2C_Latvia.jpg"
+        },
+        {
+          "id": "catalog.granola",
+          "name": {
+            "en": "Granola",
+            "uk": "Гранола"
+          },
+          "serving": {
+            "en": "40 g",
+            "uk": "40 г"
+          },
+          "calories": 190,
+          "protein": 4.5,
+          "carbs": 29,
+          "fats": 6,
+          "amount": 40,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/94/Granola%2C_yogurt%2C_fruit._%2816696981528%29.jpg"
+        },
+        {
+          "id": "catalog.cornflakes",
+          "name": {
+            "en": "Corn flakes",
+            "uk": "Кукурудзяні пластівці"
+          },
+          "serving": {
+            "en": "30 g",
+            "uk": "30 г"
+          },
+          "calories": 113,
+          "protein": 2,
+          "carbs": 24,
+          "fats": 0.4,
+          "amount": 30,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/5/52/Hojuelas_de_maiz.jpg"
+        },
+        {
+          "id": "catalog.tortilla",
+          "name": {
+            "en": "Wheat tortilla",
+            "uk": "Тортилья пшенична"
+          },
+          "serving": {
+            "en": "1 piece (40 g)",
+            "uk": "1 шт (40 г)"
+          },
+          "calories": 104,
+          "protein": 2.8,
+          "carbs": 18,
+          "fats": 2.3,
+          "amount": 40,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/5/56/NCI_flour_tortillas.jpg"
+        },
+        {
+          "id": "catalog.pearlBarley",
+          "name": {
+            "en": "Pearl barley, cooked",
+            "uk": "Перловка варена"
+          },
+          "serving": {
+            "en": "1 cup (157 g)",
+            "uk": "1 чашка (157 г)"
+          },
+          "calories": 193,
+          "protein": 3.5,
+          "carbs": 44,
+          "fats": 0.7,
+          "amount": 157,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Pearled_barley.JPG"
+        },
+        {
+          "id": "catalog.couscous",
+          "name": {
+            "en": "Couscous, cooked",
+            "uk": "Кускус варений"
+          },
+          "serving": {
+            "en": "1 cup (157 g)",
+            "uk": "1 чашка (157 г)"
+          },
+          "calories": 176,
+          "protein": 6,
+          "carbs": 36,
+          "fats": 0.3,
+          "amount": 157,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Couscous.jpg"
+        },
+        {
+          "id": "catalog.quinoa",
+          "name": {
+            "en": "Quinoa, cooked",
+            "uk": "Кіноа варена"
+          },
+          "serving": {
+            "en": "1 cup (185 g)",
+            "uk": "1 чашка (185 г)"
+          },
+          "calories": 222,
+          "protein": 8,
+          "carbs": 39,
+          "fats": 3.6,
+          "amount": 185,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Quinoa_closeup.jpg"
+        },
+        {
+          "id": "catalog.millet",
+          "name": {
+            "en": "Millet, cooked",
+            "uk": "Пшоно варене"
+          },
+          "serving": {
+            "en": "1 cup (174 g)",
+            "uk": "1 чашка (174 г)"
+          },
+          "calories": 207,
+          "protein": 6,
+          "carbs": 41,
+          "fats": 1.7,
+          "amount": 174,
+          "unit": "g",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/4/49/Cooked_Millet_Rice.jpg"
+        }
+      ]
+    },
+    {
+      "id": "beverages",
+      "items": [
+        {
+          "id": "catalog.blackCoffee",
+          "name": {
+            "en": "Black coffee",
+            "uk": "Чорна кава"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 чашка (240 мл)"
+          },
+          "calories": 2,
+          "protein": 0.3,
+          "carbs": 0,
+          "fats": 0,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Latte_and_dark_coffee.jpg"
+        },
+        {
+          "id": "catalog.greenTea",
+          "name": {
+            "en": "Green tea",
+            "uk": "Зелений чай"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 чашка (240 мл)"
+          },
+          "calories": 2,
+          "protein": 0,
+          "carbs": 0.5,
+          "fats": 0,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/36/Green_tea_3_appearances.jpg"
+        },
+        {
+          "id": "catalog.water",
+          "name": {
+            "en": "Water",
+            "uk": "Вода"
+          },
+          "serving": {
+            "en": "1 glass (250 ml)",
+            "uk": "1 склянка (250 мл)"
+          },
+          "calories": 0,
+          "protein": 0,
+          "carbs": 0,
+          "fats": 0,
+          "amount": 250,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Glass_of_water.jpg/960px-Glass_of_water.jpg"
+        },
+        {
+          "id": "catalog.orangeJuice",
+          "name": {
+            "en": "Orange juice",
+            "uk": "Апельсиновий сік"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 склянка (240 мл)"
+          },
+          "calories": 112,
+          "protein": 1.7,
+          "carbs": 26,
+          "fats": 0.5,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Orange_juice_1.jpg/960px-Orange_juice_1.jpg"
+        },
+        {
+          "id": "catalog.latte",
+          "name": {
+            "en": "Latte",
+            "uk": "Лате"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 чашка (240 мл)"
+          },
+          "calories": 120,
+          "protein": 6,
+          "carbs": 10,
+          "fats": 5,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Caffe_Latte_at_Pulse_Cafe.jpg"
+        },
+        {
+          "id": "catalog.blackTea",
+          "name": {
+            "en": "Black tea",
+            "uk": "Чорний чай"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 чашка (240 мл)"
+          },
+          "calories": 2,
+          "protein": 0,
+          "carbs": 0.5,
+          "fats": 0,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Cup_of_black_tea.png"
+        },
+        {
+          "id": "catalog.cappuccino",
+          "name": {
+            "en": "Cappuccino",
+            "uk": "Капучино"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 чашка (240 мл)"
+          },
+          "calories": 74,
+          "protein": 4,
+          "carbs": 6,
+          "fats": 4,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Cappuccino_in_original.jpg/960px-Cappuccino_in_original.jpg"
+        },
+        {
+          "id": "catalog.appleJuice",
+          "name": {
+            "en": "Apple juice",
+            "uk": "Яблучний сік"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 склянка (240 мл)"
+          },
+          "calories": 114,
+          "protein": 0.2,
+          "carbs": 28,
+          "fats": 0.3,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Apfelsaft_im_Glas.jpg"
+        },
+        {
+          "id": "catalog.cola",
+          "name": {
+            "en": "Cola",
+            "uk": "Кола"
+          },
+          "serving": {
+            "en": "1 can (330 ml)",
+            "uk": "1 банка (330 мл)"
+          },
+          "calories": 139,
+          "protein": 0,
+          "carbs": 35,
+          "fats": 0,
+          "amount": 330,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/2/27/Coca_Cola_Flasche_-_Original_Taste.jpg"
+        },
+        {
+          "id": "catalog.hotChocolate",
+          "name": {
+            "en": "Hot chocolate",
+            "uk": "Какао"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 чашка (240 мл)"
+          },
+          "calories": 190,
+          "protein": 8,
+          "carbs": 27,
+          "fats": 6,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/9c/After_The_St._Patrick%27s_Parade_Late_Lunch_%40_Lemon%2C_Dawson_Street%2C_Dublin%2C_Rep._Of_Ireland_A_Fine_Tradition%21_%286992614913%29.jpg"
+        },
+        {
+          "id": "catalog.kvass",
+          "name": {
+            "en": "Kvass",
+            "uk": "Квас"
+          },
+          "serving": {
+            "en": "1 glass (250 ml)",
+            "uk": "1 склянка (250 мл)"
+          },
+          "calories": 68,
+          "protein": 0.2,
+          "carbs": 16,
+          "fats": 0,
+          "amount": 250,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/97/Mint_bread_kvas.jpg"
+        },
+        {
+          "id": "catalog.tomatoJuice",
+          "name": {
+            "en": "Tomato juice",
+            "uk": "Томатний сік"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 склянка (240 мл)"
+          },
+          "calories": 41,
+          "protein": 1.8,
+          "carbs": 10,
+          "fats": 0.1,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/94/A_glass_of_tomato_juice_on_a_black_plate.jpg"
+        },
+        {
+          "id": "catalog.lemonade",
+          "name": {
+            "en": "Lemonade",
+            "uk": "Лимонад"
+          },
+          "serving": {
+            "en": "1 cup (240 ml)",
+            "uk": "1 склянка (240 мл)"
+          },
+          "calories": 99,
+          "protein": 0.2,
+          "carbs": 26,
+          "fats": 0.1,
+          "amount": 240,
+          "unit": "ml",
+          "imageURL": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Lemonade.jpg"
+        }
+      ]
+    }
+  ]
+}

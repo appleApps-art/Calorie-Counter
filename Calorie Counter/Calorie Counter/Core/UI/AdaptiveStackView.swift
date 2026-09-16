@@ -22,6 +22,9 @@ final class AdaptiveStackView: UIStackView {
         guard adaptSpacing else { return }
         let designValue = storedDesignSpacing ?? spacing
         storedDesignSpacing = designValue
-        spacing = .adaptHeight(designValue)
+        let value = axis == .horizontal
+            ? CGFloat.adaptWidth(designValue, in: self)
+            : CGFloat.adaptHeight(designValue, in: self)
+        if spacing != value { spacing = value }
     }
 }

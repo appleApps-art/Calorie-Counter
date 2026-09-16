@@ -27,7 +27,17 @@ enum FoodEntryMapper {
             portionGrams: object.portionGrams?.doubleValue,
             portionMilliliters: object.portionMilliliters?.doubleValue,
             notes: object.notes ?? "",
-            source: object.source
+            source: object.source,
+            imageURL: object.imageURLString.flatMap(URL.init(string:)),
+            imageData: object.imageData,
+            healthSampleID: object.healthSampleID,
+            isEaten: object.isEaten,
+            ingredientLines: decodeStringArray(object.ingredientsJSON),
+            recipeSteps: decodeStringArray(object.stepsJSON),
+            catalogExternalId: object.catalogExternalId,
+            catalogKind: FoodProductKind(rawValue: object.catalogKind ?? ""),
+            foodType: FoodType(rawValue: object.foodType ?? ""),
+            hasCompleteNutrition: object.hasCompleteNutrition?.boolValue
         )
     }
 
@@ -47,5 +57,33 @@ enum FoodEntryMapper {
         object.portionMilliliters = entry.portionMilliliters.map { NSNumber(value: $0) }
         object.notes = entry.notes.isEmpty ? nil : entry.notes
         object.source = entry.source
+        object.imageURLString = entry.imageURL?.absoluteString
+        object.imageData = entry.imageData
+        object.healthSampleID = entry.healthSampleID
+        object.isEaten = entry.isEaten
+        object.ingredientsJSON = encodeStringArray(entry.ingredientLines)
+        object.stepsJSON = encodeStringArray(entry.recipeSteps)
+        object.catalogExternalId = entry.catalogExternalId
+        object.catalogKind = entry.catalogKind?.rawValue
+        object.foodType = entry.resolvedFoodType?.rawValue
+        object.hasCompleteNutrition = entry.hasCompleteNutrition.map { NSNumber(value: $0) }
+    }
+
+    private static func encodeStringArray(_ values: [String]) -> String? {
+        let cleaned = values.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !cleaned.isEmpty,
+              let data = try? JSONEncoder().encode(cleaned),
+              let json = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return json
+    }
+
+    private static func decodeStringArray(_ json: String?) -> [String] {
+        guard let json, let data = json.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return decoded.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
     }
 }

@@ -1,0 +1,30 @@
+---
+description: Never invent missing facts, assets, tokens, or behavior — ask first
+alwaysApply: true
+---
+
+# Ask, do not invent
+
+If anything is unknown, missing, incomplete, or uncertain — **stop and ask**. Do not guess. Do not fill gaps with invented values, assets, copy, API behavior, layout, or business rules.
+
+Ask before continuing when:
+
+- a design token, color, image, GIF, or dark/light variant is missing
+- Figma, copy, or requirements do not specify a value or state
+- UI behavior, edge cases, or API contracts are unclear
+- you are not sure which existing component, screen, or pattern to reuse
+- a previous decision in chat might be wrong or outdated
+
+How to ask:
+
+- say what is missing and why it blocks the work
+- offer the smallest set of concrete options when that helps
+- wait for an answer before writing or changing code
+
+Do not:
+
+- invent colors, spacing, copy, assets, or “close enough” stand-ins
+- copy a background, image, or card color from another screen because it “looks similar”
+- assume Dark/Light, iOS version, or device behavior without a source
+- proceed with a guessed default and mention it only afterwards
+- keep coding when Figma for **this** screen was not read in this turn

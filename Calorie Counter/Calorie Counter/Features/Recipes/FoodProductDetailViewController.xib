@@ -22,6 +22,9 @@
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
+                <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bity-readable" userLabel="Readable content column">
+                    <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                </view>
                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="fill" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="stack" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
                     <rect key="frame" x="24" y="88" width="345" height="200"/>
                     <subviews>
@@ -47,23 +50,39 @@
                 </stackView>
             </subviews>
             <viewLayoutGuide key="safeArea" id="safe"/>
+            
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
-                <constraint firstItem="stack" firstAttribute="leading" secondItem="safe" secondAttribute="leading" constant="24" id="c1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="stack" firstAttribute="leading" secondItem="bity-readable" secondAttribute="leading" constant="24" id="c1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="safe" firstAttribute="trailing" secondItem="stack" secondAttribute="trailing" constant="24" id="c2" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="bity-readable" firstAttribute="trailing" secondItem="stack" secondAttribute="trailing" constant="24" id="c2" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
                 <constraint firstItem="stack" firstAttribute="top" secondItem="safe" secondAttribute="top" constant="24" id="c3" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
+                <constraint firstItem="bity-readable" firstAttribute="centerX" secondItem="safe" secondAttribute="centerX" id="bity-readable-center"/>
+                <constraint firstItem="bity-readable" firstAttribute="width" secondItem="safe" secondAttribute="width" priority="999" id="bity-readable-fluid"/>
+                <constraint firstItem="bity-readable" firstAttribute="width" relation="lessThanOrEqual" constant="760" id="bity-readable-cap"/>
+                <constraint firstItem="bity-readable" firstAttribute="width" relation="lessThanOrEqual" secondItem="safe" secondAttribute="width" id="bity-readable-fit"/>
+                <constraint firstItem="bity-readable" firstAttribute="top" secondItem="safe" secondAttribute="top" id="bity-readable-top"/>
+                <constraint firstItem="bity-readable" firstAttribute="bottom" secondItem="safe" secondAttribute="bottom" id="bity-readable-bottom"/>
             </constraints>
             <point key="canvasLocation" x="140" y="20"/>
         </view>

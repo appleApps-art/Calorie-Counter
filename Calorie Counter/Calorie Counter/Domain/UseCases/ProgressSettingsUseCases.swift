@@ -8,6 +8,11 @@ final class FetchProgressSummaryUseCase {
     private let fetchProgressPhotosUseCase: FetchProgressPhotosUseCase
     private let rewardsRepository: RewardsRepositoryProtocol
     private let evaluateStreakUseCase: EvaluateStreakUseCase
+    private let userGoalsRepository: UserGoalsRepositoryProtocol
+    private let fetchOnboardingStateUseCase: FetchOnboardingStateUseCase
+    private let calculateNutritionPlanUseCase: CalculateNutritionPlanUseCase
+    private let healthActivityStore: HealthDailyActivityStoring?
+    private let refreshGoals: (() throws -> Void)?
 
     init(
         foodEntryRepository: FoodEntryRepositoryProtocol,
@@ -16,7 +21,12 @@ final class FetchProgressSummaryUseCase {
         workoutEntryRepository: WorkoutEntryRepositoryProtocol,
         fetchProgressPhotosUseCase: FetchProgressPhotosUseCase,
         rewardsRepository: RewardsRepositoryProtocol,
-        evaluateStreakUseCase: EvaluateStreakUseCase
+        evaluateStreakUseCase: EvaluateStreakUseCase,
+        userGoalsRepository: UserGoalsRepositoryProtocol,
+        fetchOnboardingStateUseCase: FetchOnboardingStateUseCase,
+        calculateNutritionPlanUseCase: CalculateNutritionPlanUseCase,
+        healthActivityStore: HealthDailyActivityStoring? = nil,
+        refreshGoals: (() throws -> Void)? = nil
     ) {
         self.foodEntryRepository = foodEntryRepository
         self.waterEntryRepository = waterEntryRepository
@@ -25,9 +35,15 @@ final class FetchProgressSummaryUseCase {
         self.fetchProgressPhotosUseCase = fetchProgressPhotosUseCase
         self.rewardsRepository = rewardsRepository
         self.evaluateStreakUseCase = evaluateStreakUseCase
+        self.userGoalsRepository = userGoalsRepository
+        self.fetchOnboardingStateUseCase = fetchOnboardingStateUseCase
+        self.calculateNutritionPlanUseCase = calculateNutritionPlanUseCase
+        self.healthActivityStore = healthActivityStore
+        self.refreshGoals = refreshGoals
     }
 
-    func execute(days: Int = 30, now: Date = Date(), calendar: Calendar = .current) throws -> ProgressSummary {
+    func execute(days: Int = 180, now: Date = Date(), calendar: Calendar = .current) throws -> ProgressSummary {
+        try refreshGoals?()
         let start = calendar.date(byAdding: .day, value: -days, to: calendar.startOfDay(for: now)) ?? now
         let foods = try foodEntryRepository.fetchEntries(from: start, to: now)
         let waters = try waterEntryRepository.fetchEntries(from: start, to: now)
@@ -39,7 +55,7 @@ final class FetchProgressSummaryUseCase {
             guard let day = calendar.date(byAdding: .day, value: -((days - 1) - offset), to: calendar.startOfDay(for: now)) else {
                 continue
             }
-            let dayFoods = foodsByDay[day] ?? []
+            let dayFoods = (foodsByDay[day] ?? []).filter(\.isEaten)
             let dayWaters = watersByDay[day] ?? []
             points.append(
                 DailyMacroPoint(
@@ -48,21 +64,37 @@ final class FetchProgressSummaryUseCase {
                     protein: dayFoods.reduce(0) { $0 + $1.protein },
                     carbs: dayFoods.reduce(0) { $0 + $1.carbs },
                     fats: dayFoods.reduce(0) { $0 + $1.fats },
+                    fiber: dayFoods.reduce(0) { $0 + $1.fiber },
                     waterMilliliters: dayWaters.reduce(0) { $0 + $1.amountMilliliters }
                 )
             )
         }
 
         let streak = try evaluateStreakUseCase.execute(now: now, calendar: calendar)
+        let goals = try userGoalsRepository.fetchGoals()
+        let profile = try? fetchOnboardingStateUseCase.execute()
+        let activityBurnTarget = profile.flatMap { calculateNutritionPlanUseCase.execute(profile: $0) }?.activityBurnTarget ?? 0
         return ProgressSummary(
             weightEntries: try weightEntryRepository.fetchEntries(),
             caloriePoints: points,
             workouts: try workoutEntryRepository.fetchEntries(from: start, to: now),
             photos: try fetchProgressPhotosUseCase.execute(),
             rewards: try rewardsRepository.fetchState(),
-            streak: streak
+            streak: streak,
+            goals: goals,
+            activityBurnTarget: activityBurnTarget,
+            healthActivity: try healthActivityStore?.fetch(from: start, to: now) ?? []
         )
     }
+}
+
+struct ChatConversation: Identifiable, Equatable {
+    // Older versions saved no conversation boundaries. Keep those messages together
+    // without rewriting their content or guessing which messages belong together.
+    static let legacyID = UUID(uuidString: "39DBA9EE-431F-454D-B071-3602DF037FE5")!
+
+    let id: UUID
+    let messages: [ChatHistoryMessage]
 }
 
 final class PersistChatHistoryUseCase {
@@ -76,10 +108,53 @@ final class PersistChatHistoryUseCase {
         try chatHistoryRepository.fetchRecent(limit: limit)
     }
 
-    func append(role: String, content: String) throws {
+    func loadAll() throws -> [ChatHistoryMessage] {
+        try chatHistoryRepository.fetchAll()
+    }
+
+    func conversations() throws -> [ChatConversation] {
+        let grouped = Dictionary(grouping: try loadAll()) {
+            $0.conversationID ?? ChatConversation.legacyID
+        }
+        return grouped.compactMap { id, messages in
+            guard messages.contains(where: { $0.role == "user" }) else { return nil }
+            return ChatConversation(id: id, messages: messages.sorted { $0.createdAt < $1.createdAt })
+        }.sorted {
+            ($0.messages.last?.createdAt ?? .distantPast) > ($1.messages.last?.createdAt ?? .distantPast)
+        }
+    }
+
+    func loadConversation(id: UUID) throws -> [ChatHistoryMessage] {
+        try loadAll().filter { ($0.conversationID ?? ChatConversation.legacyID) == id }
+    }
+
+    func append(id: UUID = UUID(), role: String, content: String, conversationID: UUID? = nil) throws {
         try chatHistoryRepository.append(
-            ChatHistoryMessage(id: UUID(), role: role, content: content, createdAt: Date())
+            ChatHistoryMessage(id: id, role: role, content: content, createdAt: Date(), conversationID: conversationID)
         )
+    }
+
+    func replace(_ message: ChatHistoryMessage) throws {
+        // A delayed card update must not recreate a message after history was cleared.
+        var all = try chatHistoryRepository.fetchAll()
+        if let index = all.firstIndex(where: { $0.id == message.id }) {
+            all[index] = ChatHistoryMessage(
+                id: message.id,
+                role: message.role,
+                content: message.content,
+                createdAt: all[index].createdAt,
+                conversationID: all[index].conversationID
+            )
+            try chatHistoryRepository.replaceAll(all)
+        }
+    }
+
+    func replaceAll(_ messages: [ChatHistoryMessage]) throws {
+        try chatHistoryRepository.replaceAll(messages)
+    }
+
+    func deleteAll() throws {
+        try chatHistoryRepository.replaceAll([])
     }
 }
 
@@ -122,8 +197,20 @@ final class RefreshSubscriptionStatusUseCase {
         try await subscriptionService.purchase(productID: productID)
     }
 
+    func purchase(productID: String, placement: SubscriptionPlacement) async throws -> SubscriptionStatus {
+        try await subscriptionService.purchase(productID: productID, placement: placement)
+    }
+
     func restore() async throws -> SubscriptionStatus {
         try await subscriptionService.restorePurchases()
+    }
+
+    func loadPlacement(_ placement: SubscriptionPlacement) async throws -> SubscriptionOffer {
+        try await subscriptionService.loadPlacement(placement)
+    }
+
+    func logShowPlacement(_ placement: SubscriptionPlacement) async {
+        await subscriptionService.logShowPlacement(placement)
     }
 }
 
@@ -168,14 +255,40 @@ final class RequestHealthSyncAuthorizationUseCase {
     }
 
     func execute() async throws -> Bool {
-        let granted = try await healthSync.requestAuthorization()
-        if granted {
-            var settings = appSettingsStore.settings
-            settings.healthSyncEnabled = true
-            appSettingsStore.settings = settings
-        }
-        return granted
+        let completed = try await healthSync.requestAuthorization()
+        var snapshot = healthSync.authorizationSnapshot()
+        if completed { snapshot.canAttemptRead = true }
+        apply(snapshot, requested: true)
+        return completed
     }
+
+    func refreshFromStore() -> HealthAuthorizationSnapshot {
+        let snapshot = healthSync.authorizationSnapshot()
+        apply(snapshot, requested: false)
+        guard appSettingsStore.settings.healthSyncEnabled else { return snapshot.isAvailable ? .disconnected : .unavailable }
+        return snapshot
+    }
+
+    private func apply(_ snapshot: HealthAuthorizationSnapshot, requested: Bool) {
+        var settings = appSettingsStore.settings
+        if requested {
+            settings.healthAuthorizationRequested = true
+            settings.healthSyncUserDisabled = false
+            if snapshot.isConnected {
+                // A fresh connection restores import choices that older app
+                // versions incorrectly disabled from denied write permissions.
+                settings.healthSyncWeight = true
+                settings.healthSyncWater = true
+                settings.healthSyncWorkouts = true
+                settings.healthSyncFood = true
+                settings.healthSyncProfile = true
+            }
+        }
+        settings.healthSyncEnabled = !settings.healthSyncUserDisabled && snapshot.isConnected
+        // Per-type flags are import preferences. Write-denied is not read-denied.
+        appSettingsStore.settings = settings
+    }
+
 }
 
 final class ComputeNutritionFactsUseCase {

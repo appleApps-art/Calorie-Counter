@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="RecipeBrowseSectionView" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="cardsScroll" destination="scroll" id="o-scroll"/>
+                <outlet property="cardsStack" destination="cards" id="o-stack"/>
+                <outlet property="seeMoreButton" destination="more" id="o-more"/>
+                <outlet property="titleLabel" destination="title" id="o-title"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="root">
+            <rect key="frame" x="0.0" y="0.0" width="370" height="186"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Healthy Breakfast" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
+                    <color key="textColor" name="BityTextPrimary"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="right" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="more">
+                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
+                    <state key="normal" title="See more">
+                        <color key="titleColor" red="0.0" green="0.50588235294117645" blue="0.59607843137254901" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                </button>
+                <scrollView clipsSubviews="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="scroll">
+                    <subviews>
+                        <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="cards" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </stackView>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="cards" firstAttribute="leading" secondItem="scroll" secondAttribute="leading" id="cl"/>
+                        <constraint firstAttribute="trailing" secondItem="cards" secondAttribute="trailing" id="cr"/>
+                        <constraint firstItem="cards" firstAttribute="top" secondItem="scroll" secondAttribute="top" id="ct"/>
+                        <constraint firstAttribute="bottom" secondItem="cards" secondAttribute="bottom" id="cb"/>
+                        <constraint firstItem="cards" firstAttribute="height" secondItem="scroll" secondAttribute="height" id="ch"/>
+                        <constraint firstAttribute="height" constant="142" priority="250" id="sh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="142"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                    </constraints>
+                </scrollView>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="title" firstAttribute="leading" secondItem="root" secondAttribute="leading" id="tl"/>
+                <constraint firstItem="title" firstAttribute="top" secondItem="root" secondAttribute="top" id="tt"/>
+                <constraint firstItem="more" firstAttribute="leading" secondItem="title" secondAttribute="trailing" constant="8" id="ml"/>
+                <constraint firstAttribute="trailing" secondItem="more" secondAttribute="trailing" id="mr"/>
+                <constraint firstItem="more" firstAttribute="centerY" secondItem="title" secondAttribute="centerY" id="my"/>
+                <constraint firstItem="scroll" firstAttribute="top" secondItem="title" secondAttribute="bottom" constant="8" id="st" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                            <real key="value" value="8"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstItem="scroll" firstAttribute="leading" secondItem="root" secondAttribute="leading" id="sl"/>
+                <constraint firstAttribute="trailing" secondItem="scroll" secondAttribute="trailing" id="sr"/>
+                <constraint firstAttribute="bottom" secondItem="scroll" secondAttribute="bottom" id="sb"/>
+            </constraints>
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="BityTextPrimary">
+            <color red="0.102" green="0.102" blue="0.102" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

@@ -35,7 +35,10 @@
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="scroll">
+                <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bity-readable" userLabel="Readable content column">
+                    <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                </view>
+                <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="scroll" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO">
                     <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                     <subviews>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="content">
@@ -47,6 +50,9 @@
                                     <constraints>
                                         <constraint firstAttribute="height" constant="120" id="input-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="120"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
@@ -70,6 +76,9 @@
                                     <constraints>
                                         <constraint firstAttribute="height" constant="48" id="analyze-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="48"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
@@ -142,6 +151,9 @@
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="48" id="edit-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="48"/>
+                                </userDefinedRuntimeAttribute>
                                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                                             </userDefinedRuntimeAttributes>
                                                         </constraint>
@@ -152,6 +164,9 @@
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="48" id="confirm-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="48"/>
+                                </userDefinedRuntimeAttribute>
                                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                                             </userDefinedRuntimeAttributes>
                                                         </constraint>
@@ -168,21 +183,33 @@
                                     <constraints>
                                         <constraint firstItem="ttl-label" firstAttribute="top" secondItem="result-card" secondAttribute="top" constant="16" id="card-t1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstItem="ttl-label" firstAttribute="leading" secondItem="result-card" secondAttribute="leading" constant="16" id="card-l1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstAttribute="trailing" secondItem="ttl-label" secondAttribute="trailing" constant="16" id="card-r1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstItem="body-stack" firstAttribute="top" secondItem="ttl-label" secondAttribute="bottom" constant="8" id="card-t2" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="8"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
@@ -190,6 +217,9 @@
                                         <constraint firstItem="body-stack" firstAttribute="trailing" secondItem="ttl-label" secondAttribute="trailing" id="card-r2"/>
                                         <constraint firstItem="conf-label" firstAttribute="top" secondItem="body-stack" secondAttribute="bottom" constant="12" id="card-t4" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="12"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
@@ -197,6 +227,9 @@
                                         <constraint firstItem="conf-label" firstAttribute="trailing" secondItem="ttl-label" secondAttribute="trailing" id="card-r4"/>
                                         <constraint firstItem="actions" firstAttribute="top" secondItem="conf-label" secondAttribute="bottom" constant="16" id="card-t5" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
@@ -204,6 +237,9 @@
                                         <constraint firstItem="actions" firstAttribute="trailing" secondItem="ttl-label" secondAttribute="trailing" id="card-r5"/>
                                         <constraint firstAttribute="bottom" secondItem="actions" secondAttribute="bottom" constant="16" id="card-b1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
@@ -219,21 +255,33 @@
                             <constraints>
                                 <constraint firstItem="input-tv" firstAttribute="top" secondItem="content" secondAttribute="top" constant="24" id="c-t1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
                                 <constraint firstItem="input-tv" firstAttribute="leading" secondItem="content" secondAttribute="leading" constant="24" id="c-l1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
                                 <constraint firstAttribute="trailing" secondItem="input-tv" secondAttribute="trailing" constant="24" id="c-r1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
                                 <constraint firstItem="meal-seg" firstAttribute="top" secondItem="input-tv" secondAttribute="bottom" constant="16" id="c-t2" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
@@ -241,6 +289,9 @@
                                 <constraint firstItem="meal-seg" firstAttribute="trailing" secondItem="input-tv" secondAttribute="trailing" id="c-r2"/>
                                 <constraint firstItem="analyze-btn" firstAttribute="top" secondItem="meal-seg" secondAttribute="bottom" constant="16" id="c-t3" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
@@ -248,6 +299,9 @@
                                 <constraint firstItem="analyze-btn" firstAttribute="trailing" secondItem="input-tv" secondAttribute="trailing" id="c-r3"/>
                                 <constraint firstItem="status-label" firstAttribute="top" secondItem="analyze-btn" secondAttribute="bottom" constant="16" id="c-t4" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
@@ -255,6 +309,9 @@
                                 <constraint firstItem="status-label" firstAttribute="trailing" secondItem="input-tv" secondAttribute="trailing" id="c-r4"/>
                                 <constraint firstItem="result-card" firstAttribute="top" secondItem="status-label" secondAttribute="bottom" constant="16" id="c-t5" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
@@ -262,6 +319,9 @@
                                 <constraint firstItem="result-card" firstAttribute="trailing" secondItem="input-tv" secondAttribute="trailing" id="c-r5"/>
                                 <constraint firstAttribute="bottom" secondItem="result-card" secondAttribute="bottom" constant="24" id="c-b1" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                     <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                     </userDefinedRuntimeAttributes>
                                 </constraint>
@@ -278,12 +338,19 @@
                 </scrollView>
             </subviews>
             <viewLayoutGuide key="safeArea" id="safe"/>
+            
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
                 <constraint firstItem="scroll" firstAttribute="top" secondItem="safe" secondAttribute="top" id="root-t"/>
-                <constraint firstItem="scroll" firstAttribute="leading" secondItem="root-view" secondAttribute="leading" id="root-l"/>
-                <constraint firstItem="scroll" firstAttribute="trailing" secondItem="root-view" secondAttribute="trailing" id="root-r"/>
+                <constraint firstItem="scroll" firstAttribute="leading" secondItem="bity-readable" secondAttribute="leading" id="root-l"/>
+                <constraint firstItem="scroll" firstAttribute="trailing" secondItem="bity-readable" secondAttribute="trailing" id="root-r"/>
                 <constraint firstItem="scroll" firstAttribute="bottom" secondItem="root-view" secondAttribute="bottom" id="root-b"/>
+                <constraint firstItem="bity-readable" firstAttribute="centerX" secondItem="safe" secondAttribute="centerX" id="bity-readable-center"/>
+                <constraint firstItem="bity-readable" firstAttribute="width" secondItem="safe" secondAttribute="width" priority="999" id="bity-readable-fluid"/>
+                <constraint firstItem="bity-readable" firstAttribute="width" relation="lessThanOrEqual" constant="760" id="bity-readable-cap"/>
+                <constraint firstItem="bity-readable" firstAttribute="width" relation="lessThanOrEqual" secondItem="safe" secondAttribute="width" id="bity-readable-fit"/>
+                <constraint firstItem="bity-readable" firstAttribute="top" secondItem="safe" secondAttribute="top" id="bity-readable-top"/>
+                <constraint firstItem="bity-readable" firstAttribute="bottom" secondItem="safe" secondAttribute="bottom" id="bity-readable-bottom"/>
             </constraints>
             <point key="canvasLocation" x="140" y="20"/>
         </view>

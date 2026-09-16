@@ -12,6 +12,8 @@ final class FoodProductDetailViewController: BaseViewController {
         super.init(nibName: "FoodProductDetailViewController")
     }
 
+    override var analyticsScreen: AnalyticsScreen? { .foodProductDetail }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         viewModel.viewDidLoad()

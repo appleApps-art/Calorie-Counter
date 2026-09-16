@@ -6,14 +6,34 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F04E1303302BA6EC00CD4F00 /* Adapty in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1301302BA6EC00CD4F00 /* Adapty */; };
+		F04E1304302BA6EC00CD4F00 /* AdaptyUI in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1302302BA6EC00CD4F00 /* AdaptyUI */; };
+		F04E1307302BA6EC00CD4F00 /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1306302BA6EC00CD4F00 /* AmplitudeSwift */; };
+		F04E1602302BA6EC00CD4F00 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1601302BA6EC00CD4F00 /* Lottie */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F04E1506302BA6EC00CD4F00 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F04E1210302BA6EC00CD4F00 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F04E1217302BA6EC00CD4F00;
+			remoteInfo = "Calorie Counter";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		F04E1218302BA6EC00CD4F00 /* Calorie Counter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Calorie Counter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F04E1400302BA6EC00CD4F00 /* BityWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BityWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F04E1500302BA6EC00CD4F00 /* Calorie CounterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Calorie CounterTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		F04E122A302BA6ED00CD4F00 /* Exceptions for "Calorie Counter" folder in "Calorie Counter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Data/Services/Widget/WidgetSnapshotController.swift,
 				Resources/Info.plist,
 			);
 			target = F04E1217302BA6EC00CD4F00 /* Calorie Counter */;
@@ -29,10 +49,36 @@
 			path = "Calorie Counter";
 			sourceTree = "<group>";
 		};
+		F04E1402302BA6EC00CD4F00 /* BityWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BityWidget;
+			sourceTree = "<group>";
+		};
+		F04E1413302BA6EC00CD4F00 /* WidgetShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WidgetShared;
+			sourceTree = "<group>";
+		};
+		F04E1502302BA6EC00CD4F00 /* Calorie CounterTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Calorie CounterTests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F04E1215302BA6EC00CD4F00 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F04E1303302BA6EC00CD4F00 /* Adapty in Frameworks */,
+				F04E1304302BA6EC00CD4F00 /* AdaptyUI in Frameworks */,
+				F04E1307302BA6EC00CD4F00 /* AmplitudeSwift in Frameworks */,
+				F04E1602302BA6EC00CD4F00 /* Lottie in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F04E1508302BA6EC00CD4F00 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +92,9 @@
 			isa = PBXGroup;
 			children = (
 				F04E121A302BA6EC00CD4F00 /* Calorie Counter */,
+				F04E1402302BA6EC00CD4F00 /* BityWidget */,
+				F04E1413302BA6EC00CD4F00 /* WidgetShared */,
+				F04E1502302BA6EC00CD4F00 /* Calorie CounterTests */,
 				F04E1219302BA6EC00CD4F00 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +103,8 @@
 			isa = PBXGroup;
 			children = (
 				F04E1218302BA6EC00CD4F00 /* Calorie Counter.app */,
+				F04E1400302BA6EC00CD4F00 /* BityWidget.appex */,
+				F04E1500302BA6EC00CD4F00 /* Calorie CounterTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -78,10 +129,37 @@
 			);
 			name = "Calorie Counter";
 			packageProductDependencies = (
+				F04E1301302BA6EC00CD4F00 /* Adapty */,
+				F04E1302302BA6EC00CD4F00 /* AdaptyUI */,
+				F04E1306302BA6EC00CD4F00 /* AmplitudeSwift */,
+				F04E1601302BA6EC00CD4F00 /* Lottie */,
 			);
 			productName = "Calorie Counter";
 			productReference = F04E1218302BA6EC00CD4F00 /* Calorie Counter.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F04E1501302BA6EC00CD4F00 /* Calorie CounterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F04E1505302BA6EC00CD4F00 /* Build configuration list for PBXNativeTarget "Calorie CounterTests" */;
+			buildPhases = (
+				F04E1507302BA6EC00CD4F00 /* Sources */,
+				F04E1508302BA6EC00CD4F00 /* Frameworks */,
+				F04E1509302BA6EC00CD4F00 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F04E150A302BA6EC00CD4F00 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F04E1502302BA6EC00CD4F00 /* Calorie CounterTests */,
+			);
+			name = "Calorie CounterTests";
+			packageProductDependencies = (
+			);
+			productName = "Calorie CounterTests";
+			productReference = F04E1500302BA6EC00CD4F00 /* Calorie CounterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -96,6 +174,10 @@
 					F04E1217302BA6EC00CD4F00 = {
 						CreatedOnToolsVersion = 26.6;
 					};
+					F04E1501302BA6EC00CD4F00 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = F04E1217302BA6EC00CD4F00;
+					};
 				};
 			};
 			buildConfigurationList = F04E1213302BA6EC00CD4F00 /* Build configuration list for PBXProject "Calorie Counter" */;
@@ -108,18 +190,31 @@
 			);
 			mainGroup = F04E120F302BA6EC00CD4F00;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F04E1300302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */,
+				F04E1305302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */,
+				F04E1600302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "lottie-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F04E1219302BA6EC00CD4F00 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				F04E1217302BA6EC00CD4F00 /* Calorie Counter */,
+				F04E1501302BA6EC00CD4F00 /* Calorie CounterTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		F04E1216302BA6EC00CD4F00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F04E1509302BA6EC00CD4F00 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -136,7 +231,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F04E1507302BA6EC00CD4F00 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F04E150A302BA6EC00CD4F00 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F04E1217302BA6EC00CD4F00 /* Calorie Counter */;
+			targetProxy = F04E1506302BA6EC00CD4F00 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		F04E122C302BA6ED00CD4F00 /* Debug */ = {
@@ -147,14 +257,17 @@
 				CODE_SIGN_ENTITLEMENTS = "Calorie Counter/Resources/Calorie Counter.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RMUS7YURR8;
+				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Calorie Counter/Resources/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is used to scan food barcodes and log meals from photos.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Health data is used to read weight and activity for your calorie plan.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Health data is updated when you log weight, water, or workouts.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Health data is used to import weight, water, workouts, and nutrition so your diary stays up to date.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Health is updated when you log food, water, weight, or workouts in Bity.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to log food by voice.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is used to save progress photos and analyze meal photos.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition is used to log food by voice.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -163,7 +276,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "test.builder.paywall.Calorie-Counter";
+				PRODUCT_BUNDLE_IDENTIFIER = builder.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -183,14 +296,16 @@
 				CODE_SIGN_ENTITLEMENTS = "Calorie Counter/Resources/Calorie Counter.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RMUS7YURR8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Calorie Counter/Resources/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is used to scan food barcodes and log meals from photos.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Health data is used to read weight and activity for your calorie plan.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Health data is updated when you log weight, water, or workouts.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Health data is used to import weight, water, workouts, and nutrition so your diary stays up to date.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Health is updated when you log food, water, weight, or workouts in Bity.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to log food by voice.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is used to save progress photos and analyze meal photos.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition is used to log food by voice.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -199,7 +314,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "test.builder.paywall.Calorie-Counter";
+				PRODUCT_BUNDLE_IDENTIFIER = builder.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -330,6 +445,56 @@
 			};
 			name = Release;
 		};
+		F04E1503302BA6EC00CD4F00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "test.builder.paywall.Calorie-CounterTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Calorie Counter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Calorie Counter";
+			};
+			name = Debug;
+		};
+		F04E1504302BA6EC00CD4F00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "test.builder.paywall.Calorie-CounterTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Calorie Counter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Calorie Counter";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -351,7 +516,66 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		F04E1505302BA6EC00CD4F00 /* Build configuration list for PBXNativeTarget "Calorie CounterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F04E1503302BA6EC00CD4F00 /* Debug */,
+				F04E1504302BA6EC00CD4F00 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F04E1300302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/adaptyteam/AdaptySDK-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.2;
+			};
+		};
+		F04E1305302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/amplitude/Amplitude-Swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.18.7;
+			};
+		};
+		F04E1600302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F04E1301302BA6EC00CD4F00 /* Adapty */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F04E1300302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */;
+			productName = Adapty;
+		};
+		F04E1302302BA6EC00CD4F00 /* AdaptyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F04E1300302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */;
+			productName = AdaptyUI;
+		};
+		F04E1306302BA6EC00CD4F00 /* AmplitudeSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F04E1305302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "Amplitude-Swift" */;
+			productName = AmplitudeSwift;
+		};
+		F04E1601302BA6EC00CD4F00 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F04E1600302BA6EC00CD4F00 /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F04E1210302BA6EC00CD4F00 /* Project object */;
 }

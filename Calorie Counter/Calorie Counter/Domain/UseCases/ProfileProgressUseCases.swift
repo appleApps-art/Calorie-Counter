@@ -52,17 +52,20 @@ final class LogWorkoutUseCase {
     private let awardXPUseCase: AwardXPUseCase?
     private let healthSync: HealthSyncing?
     private let appSettingsStore: AppSettingsStoring?
+    private let analytics: AnalyticsTracking?
 
     init(
         workoutEntryRepository: WorkoutEntryRepositoryProtocol,
         awardXPUseCase: AwardXPUseCase? = nil,
         healthSync: HealthSyncing? = nil,
-        appSettingsStore: AppSettingsStoring? = nil
+        appSettingsStore: AppSettingsStoring? = nil,
+        analytics: AnalyticsTracking? = nil
     ) {
         self.workoutEntryRepository = workoutEntryRepository
         self.awardXPUseCase = awardXPUseCase
         self.healthSync = healthSync
         self.appSettingsStore = appSettingsStore
+        self.analytics = analytics
     }
 
     func execute(
@@ -80,10 +83,14 @@ final class LogWorkoutUseCase {
         )
         try workoutEntryRepository.save(entry)
         try awardXPUseCase?.execute(kind: .workout, relatedID: entry.id)
+        analytics?.track(.workoutLogged)
         let settings = appSettingsStore?.settings
-        if settings?.healthSyncEnabled == true, settings?.healthSyncWorkouts == true {
-            Task {
-                try? await healthSync?.saveWorkout(entry)
+        if settings?.healthSyncEnabled == true,
+           settings?.healthSyncWorkouts == true,
+           entry.source != HealthSyncSource.healthKit
+        {
+            HealthExportQueue.shared.enqueue(entryID: entry.id) { [healthSync] in
+                try await healthSync?.saveWorkout(entry)
             }
         }
         return entry
@@ -94,15 +101,18 @@ final class SaveProgressPhotoUseCase {
     private let progressPhotoRepository: ProgressPhotoRepositoryProtocol
     private let fileStore: ProgressPhotoFileStoring
     private let awardXPUseCase: AwardXPUseCase?
+    private let analytics: AnalyticsTracking?
 
     init(
         progressPhotoRepository: ProgressPhotoRepositoryProtocol,
         fileStore: ProgressPhotoFileStoring,
-        awardXPUseCase: AwardXPUseCase? = nil
+        awardXPUseCase: AwardXPUseCase? = nil,
+        analytics: AnalyticsTracking? = nil
     ) {
         self.progressPhotoRepository = progressPhotoRepository
         self.fileStore = fileStore
         self.awardXPUseCase = awardXPUseCase
+        self.analytics = analytics
     }
 
     func execute(
@@ -132,6 +142,7 @@ final class SaveProgressPhotoUseCase {
         if awardsXP {
             try awardXPUseCase?.execute(kind: .progressPhoto, relatedID: id)
         }
+        analytics?.track(.progressPhotoSaved)
         return photo
     }
 }
@@ -167,19 +178,20 @@ final class DeleteUserPreferenceUseCase {
 }
 
 final class ImportHealthWeightUseCase {
-    private let healthSync: HealthSyncing
-    private let logWeightUseCase: LogWeightUseCase
+    private let syncHealthDataUseCase: SyncHealthDataUseCase
+    private let weightEntryRepository: WeightEntryRepositoryProtocol
 
-    init(healthSync: HealthSyncing, logWeightUseCase: LogWeightUseCase) {
-        self.healthSync = healthSync
-        self.logWeightUseCase = logWeightUseCase
+    init(
+        syncHealthDataUseCase: SyncHealthDataUseCase,
+        weightEntryRepository: WeightEntryRepositoryProtocol
+    ) {
+        self.syncHealthDataUseCase = syncHealthDataUseCase
+        self.weightEntryRepository = weightEntryRepository
     }
 
     func execute() async throws -> WeightEntry? {
-        guard let kilograms = try await healthSync.fetchLatestWeight() else {
-            return nil
-        }
-        return try logWeightUseCase.execute(weightKilograms: kilograms)
+        try await syncHealthDataUseCase.execute()
+        return try weightEntryRepository.fetchEntries().last
     }
 }
 

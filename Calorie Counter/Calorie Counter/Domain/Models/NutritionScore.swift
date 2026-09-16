@@ -13,6 +13,9 @@ enum FoodNutritionBadge: String, Equatable, CaseIterable {
     case lowCarb
     case highFiber
     case lowSugar
+    case lowSodium
+    case glutenFree
+    case vegan
     case balanced
 
     var title: String {
@@ -21,12 +24,31 @@ enum FoodNutritionBadge: String, Equatable, CaseIterable {
         case .lowCarb: return L10n.tr("nutrition.badge.lowCarb")
         case .highFiber: return L10n.tr("nutrition.badge.highFiber")
         case .lowSugar: return L10n.tr("nutrition.badge.lowSugar")
+        case .lowSodium: return L10n.tr("nutrition.badge.lowSodium")
+        case .glutenFree: return L10n.tr("nutrition.badge.glutenFree")
+        case .vegan: return L10n.tr("nutrition.badge.vegan")
         case .balanced: return L10n.tr("nutrition.badge.balanced")
+        }
+    }
+
+    static func fromTag(_ raw: String) -> FoodNutritionBadge? {
+        let key = raw.lowercased().replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "-", with: " ")
+        switch key {
+        case "high protein", "highprotein": return .highProtein
+        case "low carb", "lowcarb": return .lowCarb
+        case "high fiber", "highfiber": return .highFiber
+        case "low sugar", "lowsugar": return .lowSugar
+        case "low sodium", "lowsodium": return .lowSodium
+        case "gluten free", "glutenfree": return .glutenFree
+        case "vegan": return .vegan
+        case "balanced": return .balanced
+        default: return nil
         }
     }
 }
 
 struct DailyValuePercents: Equatable {
+    var calories: Double
     var protein: Double
     var fat: Double
     var carbs: Double
@@ -44,6 +66,7 @@ struct FoodNutritionFacts: Equatable {
 }
 
 enum NutritionFactsCalculator {
+    static let caloriesDV = 2000.0
     static let proteinDV = 50.0
     static let fatDV = 78.0
     static let carbsDV = 275.0
@@ -61,6 +84,7 @@ enum NutritionFactsCalculator {
         sodium: Double
     ) -> FoodNutritionFacts {
         let dv = DailyValuePercents(
+            calories: percent(calories, of: caloriesDV),
             protein: percent(protein, of: proteinDV),
             fat: percent(fats, of: fatDV),
             carbs: percent(carbs, of: carbsDV),
@@ -85,7 +109,7 @@ enum NutritionFactsCalculator {
             score: clamped,
             grade: grade,
             summary: summary(for: grade),
-            badges: badges(calories: calories, protein: protein, carbs: carbs, fats: fats, fiber: fiber, sugar: sugar),
+            badges: badges(calories: calories, protein: protein, carbs: carbs, fats: fats, fiber: fiber, sugar: sugar, sodium: sodium),
             dailyValue: dv
         )
     }
@@ -133,7 +157,8 @@ enum NutritionFactsCalculator {
         carbs: Double,
         fats: Double,
         fiber: Double,
-        sugar: Double
+        sugar: Double,
+        sodium: Double
     ) -> [FoodNutritionBadge] {
         var result: [FoodNutritionBadge] = []
         let proteinShare = calories > 0 ? (protein * 4) / calories : 0
@@ -150,6 +175,9 @@ enum NutritionFactsCalculator {
         }
         if sugar <= 8 {
             result.append(.lowSugar)
+        }
+        if sodium <= 140 {
+            result.append(.lowSodium)
         }
         if proteinShare >= 0.2 && carbShare >= 0.2 && fatShare >= 0.2 && proteinShare <= 0.45 && carbShare <= 0.55 {
             result.append(.balanced)

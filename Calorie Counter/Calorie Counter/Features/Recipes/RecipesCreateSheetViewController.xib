@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="RecipesCreateSheetViewController" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="closeButton" destination="close" id="o-close"/>
+                <outlet property="navTitleLabel" destination="nav-title" id="o-nt"/>
+                <outlet property="scanBarcodeButton" destination="barcode-btn" id="o-bb"/>
+                <outlet property="scanBarcodeCard" destination="barcode-card" id="o-bc"/>
+                <outlet property="scanBarcodeIcon" destination="barcode-icon" id="o-bi"/>
+                <outlet property="scanBarcodeTitleLabel" destination="barcode-title" id="o-btl"/>
+                <outlet property="scanBarcodeWell" destination="barcode-well" id="o-bw"/>
+                <outlet property="scanFoodButton" destination="food-btn" id="o-fb"/>
+                <outlet property="scanFoodCard" destination="food-card" id="o-fc"/>
+                <outlet property="scanFoodIcon" destination="food-icon" id="o-fi"/>
+                <outlet property="scanFoodTitleLabel" destination="food-title" id="o-ftl"/>
+                <outlet property="scanFoodWell" destination="food-well" id="o-fw"/>
+                <outlet property="view" destination="root" id="o-view"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="root">
+            <rect key="frame" x="0.0" y="0.0" width="402" height="198"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="close-wrap">
+                    <rect key="frame" x="16" y="16" width="44" height="44"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="close"/>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="44" id="cww"/>
+                        <constraint firstAttribute="height" constant="44" id="cwh"/>
+                        <constraint firstItem="close" firstAttribute="leading" secondItem="close-wrap" secondAttribute="leading" id="cl"/>
+                        <constraint firstAttribute="trailing" secondItem="close" secondAttribute="trailing" id="cr"/>
+                        <constraint firstItem="close" firstAttribute="top" secondItem="close-wrap" secondAttribute="top" id="ct"/>
+                        <constraint firstAttribute="bottom" secondItem="close" secondAttribute="bottom" id="cb"/>
+                    </constraints>
+                </view>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Log Meal" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="nav-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
+                    <color key="textColor" name="BityTextPrimary"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="grid" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                    <rect key="frame" x="16" y="60" width="370" height="144"/>
+                    <subviews>
+                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="row1" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                            <subviews>
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="food-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="food-well" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="food-icon"/>
+                                            </subviews>
+                                            <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="44" id="fww"/>
+                                                <constraint firstAttribute="height" constant="44" id="fwh"/>
+                                                <constraint firstItem="food-icon" firstAttribute="centerX" secondItem="food-well" secondAttribute="centerX" id="ficx"/>
+                                                <constraint firstItem="food-icon" firstAttribute="centerY" secondItem="food-well" secondAttribute="centerY" id="ficy"/>
+                                                <constraint firstItem="food-icon" firstAttribute="width" constant="16" id="fiw"/>
+                                                <constraint firstItem="food-icon" firstAttribute="height" constant="16" id="fih"/>
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                    <real key="value" value="12"/>
+                                                </userDefinedRuntimeAttribute>
+                                            </userDefinedRuntimeAttributes>
+                                        </view>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Scan Food" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="food-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                            <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="food-btn"/>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstAttribute="height" constant="68" id="fh"/>
+                                        <constraint firstItem="food-well" firstAttribute="leading" secondItem="food-card" secondAttribute="leading" constant="16" id="fwl"/>
+                                        <constraint firstItem="food-well" firstAttribute="centerY" secondItem="food-card" secondAttribute="centerY" id="fwcy"/>
+                                        <constraint firstItem="food-title" firstAttribute="leading" secondItem="food-well" secondAttribute="trailing" constant="8" id="ftl"/>
+                                        <constraint firstAttribute="trailing" secondItem="food-title" secondAttribute="trailing" constant="16" id="ftr"/>
+                                        <constraint firstItem="food-title" firstAttribute="centerY" secondItem="food-card" secondAttribute="centerY" id="ftcy"/>
+                                        <constraint firstItem="food-btn" firstAttribute="leading" secondItem="food-card" secondAttribute="leading" id="fbl"/>
+                                        <constraint firstAttribute="trailing" secondItem="food-btn" secondAttribute="trailing" id="fbr"/>
+                                        <constraint firstItem="food-btn" firstAttribute="top" secondItem="food-card" secondAttribute="top" id="fbt"/>
+                                        <constraint firstAttribute="bottom" secondItem="food-btn" secondAttribute="bottom" id="fbb"/>
+                                    </constraints>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="showsDropShadow" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="showsHairlineBorder" value="NO"/>
+                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                            <real key="value" value="16"/>
+                                        </userDefinedRuntimeAttribute>
+                                    </userDefinedRuntimeAttributes>
+                                </view>
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="barcode-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="barcode-well" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="barcode-icon"/>
+                                            </subviews>
+                                            <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="44" id="bww"/>
+                                                <constraint firstAttribute="height" constant="44" id="bwh"/>
+                                                <constraint firstItem="barcode-icon" firstAttribute="centerX" secondItem="barcode-well" secondAttribute="centerX" id="bicx"/>
+                                                <constraint firstItem="barcode-icon" firstAttribute="centerY" secondItem="barcode-well" secondAttribute="centerY" id="bicy"/>
+                                                <constraint firstItem="barcode-icon" firstAttribute="width" constant="16" id="biw"/>
+                                                <constraint firstItem="barcode-icon" firstAttribute="height" constant="16" id="bih"/>
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                    <real key="value" value="12"/>
+                                                </userDefinedRuntimeAttribute>
+                                            </userDefinedRuntimeAttributes>
+                                        </view>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Scan Barcode" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="barcode-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                            <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="barcode-btn"/>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstAttribute="height" constant="68" id="bh"/>
+                                        <constraint firstItem="barcode-well" firstAttribute="leading" secondItem="barcode-card" secondAttribute="leading" constant="16" id="bwl"/>
+                                        <constraint firstItem="barcode-well" firstAttribute="centerY" secondItem="barcode-card" secondAttribute="centerY" id="bwcy"/>
+                                        <constraint firstItem="barcode-title" firstAttribute="leading" secondItem="barcode-well" secondAttribute="trailing" constant="8" id="btl"/>
+                                        <constraint firstAttribute="trailing" secondItem="barcode-title" secondAttribute="trailing" constant="16" id="btr"/>
+                                        <constraint firstItem="barcode-title" firstAttribute="centerY" secondItem="barcode-card" secondAttribute="centerY" id="btcy"/>
+                                        <constraint firstItem="barcode-btn" firstAttribute="leading" secondItem="barcode-card" secondAttribute="leading" id="bbl"/>
+                                        <constraint firstAttribute="trailing" secondItem="barcode-btn" secondAttribute="trailing" id="bbr"/>
+                                        <constraint firstItem="barcode-btn" firstAttribute="top" secondItem="barcode-card" secondAttribute="top" id="bbt"/>
+                                        <constraint firstAttribute="bottom" secondItem="barcode-btn" secondAttribute="bottom" id="bbb"/>
+                                    </constraints>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="showsDropShadow" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="showsHairlineBorder" value="NO"/>
+                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                            <real key="value" value="16"/>
+                                        </userDefinedRuntimeAttribute>
+                                    </userDefinedRuntimeAttributes>
+                                </view>
+                            </subviews>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO"/>
+                            </userDefinedRuntimeAttributes>
+                        </stackView>
+                        
+                    </subviews>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO"/>
+                    </userDefinedRuntimeAttributes>
+                </stackView>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="safe"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="close-wrap" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="16" id="cwl"/>
+                <constraint firstItem="close-wrap" firstAttribute="top" secondItem="root" secondAttribute="top" constant="16" id="cwt"/>
+                <constraint firstItem="nav-title" firstAttribute="centerX" secondItem="root" secondAttribute="centerX" id="ntx"/>
+                <constraint firstItem="nav-title" firstAttribute="centerY" secondItem="close-wrap" secondAttribute="centerY" id="nty"/>
+                <constraint firstItem="nav-title" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="close-wrap" secondAttribute="trailing" constant="8" id="ntl"/>
+                <constraint firstItem="grid" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="10" id="gl"/>
+                <constraint firstAttribute="trailing" secondItem="grid" secondAttribute="trailing" constant="10" id="gr"/>
+                <constraint firstItem="grid" firstAttribute="top" secondItem="close-wrap" secondAttribute="bottom" constant="30" id="gt"/>
+                <constraint firstItem="safe" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="grid" secondAttribute="bottom" constant="6" id="gb"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="139" y="20"/>
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="BityTextPrimary">
+            <color red="0.145" green="0.145" blue="0.161" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

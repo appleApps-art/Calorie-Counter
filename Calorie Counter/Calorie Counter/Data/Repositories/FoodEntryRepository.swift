@@ -2,6 +2,7 @@ import CoreData
 import Foundation
 
 protocol FoodEntryRepositoryProtocol {
+    func fetchAll() throws -> [FoodEntry]
     func fetchEntries(for date: Date) throws -> [FoodEntry]
     func fetchEntries(from start: Date, to end: Date) throws -> [FoodEntry]
     func fetchEntry(id: UUID) throws -> FoodEntry?
@@ -14,6 +15,13 @@ final class FoodEntryRepository: FoodEntryRepositoryProtocol {
 
     init(coreDataStack: CoreDataStack) {
         self.coreDataStack = coreDataStack
+    }
+
+    func fetchAll() throws -> [FoodEntry] {
+        let context = coreDataStack.viewContext
+        let request = CDFoodEntry.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+        return try context.fetch(request).compactMap(FoodEntryMapper.map)
     }
 
     func fetchEntries(for date: Date) throws -> [FoodEntry] {

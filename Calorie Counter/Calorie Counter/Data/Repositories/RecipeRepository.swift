@@ -6,7 +6,9 @@ protocol RecipeRepositoryProtocol {
     func fetchSaved(externalId: String) throws -> Recipe?
     func save(_ recipe: Recipe) throws
     func delete(id: UUID) throws
+    func deleteSaved(_ recipe: Recipe) throws
     func isSaved(externalId: String) throws -> Bool
+    func isSaved(_ recipe: Recipe) throws -> Bool
 }
 
 final class RecipeRepository: RecipeRepositoryProtocol {
@@ -62,11 +64,36 @@ final class RecipeRepository: RecipeRepositoryProtocol {
         }
     }
 
+    func deleteSaved(_ recipe: Recipe) throws {
+        let context = coreDataStack.viewContext
+        guard let object = try savedObject(for: recipe) else { return }
+        context.delete(object)
+        try coreDataStack.saveContext()
+    }
+
     func isSaved(externalId: String) throws -> Bool {
         let context = coreDataStack.viewContext
         let request = CDSavedRecipe.fetchRequest()
         request.fetchLimit = 1
         request.predicate = NSPredicate(format: "externalId == %@", externalId)
         return try context.fetch(request).first != nil
+    }
+
+    func isSaved(_ recipe: Recipe) throws -> Bool {
+        try savedObject(for: recipe) != nil
+    }
+
+    private func savedObject(for recipe: Recipe) throws -> CDSavedRecipe? {
+        let context = coreDataStack.viewContext
+        let request = CDSavedRecipe.fetchRequest()
+        request.fetchLimit = 1
+        if let externalId = recipe.externalId, !externalId.isEmpty {
+            request.predicate = NSPredicate(format: "externalId == %@", externalId)
+            if let object = try context.fetch(request).first {
+                return object
+            }
+        }
+        request.predicate = NSPredicate(format: "id == %@", recipe.id as CVarArg)
+        return try context.fetch(request).first
     }
 }

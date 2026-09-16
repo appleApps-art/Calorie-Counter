@@ -20,6 +20,18 @@ enum ToolCallValue {
         value as? String
     }
 
+    static func url(_ value: Any?) -> URL? {
+        guard
+            let raw = string(value)?.trimmingCharacters(in: .whitespacesAndNewlines),
+            let url = URL(string: raw),
+            let scheme = url.scheme?.lowercased(),
+            scheme == "http" || scheme == "https"
+        else {
+            return nil
+        }
+        return url
+    }
+
     static func dictionary(_ value: Any?) -> [String: Any] {
         value as? [String: Any] ?? [:]
     }

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light" />
+    <dependencies>
+        <deployment identifier="iOS" />
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506" />
+        <capability name="Safe area layout guides" minToolsVersion="9.0" />
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0" />
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="LogWeightViewController" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="backButton" destination="lw-back" id="lw-o-back" />
+                <outlet property="changeDateButton" destination="lw-cdate" id="lw-o-cdate" />
+                <outlet property="dateBadgeLabel" destination="lw-dbadge" id="lw-o-dbadge" />
+                <outlet property="dateHeaderLabel" destination="lw-dh" id="lw-o-dh" />
+                <outlet property="saveButton" destination="lw-save" id="lw-o-save" />
+                <outlet property="sectionHeaderLabel" destination="lw-sh" id="lw-o-sh" />
+                <outlet property="slider" destination="lw-slider" id="lw-o-slider" />
+                <outlet property="ticksView" destination="lw-ticks" id="lw-o-ticks" />
+                <outlet property="titleLabel" destination="lw-title" id="lw-o-title" />
+                <outlet property="unitLabel" destination="lw-unit" id="lw-o-unit" />
+                <outlet property="unitSegmentedControl" destination="lw-seg" id="lw-o-seg" />
+                <outlet property="valueField" destination="lw-value" id="lw-o-value" />
+                <outlet property="valueFieldWidth" destination="lw-vw" id="lw-o-value-width" />
+                <outlet property="view" destination="lw-root" id="lw-o-view" />
+                <outlet property="weightCard" destination="lw-card" id="lw-o-card" />
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder" />
+        <view contentMode="scaleToFill" id="lw-root">
+            <rect key="frame" x="0.0" y="0.0" width="402" height="874" />
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" />
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-bg" customClass="HomeBackgroundView" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="usesHomeWash" value="NO" />
+                    </userDefinedRuntimeAttributes>
+                </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="lw-back">
+                    <constraints>
+                        <constraint firstAttribute="width" constant="44" id="lw-bw" />
+                        <constraint firstAttribute="height" constant="44" id="lw-bh" />
+                    </constraints>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Log Weight" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="lw-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17" />
+                    <color key="textColor" name="BityTextPrimary" />
+                    <nil key="highlightedColor" />
+                </label>
+                <scrollView clipsSubviews="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" keyboardDismissMode="interactive" translatesAutoresizingMaskIntoConstraints="NO" id="lw-scroll">
+                    <subviews>
+                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="lw-content" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                            <subviews>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="lw-wsec" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <subviews>
+                                        <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="lw-head" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Enter Weight" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="lw-sh" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="32" id="lw-shh" />
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                                    <color key="textColor" name="BityTextPrimary" />
+                                                    <nil key="highlightedColor" />
+                                                </label>
+                                                <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="lw-seg">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="110" id="lw-segw" />
+                                                        <constraint firstAttribute="height" constant="32" id="lw-segh" />
+                                                    </constraints>
+                                                    <segments>
+                                                        <segment title="kg" />
+                                                        <segment title="lbs" />
+                                                    </segments>
+                                                </segmentedControl>
+                                            </subviews>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                            </userDefinedRuntimeAttributes>
+                                        </stackView>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <stackView opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="lw-ticks">
+                                                    <subviews>
+                                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-t0">
+                                                            <color key="backgroundColor" red="0.455" green="0.455" blue="0.502" alpha="0.16" colorSpace="custom" customColorSpace="sRGB" />
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="4" id="lw-tw0" />
+                                                                <constraint firstAttribute="height" constant="4" id="lw-th0" />
+                                                            </constraints>
+                                                        </view>
+                                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-t1">
+                                                            <color key="backgroundColor" red="0.455" green="0.455" blue="0.502" alpha="0.16" colorSpace="custom" customColorSpace="sRGB" />
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="4" id="lw-tw1" />
+                                                                <constraint firstAttribute="height" constant="4" id="lw-th1" />
+                                                            </constraints>
+                                                        </view>
+                                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-t2">
+                                                            <color key="backgroundColor" red="0.455" green="0.455" blue="0.502" alpha="0.16" colorSpace="custom" customColorSpace="sRGB" />
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="4" id="lw-tw2" />
+                                                                <constraint firstAttribute="height" constant="4" id="lw-th2" />
+                                                            </constraints>
+                                                        </view>
+                                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-t3">
+                                                            <color key="backgroundColor" red="0.455" green="0.455" blue="0.502" alpha="0.16" colorSpace="custom" customColorSpace="sRGB" />
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="4" id="lw-tw3" />
+                                                                <constraint firstAttribute="height" constant="4" id="lw-th3" />
+                                                            </constraints>
+                                                        </view>
+                                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-t4">
+                                                            <color key="backgroundColor" red="0.455" green="0.455" blue="0.502" alpha="0.16" colorSpace="custom" customColorSpace="sRGB" />
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="4" id="lw-tw4" />
+                                                                <constraint firstAttribute="height" constant="4" id="lw-th4" />
+                                                            </constraints>
+                                                        </view>
+                                                    </subviews>
+                                                </stackView>
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="60" minValue="30" maxValue="200" translatesAutoresizingMaskIntoConstraints="NO" id="lw-slider" />
+                                                <stackView contentMode="scaleToFill" alignment="firstBaseline" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="lw-number-group">
+                                                    <subviews>
+                                                        <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="right" contentVerticalAlignment="center" textAlignment="right" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="lw-value">
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="100" id="lw-vw" />
+                                                            </constraints>
+                                                            <fontDescription key="fontDescription" type="system" pointSize="34" />
+                                                            <textInputTraits key="textInputTraits" keyboardType="decimalPad" />
+                                                        </textField>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="kg" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="lw-unit" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <fontDescription key="fontDescription" type="system" pointSize="17" />
+                                                            <color key="textColor" name="BityTextSecondary" />
+                                                            <nil key="highlightedColor" />
+                                                        </label>
+                                                    </subviews>
+                                                </stackView>
+                                            </subviews>
+                                            <color key="backgroundColor" name="BityCard" />
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="140" id="lw-cardh" />
+                                                <constraint firstItem="lw-slider" firstAttribute="leading" secondItem="lw-card" secondAttribute="leading" constant="32" id="lw-sldl" />
+                                                <constraint firstItem="lw-card" firstAttribute="trailing" secondItem="lw-slider" secondAttribute="trailing" constant="32" id="lw-sldr" />
+                                                <constraint firstItem="lw-card" firstAttribute="bottom" secondItem="lw-slider" secondAttribute="bottom" constant="28" id="lw-sb" />
+                                                <constraint firstItem="lw-ticks" firstAttribute="leading" secondItem="lw-slider" secondAttribute="leading" constant="16" id="lw-tl" />
+                                                <constraint firstItem="lw-slider" firstAttribute="trailing" secondItem="lw-ticks" secondAttribute="trailing" constant="16" id="lw-tr" />
+                                                <constraint firstItem="lw-ticks" firstAttribute="centerY" secondItem="lw-slider" secondAttribute="centerY" constant="9" id="lw-tickcy" />
+                                                <constraint firstItem="lw-number-group" firstAttribute="top" secondItem="lw-card" secondAttribute="top" constant="16" id="lw-number-top" />
+                                                <constraint firstItem="lw-number-group" firstAttribute="centerX" secondItem="lw-card" secondAttribute="centerX" id="lw-number-center" />
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="NO" />
+                                                <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                    <real key="value" value="24" />
+                                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES" />
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO" />
+                                            </userDefinedRuntimeAttributes>
+                                        </view>
+                                    </subviews>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                    </userDefinedRuntimeAttributes>
+                                </stackView>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="lw-dsec">
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Log Date" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="lw-dh" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="38" id="lw-dhh" />
+                                            </constraints>
+                                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15" />
+                                            <color key="textColor" name="BityTextPrimary" />
+                                            <nil key="highlightedColor" />
+                                        </label>
+                                        <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="lw-drow" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Today" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="lw-dbadge" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="34" id="lw-dbh" />
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17" />
+                                                    <color key="textColor" name="BityTextPrimary" />
+                                                    <nil key="highlightedColor" />
+                                                </label>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="lw-cdate">
+                                                    <state key="normal" title="Change date" />
+                                                </button>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lw-date-spacer" />
+                                            </subviews>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                                            </userDefinedRuntimeAttributes>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="52" id="lw-date-row-height" />
+                                            </constraints>
+                                        </stackView>
+                                    </subviews>
+                                </stackView>
+                            </subviews>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="NO" />
+                            </userDefinedRuntimeAttributes>
+                        </stackView>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="lw-content" firstAttribute="top" secondItem="lw-scroll" secondAttribute="top" constant="16" id="lw-ct" />
+                        <constraint firstItem="lw-content" firstAttribute="leading" secondItem="lw-scroll" secondAttribute="leading" id="lw-cl" />
+                        <constraint firstItem="lw-content" firstAttribute="trailing" secondItem="lw-scroll" secondAttribute="trailing" id="lw-cr" />
+                        <constraint firstItem="lw-content" firstAttribute="bottom" secondItem="lw-scroll" secondAttribute="bottom" id="lw-cb" />
+                        <constraint firstItem="lw-content" firstAttribute="width" secondItem="lw-scroll" secondAttribute="width" id="lw-cw" />
+                        <constraint firstItem="lw-wsec" firstAttribute="width" secondItem="lw-content" secondAttribute="width" constant="-32" id="lw-ww" />
+                        <constraint firstItem="lw-dsec" firstAttribute="width" secondItem="lw-wsec" secondAttribute="width" id="lw-dw" />
+                    </constraints>
+                </scrollView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="lw-save">
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="lw-saveh" />
+                    </constraints>
+                    <state key="normal" title="Save" />
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="lw-safe" />
+            <color key="backgroundColor" name="BityGray6" />
+            <constraints>
+                <constraint firstItem="lw-bg" firstAttribute="top" secondItem="lw-root" secondAttribute="top" id="lw-bgt" />
+                <constraint firstItem="lw-bg" firstAttribute="leading" secondItem="lw-root" secondAttribute="leading" id="lw-bgl" />
+                <constraint firstAttribute="trailing" secondItem="lw-bg" secondAttribute="trailing" id="lw-bgr" />
+                <constraint firstAttribute="bottom" secondItem="lw-bg" secondAttribute="bottom" id="lw-bgb" />
+                <constraint firstItem="lw-back" firstAttribute="leading" secondItem="lw-root" secondAttribute="leading" constant="16" id="lw-bl" />
+                <constraint firstItem="lw-back" firstAttribute="top" secondItem="lw-safe" secondAttribute="top" id="lw-bt" constant="8" />
+                <constraint firstItem="lw-title" firstAttribute="centerX" secondItem="lw-root" secondAttribute="centerX" id="lw-tcx" />
+                <constraint firstItem="lw-title" firstAttribute="centerY" secondItem="lw-back" secondAttribute="centerY" id="lw-tcy" />
+                <constraint firstItem="lw-scroll" firstAttribute="top" secondItem="lw-back" secondAttribute="bottom" constant="10" id="lw-st" />
+                <constraint firstItem="lw-scroll" firstAttribute="leading" secondItem="lw-root" secondAttribute="leading" id="lw-sl" />
+                <constraint firstAttribute="trailing" secondItem="lw-scroll" secondAttribute="trailing" id="lw-sr" />
+                <constraint firstItem="lw-save" firstAttribute="top" secondItem="lw-scroll" secondAttribute="bottom" constant="8" id="lw-savet" />
+                <constraint firstItem="lw-save" firstAttribute="leading" secondItem="lw-root" secondAttribute="leading" constant="16" id="lw-savel" />
+                <constraint firstItem="lw-root" firstAttribute="trailing" secondItem="lw-save" secondAttribute="trailing" constant="16" id="lw-saver" />
+                <constraint firstItem="lw-safe" firstAttribute="bottom" secondItem="lw-save" secondAttribute="bottom" constant="0" id="lw-saveb" />
+            </constraints>
+            <point key="canvasLocation" x="139" y="20" />
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="BityCard">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityGray6">
+            <color red="0.949" green="0.949" blue="0.969" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityTextPrimary">
+            <color red="0.102" green="0.102" blue="0.102" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityTextSecondary">
+            <color red="0.235" green="0.235" blue="0.263" alpha="0.6" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+    </resources>
+</document>

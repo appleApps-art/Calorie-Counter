@@ -1,14 +1,19 @@
 import Foundation
 
 final class CalculateNutritionPlanUseCase {
-    func execute(profile: UserProfile) -> NutritionPlan? {
+    func execute(
+        profile: UserProfile,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> NutritionPlan? {
         guard
             let sex = profile.sex,
             let age = profile.age,
             let height = profile.heightCm,
             let weight = profile.weightKg,
             let activity = profile.activityLevel,
-            let goal = profile.goalType
+            let goal = profile.goalType,
+            age > 0, height.isFinite, height > 0, weight.isFinite, weight > 0
         else {
             return nil
         }
@@ -48,24 +53,107 @@ final class CalculateNutritionPlanUseCase {
             fatPerKg = 1.0
         }
 
-        let protein = proteinPerKg * weight
-        let fats = fatPerKg * weight
-        let remaining = max(0, calories - protein * 4 - fats * 9)
-        let carbs = remaining / 4
+        let calorieBudget = max(0, calories.rounded())
+        let proposedProtein = proteinPerKg * weight
+        let proposedFats = fatPerKg * weight
+        let requiredEnergy = proposedProtein * 4 + proposedFats * 9
+        let factor = requiredEnergy > 0 ? min(1, calorieBudget / requiredEnergy) : 1
+        let protein = (proposedProtein * factor).rounded(.down)
+        let fats = (proposedFats * factor).rounded(.down)
+        let carbs = max(0, (calorieBudget - protein * 4 - fats * 9) / 4).rounded(.down)
         let water = max(2000, weight * 35)
+        let fiber = max(
+            Guideline.fiberMinimumGrams,
+            (Guideline.fiberGramsPer1000Kcal * calories / 1000).rounded()
+        )
+        let sugar = (calories * Guideline.addedSugarEnergyFraction / Guideline.kcalPerGramCarbohydrate).rounded()
 
         let goals = UserGoals(
             calorieTarget: calories.rounded(),
             proteinTarget: protein.rounded(),
             carbsTarget: carbs.rounded(),
             fatsTarget: fats.rounded(),
-            fiberTarget: 25,
-            sugarTarget: 50,
-            sodiumTarget: 2300,
+            fiberTarget: fiber,
+            sugarTarget: sugar,
+            sodiumTarget: Guideline.sodiumUpperLimitMilligrams,
             waterTargetMilliliters: water.rounded()
         )
 
-        return NutritionPlan(bmr: bmr.rounded(), tdee: tdee.rounded(), goals: goals, goalType: goal)
+        return NutritionPlan(
+            bmr: bmr.rounded(),
+            tdee: tdee.rounded(),
+            goals: goals,
+            goalType: goal,
+            estimatedGoalDate: estimatedGoalDate(
+                goal: goal,
+                weightKg: weight,
+                targetKg: Self.resolvedTargetWeightKilograms(profile: profile),
+                now: now,
+                calendar: calendar
+            )
+        )
+    }
+
+    static func defaultTargetWeightKilograms(
+        goal: GoalType?,
+        heightCm: Double?,
+        weightKg: Double?
+    ) -> Double? {
+        guard let weightKg else { return nil }
+        switch goal {
+        case .lose:
+            guard let heightCm, heightCm > 0 else { return weightKg }
+            let heightM = heightCm / 100
+            return min(weightKg, Guideline.loseTargetBMI * heightM * heightM)
+        case .gain:
+            return weightKg + Guideline.gainTargetExtraKg
+        case .maintain, .none:
+            return weightKg
+        }
+    }
+
+    static func resolvedTargetWeightKilograms(profile: UserProfile) -> Double? {
+        profile.targetWeightKg ?? defaultTargetWeightKilograms(
+            goal: profile.goalType,
+            heightCm: profile.heightCm,
+            weightKg: profile.weightKg
+        )
+    }
+
+    private func estimatedGoalDate(
+        goal: GoalType,
+        weightKg: Double,
+        targetKg: Double?,
+        now: Date,
+        calendar: Calendar
+    ) -> Date? {
+        switch goal {
+        case .maintain:
+            return nil
+        case .lose:
+            guard let targetKg else { return nil }
+            let delta = weightKg - targetKg
+            guard delta > 0.05 else { return now }
+            let days = Int(((delta / Guideline.loseWeeklyKg) * 7).rounded())
+            return calendar.date(byAdding: .day, value: max(1, days), to: now)
+        case .gain:
+            let extra = (targetKg ?? weightKg + Guideline.gainTargetExtraKg) - weightKg
+            guard extra > 0.05 else { return now }
+            let days = Int(((extra / Guideline.gainWeeklyKg) * 7).rounded())
+            return calendar.date(byAdding: .day, value: max(1, days), to: now)
+        }
+    }
+
+    private enum Guideline {
+        static let fiberGramsPer1000Kcal = 14.0
+        static let fiberMinimumGrams = 25.0
+        static let addedSugarEnergyFraction = 0.05
+        static let kcalPerGramCarbohydrate = 4.0
+        static let sodiumUpperLimitMilligrams = 2300.0
+        static let loseTargetBMI = 22.0
+        static let loseWeeklyKg = 0.5
+        static let gainTargetExtraKg = 5.0
+        static let gainWeeklyKg = 0.25
     }
 }
 
@@ -97,13 +185,31 @@ final class FetchOnboardingStateUseCase {
 
 final class SaveUserProfileUseCase {
     private let userProfileRepository: UserProfileRepositoryProtocol
+    private let healthSync: HealthSyncing?
+    private let appSettingsStore: AppSettingsStoring?
 
-    init(userProfileRepository: UserProfileRepositoryProtocol) {
+    init(
+        userProfileRepository: UserProfileRepositoryProtocol,
+        healthSync: HealthSyncing? = nil,
+        appSettingsStore: AppSettingsStoring? = nil
+    ) {
         self.userProfileRepository = userProfileRepository
+        self.healthSync = healthSync
+        self.appSettingsStore = appSettingsStore
     }
 
     func execute(_ profile: UserProfile) throws {
         try userProfileRepository.save(profile)
+        syncHeight(profile)
+    }
+
+    private func syncHeight(_ profile: UserProfile) {
+        guard let height = profile.heightCm else { return }
+        let settings = appSettingsStore?.settings
+        guard settings?.healthSyncEnabled == true, settings?.healthSyncProfile == true else { return }
+        HealthExportQueue.shared.enqueue(entryID: profile.id) { [healthSync] in
+            try await healthSync?.saveHeight(height, date: Date(), entryID: profile.id)
+        }
     }
 }
 
@@ -204,23 +310,55 @@ final class UpdateProfileAndGoalsUseCase {
     private let userProfileRepository: UserProfileRepositoryProtocol
     private let userGoalsRepository: UserGoalsRepositoryProtocol
     private let calculateNutritionPlanUseCase: CalculateNutritionPlanUseCase
+    private let healthSync: HealthSyncing?
+    private let appSettingsStore: AppSettingsStoring?
 
     init(
         userProfileRepository: UserProfileRepositoryProtocol,
         userGoalsRepository: UserGoalsRepositoryProtocol,
-        calculateNutritionPlanUseCase: CalculateNutritionPlanUseCase = CalculateNutritionPlanUseCase()
+        calculateNutritionPlanUseCase: CalculateNutritionPlanUseCase = CalculateNutritionPlanUseCase(),
+        healthSync: HealthSyncing? = nil,
+        appSettingsStore: AppSettingsStoring? = nil
     ) {
         self.userProfileRepository = userProfileRepository
         self.userGoalsRepository = userGoalsRepository
         self.calculateNutritionPlanUseCase = calculateNutritionPlanUseCase
+        self.healthSync = healthSync
+        self.appSettingsStore = appSettingsStore
     }
 
-    func execute(_ profile: UserProfile) throws -> NutritionPlan? {
+    func execute(_ profile: UserProfile, applyNutritionGoal: Bool = false) throws -> NutritionPlan? {
+        // An explicit goal selection must replace stale/manual targets too.
+        if applyNutritionGoal, calculateNutritionPlanUseCase.execute(profile: profile) == nil {
+            throw OnboardingError.incompleteProfile
+        }
+        if let appSettingsStore, !appSettingsStore.settings.nutritionGoalModeResolved {
+            try RefreshNutritionGoalsUseCase(
+                profileRepository: userProfileRepository, goalsRepository: userGoalsRepository,
+                settingsStore: appSettingsStore, calculator: calculateNutritionPlanUseCase
+            ).execute()
+        }
         try userProfileRepository.save(profile)
+        if let height = profile.heightCm {
+            let settings = appSettingsStore?.settings
+            if settings?.healthSyncEnabled == true, settings?.healthSyncProfile == true {
+                HealthExportQueue.shared.enqueue(entryID: profile.id) { [healthSync] in
+                    try await healthSync?.saveHeight(height, date: Date(), entryID: profile.id)
+                }
+            }
+        }
         guard let plan = calculateNutritionPlanUseCase.execute(profile: profile) else {
             return nil
         }
-        try userGoalsRepository.save(plan.goals)
+        if applyNutritionGoal || appSettingsStore?.settings.automaticallyAdjustNutritionGoals != false {
+            try userGoalsRepository.save(plan.goals)
+        }
+        if applyNutritionGoal, let appSettingsStore {
+            var settings = appSettingsStore.settings
+            settings.automaticallyAdjustNutritionGoals = true
+            settings.nutritionGoalModeResolved = true
+            appSettingsStore.settings = settings
+        }
         return plan
     }
 }

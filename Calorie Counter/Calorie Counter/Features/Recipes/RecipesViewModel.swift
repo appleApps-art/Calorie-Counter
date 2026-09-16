@@ -1,165 +1,344 @@
 import Foundation
 
-enum RecipesSearchMode: Int, Equatable {
-    case recipes = 0
-    case foods = 1
-}
-
-struct RecipesListItem: Equatable {
-    enum Kind: Equatable {
-        case recipe(Recipe)
-        case food(FoodProduct)
-    }
-
-    let title: String
-    let subtitle: String
-    let kind: Kind
-}
-
 final class RecipesViewModel {
     let titleText = Observable(L10n.tr("recipes.title"))
-    let statusText = Observable(L10n.tr("recipes.searchHint"))
-    let resultsText = Observable("")
+    let queryText = Observable("")
+    let selectedTab = Observable(RecipeHubTab.all)
+    let browseSections = Observable<[RecipeBrowseSection]>([])
+    let savedRecipes = Observable<[Recipe]>([])
+    let mealPlans = Observable<[MealPlan]>([])
+    let resultRecipes = Observable<[Recipe]>([])
+    let suggestionTitles = Observable<[String]>([])
+    let filterChips = Observable<[RecipeFilterChip]>([])
     let isLoading = Observable(false)
-    let searchMode = Observable(RecipesSearchMode.recipes)
-    let items = Observable<[RecipesListItem]>([])
+    let isRecording = Observable(false)
+    let canConfirmQuery = Observable(false)
+    let showsFilterResults = Observable(false)
+    let showsEmptyResults = Observable(false)
 
     var onSelectRecipe: ((Recipe) -> Void)?
-    var onSelectFoodProduct: ((FoodProduct) -> Void)?
+    var onSelectMealPlan: ((MealPlan) -> Void)?
+    var onOpenSection: ((RecipeBrowseSectionKind, String) -> Void)?
+    var onOpenPantry: (() -> Void)?
+    var onOpenFilters: ((RecipeSearchFilters) -> Void)?
+    var onOpenCreateSheet: (() -> Void)?
+    var onCreateRecipe: (() -> Void)?
+    var onCreateMealPlan: (() -> Void)?
 
     private let searchRecipesUseCase: SearchRecipesUseCase
-    private let searchFoodProductsUseCase: SearchFoodProductsUseCase
+    private let fetchBrowseSectionsUseCase: FetchRecipeBrowseSectionsUseCase
     private let recipeRepository: RecipeRepositoryProtocol
-    private var searchQuery = ""
-    private var cachedRecipes: [Recipe] = []
-    private var cachedFoods: [FoodProduct] = []
+    private let fetchMealPlansUseCase: FetchMealPlansUseCase
+    private let voiceRecorder: VoiceFoodAudioRecording
+    private let transcribeFoodVoiceUseCase: TranscribeFoodVoiceUseCase
+    private var filters = RecipeSearchFilters.empty
+    private var searchTask: Task<Void, Never>?
+    private var browseTask: Task<Void, Never>?
+    private var receivedLiveVoice = false
+    private var speechEndTask: Task<Void, Never>?
 
     init(
         searchRecipesUseCase: SearchRecipesUseCase,
-        searchFoodProductsUseCase: SearchFoodProductsUseCase,
-        recipeRepository: RecipeRepositoryProtocol
+        fetchBrowseSectionsUseCase: FetchRecipeBrowseSectionsUseCase,
+        recipeRepository: RecipeRepositoryProtocol,
+        fetchMealPlansUseCase: FetchMealPlansUseCase,
+        voiceRecorder: VoiceFoodAudioRecording,
+        transcribeFoodVoiceUseCase: TranscribeFoodVoiceUseCase
     ) {
         self.searchRecipesUseCase = searchRecipesUseCase
-        self.searchFoodProductsUseCase = searchFoodProductsUseCase
+        self.fetchBrowseSectionsUseCase = fetchBrowseSectionsUseCase
         self.recipeRepository = recipeRepository
+        self.fetchMealPlansUseCase = fetchMealPlansUseCase
+        self.voiceRecorder = voiceRecorder
+        self.transcribeFoodVoiceUseCase = transcribeFoodVoiceUseCase
     }
 
     func viewDidLoad() {
-        loadSavedRecipes()
+        reloadLocal()
+        loadBrowse()
     }
 
-    func updateSearchQuery(_ text: String) {
-        searchQuery = text
-    }
-
-    func searchModeChanged(_ index: Int) {
-        searchMode.value = RecipesSearchMode(rawValue: index) ?? .recipes
-        titleText.value = searchMode.value == .recipes ? L10n.tr("recipes.title") : L10n.tr("recipes.foods")
-        if searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            if searchMode.value == .recipes {
-                loadSavedRecipes()
-            } else {
-                items.value = []
-                resultsText.value = L10n.tr("recipes.searchFoodsHint")
-                statusText.value = L10n.tr("recipes.foods")
-            }
-        } else {
+    func reloadVisible() {
+        reloadLocal()
+        if showsFilterResults.value {
             searchTapped()
+        } else if selectedTab.value == .all, browseLooksInvalid {
+            loadBrowse()
+        }
+    }
+
+    func selectTab(_ tab: RecipeHubTab) {
+        selectedTab.value = tab
+        if !showsFilterResults.value {
+            suggestionTitles.value = []
+        }
+        reloadLocal()
+    }
+
+    func updateQuery(_ text: String) {
+        queryText.value = text
+        if canConfirmQuery.value, text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            canConfirmQuery.value = false
+        }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty, !filters.hasActiveConstraints {
+            showsFilterResults.value = false
+            showsEmptyResults.value = false
+            resultRecipes.value = []
+            filterChips.value = []
+            suggestionTitles.value = []
+            return
+        }
+        suggestionTitles.value = []
+        if filters.hasActiveConstraints {
+            debounceSearch()
         }
     }
 
     func searchTapped() {
-        let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else {
-            statusText.value = L10n.tr("recipes.enterQuery")
+        cancelVoice()
+        canConfirmQuery.value = false
+        searchTask?.cancel()
+        let query = queryText.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty || filters.hasActiveConstraints else { return }
+        showsFilterResults.value = true
+        filterChips.value = filters.resultChips
+        showsEmptyResults.value = false
+        resultRecipes.value = []
+        isLoading.value = true
+        suggestionTitles.value = []
+        searchTask = Task { @MainActor in
+            let recipes = (try? await searchRecipesUseCase.execute(query: query, filters: filters)) ?? []
+            guard !Task.isCancelled else { return }
+            resultRecipes.value = recipes
+            showsEmptyResults.value = recipes.isEmpty
+            isLoading.value = false
+            Analytics.tracker.track(.foodSearchPerformed(queryLength: query.count, resultCount: recipes.count))
+        }
+    }
+
+    func applyFilters(_ filters: RecipeSearchFilters) {
+        self.filters = filters
+        filterChips.value = filters.resultChips
+        showsFilterResults.value = filters.hasActiveConstraints || !queryText.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if showsFilterResults.value {
+            searchTapped()
+        } else {
+            resultRecipes.value = []
+            showsEmptyResults.value = false
+        }
+    }
+
+    func removeFilterChip(_ chip: RecipeFilterChip) {
+        filters.remove(chip: chip)
+        applyFilters(filters)
+    }
+
+    func selectSuggestion(_ title: String) {
+        queryText.value = title
+        suggestionTitles.value = []
+        searchTapped()
+    }
+
+    func selectRecipe(_ recipe: Recipe) {
+        onSelectRecipe?(recipe)
+    }
+
+    func selectMealPlan(_ plan: MealPlan) {
+        onSelectMealPlan?(plan)
+    }
+
+    func seeMoreTapped(_ kind: RecipeBrowseSectionKind) {
+        onOpenSection?(kind, L10n.tr(kind.titleKey))
+    }
+
+    func pantryTapped() {
+        onOpenPantry?()
+    }
+
+    func addTapped() {
+        onOpenCreateSheet?()
+    }
+
+    func createRecipeTapped() {
+        onCreateRecipe?()
+    }
+
+    func createMealPlanTapped() {
+        onCreateMealPlan?()
+    }
+
+    func reloadAfterCreate() {
+        savedRecipes.value = (try? recipeRepository.fetchSaved()) ?? []
+    }
+
+    func reloadAfterMealPlanCreate() {
+        mealPlans.value = (try? fetchMealPlansUseCase.execute()) ?? []
+        selectedTab.value = .mealPlans
+    }
+
+    func filtersTapped() {
+        cancelVoice()
+        onOpenFilters?(filters)
+    }
+
+    func trailingActionTapped() {
+        if canConfirmQuery.value {
+            confirmQueryTapped()
+        } else {
+            toggleVoiceTapped()
+        }
+    }
+
+    func toggleVoiceTapped() {
+        if isRecording.value {
+            finishVoiceForConfirm()
+        } else {
+            startVoice()
+        }
+    }
+
+    static func calorieBadgeText(for recipe: Recipe) -> String? {
+        guard let calories = recipe.calories, calories > 0 else { return nil }
+        return L10n.format("recipes.kcal", Int(calories.rounded()))
+    }
+
+    private var browseLooksInvalid: Bool {
+        let sections = browseSections.value
+        if sections.isEmpty { return true }
+        return sections.contains { section in
+            section.recipes.contains(where: \.looksLikeListingPage)
+        }
+    }
+
+    private func reloadLocal() {
+        savedRecipes.value = (try? recipeRepository.fetchSaved()) ?? []
+        mealPlans.value = (try? fetchMealPlansUseCase.execute()) ?? []
+    }
+
+    private func debounceSearch() {
+        searchTask?.cancel()
+        let query = queryText.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard query.count >= 2 else {
+            suggestionTitles.value = []
+            if filters.hasActiveConstraints {
+                searchTapped()
+            }
             return
         }
-        isLoading.value = true
-        statusText.value = L10n.tr("recipes.searching")
+        searchTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            guard !Task.isCancelled else { return }
+            let recipes = (try? await searchRecipesUseCase.execute(query: query, filters: filters)) ?? []
+            guard !Task.isCancelled else { return }
+            suggestionTitles.value = Array(recipes.prefix(4).map(\.title))
+            if filters.hasActiveConstraints {
+                showsFilterResults.value = true
+                filterChips.value = filters.resultChips
+                resultRecipes.value = recipes
+                showsEmptyResults.value = recipes.isEmpty
+            }
+        }
+    }
 
-        Task { @MainActor in
-            do {
-                switch searchMode.value {
-                case .recipes:
-                    let recipes = try await searchRecipesUseCase.execute(query: query)
-                    cachedRecipes = recipes
-                    items.value = recipes.map {
-                        RecipesListItem(
-                            title: $0.title,
-                            subtitle: nutritionSubtitle(calories: $0.calories, minutes: $0.readyInMinutes),
-                            kind: .recipe($0)
-                        )
-                    }
-                    resultsText.value = recipes.isEmpty ? L10n.tr("recipes.noneFound") : L10n.format("recipes.countFormat", recipes.count)
-                case .foods:
-                    let foods = try await searchFoodProductsUseCase.execute(query: query)
-                    cachedFoods = foods
-                    items.value = foods.map {
-                        RecipesListItem(
-                            title: $0.name,
-                            subtitle: foodSubtitle($0),
-                            kind: .food($0)
-                        )
-                    }
-                    resultsText.value = foods.isEmpty ? L10n.tr("recipes.foodsNone") : L10n.format("recipes.foodsCount", foods.count)
-                }
-                statusText.value = L10n.tr("common.done")
-            } catch {
-                statusText.value = error.localizedDescription
-                items.value = []
-                resultsText.value = L10n.tr("recipes.searchFailed")
+    private func loadBrowse() {
+        browseTask?.cancel()
+        browseTask = Task { @MainActor in
+            if let cached = fetchBrowseSectionsUseCase.peek(), !cached.isEmpty {
+                browseSections.value = cached
+                isLoading.value = false
+            } else {
+                isLoading.value = true
+            }
+            let sections = await fetchBrowseSectionsUseCase.execute(force: true)
+            guard !Task.isCancelled else { return }
+            if !sections.isEmpty {
+                browseSections.value = sections
             }
             isLoading.value = false
         }
     }
 
-    func selectItem(at index: Int) {
-        guard items.value.indices.contains(index) else { return }
-        switch items.value[index].kind {
-        case .recipe(let recipe):
-            onSelectRecipe?(recipe)
-        case .food(let product):
-            onSelectFoodProduct?(product)
-        }
-    }
-
-    private func loadSavedRecipes() {
-        do {
-            let saved = try recipeRepository.fetchSaved()
-            cachedRecipes = saved
-            items.value = saved.map {
-                RecipesListItem(
-                    title: $0.title,
-                    subtitle: L10n.format("recipes.savedPrefix", nutritionSubtitle(calories: $0.calories, minutes: $0.readyInMinutes)),
-                    kind: .recipe($0)
-                )
+    private func startVoice() {
+        Task { @MainActor in
+            let granted = await voiceRecorder.requestPermission()
+            guard granted else { return }
+            do {
+                receivedLiveVoice = false
+                canConfirmQuery.value = false
+                voiceRecorder.onPartialTranscript = { [weak self] live in
+                    let text = live.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard let self, !text.isEmpty else { return }
+                    self.receivedLiveVoice = true
+                    self.queryText.value = text
+                    self.scheduleSpeechEnd()
+                }
+                voiceRecorder.onUtteranceFinal = { [weak self] in
+                    self?.finishVoiceForConfirm()
+                }
+                try voiceRecorder.startRecording()
+                isRecording.value = true
+            } catch {
+                clearVoiceCallbacks()
             }
-            resultsText.value = saved.isEmpty ? L10n.tr("recipes.savedEmpty") : L10n.format("recipes.savedCount", saved.count)
-            statusText.value = L10n.tr("recipes.savedStatus")
-        } catch {
-            statusText.value = error.localizedDescription
         }
     }
 
-    private func nutritionSubtitle(calories: Double?, minutes: Int?) -> String {
-        var parts: [String] = []
-        if let calories {
-            parts.append(L10n.format("recipes.kcal", Int(calories.rounded())))
+    private func scheduleSpeechEnd() {
+        speechEndTask?.cancel()
+        speechEndTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            guard !Task.isCancelled else { return }
+            self?.finishVoiceForConfirm()
         }
-        if let minutes {
-            parts.append(L10n.format("recipes.min", minutes))
-        }
-        return parts.isEmpty ? L10n.tr("recipes.generic") : parts.joined(separator: " · ")
     }
 
-    private func foodSubtitle(_ product: FoodProduct) -> String {
-        var parts = [product.kind == .ingredient ? L10n.tr("recipes.ingredient") : L10n.tr("recipes.product")]
-        if let brand = product.brand, !brand.isEmpty {
-            parts.append(brand)
+    private func finishVoiceForConfirm() {
+        guard isRecording.value else { return }
+        speechEndTask?.cancel()
+        speechEndTask = nil
+
+        var audio = Data()
+        do {
+            audio = try voiceRecorder.stopRecording()
+        } catch {}
+        clearVoiceCallbacks()
+
+        let live = queryText.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !live.isEmpty {
+            canConfirmQuery.value = true
+            isRecording.value = false
+            return
         }
-        if let calories = product.calories {
-            parts.append(L10n.format("recipes.kcal", Int(calories.rounded())))
+
+        isRecording.value = false
+        guard !audio.isEmpty else { return }
+        Task { @MainActor in
+            let result = try? await transcribeFoodVoiceUseCase.execute(audioData: audio)
+            let text = result?.text.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !text.isEmpty {
+                queryText.value = text
+                canConfirmQuery.value = true
+            }
         }
-        return parts.joined(separator: " · ")
+    }
+
+    private func confirmQueryTapped() {
+        searchTapped()
+    }
+
+    private func cancelVoice() {
+        speechEndTask?.cancel()
+        speechEndTask = nil
+        if isRecording.value {
+            voiceRecorder.cancelRecording()
+            isRecording.value = false
+        }
+        clearVoiceCallbacks()
+    }
+
+    private func clearVoiceCallbacks() {
+        voiceRecorder.onPartialTranscript = nil
+        voiceRecorder.onUtteranceFinal = nil
     }
 }

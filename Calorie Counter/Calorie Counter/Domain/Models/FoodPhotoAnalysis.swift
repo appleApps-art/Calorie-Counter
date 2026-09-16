@@ -15,6 +15,12 @@ struct FoodPhotoAnalysis: Equatable {
     var confidence: Double
     var notes: String
     var assistantMessage: String
+    var servingLabel: String = ""
+    var ingredients: [FoodIngredient] = []
+    var tags: [String] = []
+    var suggestion: FoodHealthSuggestion? = nil
+    var source: String? = "photo"
+    var foodType: FoodType? = nil
 
     var nutritionFacts: FoodNutritionFacts {
         NutritionFactsCalculator.facts(
@@ -44,7 +50,8 @@ struct FoodPhotoAnalysis: Equatable {
             portionGrams: portionGrams,
             portionMilliliters: portionMilliliters,
             notes: notes,
-            source: source
+            source: source,
+            foodType: foodType
         )
     }
 }

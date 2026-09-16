@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="OnboardingPlanViewController" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="backButton" destination="back" id="o-back"/>
+                <outlet property="backgroundImageView" destination="bg" id="o-bg"/>
+                <outlet property="carbsCardView" destination="carbs" id="o-carbs"/>
+                <outlet property="continueButton" destination="cta" id="o-cta"/>
+                <outlet property="energyCardView" destination="energy" id="o-energy"/>
+                <outlet property="energyTitleLabel" destination="energy-title" id="o-energy-title"/>
+                <outlet property="energyValueLabel" destination="energy-value" id="o-energy-value"/>
+                <outlet property="fatsCardView" destination="fats" id="o-fats"/>
+                <outlet property="fiberTitleLabel" destination="fiber-t" id="o-fiber-t"/>
+                <outlet property="fiberValueLabel" destination="fiber-v" id="o-fiber-v"/>
+                <outlet property="goalDateBadgeView" destination="badge" id="o-badge"/>
+                <outlet property="goalDateLabel" destination="badge-label" id="o-badge-label"/>
+                <outlet property="healthCardView" destination="health-card" id="o-health-card"/>
+                <outlet property="healthTitleLabel" destination="health-title" id="o-health-title"/>
+                <outlet property="macroTitleLabel" destination="macro-title" id="o-macro-title"/>
+                <outlet property="proteinCardView" destination="protein" id="o-protein"/>
+                <outlet property="sodiumTitleLabel" destination="sodium-t" id="o-sodium-t"/>
+                <outlet property="sodiumValueLabel" destination="sodium-v" id="o-sodium-v"/>
+                <outlet property="subtitleLabel" destination="subtitle" id="o-subtitle"/>
+                <outlet property="sugarTitleLabel" destination="sugar-t" id="o-sugar-t"/>
+                <outlet property="sugarValueLabel" destination="sugar-v" id="o-sugar-v"/>
+                <outlet property="titleLabel" destination="title" id="o-title"/>
+                <outlet property="waterCardView" destination="water" id="o-water"/>
+                <outlet property="view" destination="root" id="o-view"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="root">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" translatesAutoresizingMaskIntoConstraints="NO" id="bg">
+                    <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                </imageView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="back">
+                    <rect key="frame" x="16" y="59" width="44" height="44"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="44" id="back-w" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="44"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstAttribute="height" constant="44" id="back-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="44"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                    </constraints>
+                </button>
+                <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="scroll" showsVerticalScrollIndicator="NO">
+                    <rect key="frame" x="0.0" y="113" width="393" height="671"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Title" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                            <rect key="frame" x="16" y="0.0" width="366" height="41"/>
+                            <fontDescription key="fontDescription" type="boldSystem" pointSize="34"/>
+                            <color key="textColor" name="BityTextPrimary"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Subtitle" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="subtitle" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                            <rect key="frame" x="16" y="49" width="361" height="40"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                            <color key="textColor" name="BityTextSecondary"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="fill" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="content" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                            <rect key="frame" x="16" y="8" width="361" height="600"/>
+                            <subviews>
+                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="energy" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <rect key="frame" x="0.0" y="0.0" width="361" height="150"/>
+                                    <subviews>
+                                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="leading" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="energy-stack" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <rect key="frame" x="24" y="24" width="313" height="102"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Daily Energy Budget" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="energy-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="0.0" y="0.0" width="313" height="22"/>
+                                                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
+                                                    <color key="textColor" name="BityTextSecondary"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="2,150  kcal / day" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="energy-value" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="0.0" y="38" width="313" height="41"/>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="34"/>
+                                                    <color key="textColor" name="BityTextPrimary"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="badge" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="0.0" y="95" width="313" height="34"/>
+                                                    <subviews>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Estimated goal date" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="badge-label" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <rect key="frame" x="12" y="8" width="289" height="18"/>
+                                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                                            <color key="textColor" name="BityTextSecondary"/>
+                                                            <nil key="highlightedColor"/>
+                                                        </label>
+                                                    </subviews>
+                                                    <color key="backgroundColor" name="BityGray6"/>
+                                                    <constraints>
+                                                        <constraint firstItem="badge-label" firstAttribute="leading" secondItem="badge" secondAttribute="leading" constant="12" id="bl-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="12"/>
+                                </userDefinedRuntimeAttribute>
+                                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                                                            </userDefinedRuntimeAttributes>
+                                                        </constraint>
+                                                        <constraint firstAttribute="trailing" secondItem="badge-label" secondAttribute="trailing" constant="12" id="bl-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="12"/>
+                                </userDefinedRuntimeAttribute>
+                                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                                                            </userDefinedRuntimeAttributes>
+                                                        </constraint>
+                                                        <constraint firstItem="badge-label" firstAttribute="top" secondItem="badge" secondAttribute="top" constant="8" id="bl-t" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="8"/>
+                                </userDefinedRuntimeAttribute>
+                                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                            </userDefinedRuntimeAttributes>
+                                                        </constraint>
+                                                        <constraint firstAttribute="bottom" secondItem="badge-label" secondAttribute="bottom" constant="8" id="bl-b" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="8"/>
+                                </userDefinedRuntimeAttribute>
+                                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                            </userDefinedRuntimeAttributes>
+                                                        </constraint>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                            <real key="value" value="8"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                            </subviews>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </stackView>
+                                    </subviews>
+                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    <constraints>
+                                        <constraint firstItem="energy-stack" firstAttribute="leading" secondItem="energy" secondAttribute="leading" constant="24" id="es-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </constraint>
+                                        <constraint firstAttribute="trailing" secondItem="energy-stack" secondAttribute="trailing" constant="24" id="es-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </constraint>
+                                        <constraint firstItem="energy-stack" firstAttribute="top" secondItem="energy" secondAttribute="top" constant="24" id="es-t" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </constraint>
+                                        <constraint firstAttribute="bottom" secondItem="energy-stack" secondAttribute="bottom" constant="24" id="es-b" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </constraint>
+                                    </constraints>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                            <real key="value" value="24"/>
+                                        </userDefinedRuntimeAttribute>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES"/>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO"/>
+                                    </userDefinedRuntimeAttributes>
+                                </view>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="fill" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="macro-section" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <rect key="frame" x="0.0" y="174" width="361" height="190"/>
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Macronutrient Targets" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="macro-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="0.0" width="361" height="28"/>
+                                            <fontDescription key="fontDescription" type="boldSystem" pointSize="22"/>
+                                            <color key="textColor" name="BityTextPrimary"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="fill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="macro-row1" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="40" width="361" height="77"/>
+                                            <subviews>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="protein" customClass="PlanStatCardView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="0.0" y="0.0" width="176.5" height="77"/>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fats" customClass="PlanStatCardView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="184.5" y="0.0" width="176.5" height="77"/>
+                                                </view>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="77" id="row1-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="77"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </stackView>
+                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="fill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="macro-row2" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="125" width="361" height="77"/>
+                                            <subviews>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="carbs" customClass="PlanStatCardView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="0.0" y="0.0" width="176.5" height="77"/>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="water" customClass="PlanStatCardView" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <rect key="frame" x="184.5" y="0.0" width="176.5" height="77"/>
+                                                </view>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="77" id="row2-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="77"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </stackView>
+                                    </subviews>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                                    </userDefinedRuntimeAttributes>
+                                </stackView>
+                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="fill" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="health-section" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <rect key="frame" x="0.0" y="388" width="361" height="212"/>
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Health &amp; Limit Targets" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="health-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="0.0" width="361" height="28"/>
+                                            <fontDescription key="fontDescription" type="boldSystem" pointSize="22"/>
+                                            <color key="textColor" name="BityTextPrimary"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="health-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="40" width="361" height="172"/>
+                                            <subviews>
+                                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="fill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="health-rows">
+                                                    <rect key="frame" x="16" y="4" width="329" height="164"/>
+                                                    <subviews>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="row-fiber">
+                                                            <rect key="frame" x="0.0" y="0.0" width="329" height="54.666666666666664"/>
+                                                            <subviews>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Dietary Fiber" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="fiber-t" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                                    <rect key="frame" x="0.0" y="16" width="200" height="22"/>
+                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                    <color key="textColor" name="BityTextPrimary"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="right" horizontalHuggingPriority="251" text="&gt; 30 g / day" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="fiber-v" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                                    <rect key="frame" x="200" y="16" width="129" height="22"/>
+                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                    <color key="textColor" name="BityTextSecondary"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                            </subviews>
+                                                        </stackView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="row-sugar">
+                                                            <rect key="frame" x="0.0" y="54.666666666666664" width="329" height="54.666666666666664"/>
+                                                            <subviews>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Added Sugar" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="sugar-t" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                                    <rect key="frame" x="0.0" y="16" width="200" height="22"/>
+                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                    <color key="textColor" name="BityTextPrimary"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="right" horizontalHuggingPriority="251" text="&lt; 25 g / day" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="sugar-v" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                                    <rect key="frame" x="200" y="16" width="129" height="22"/>
+                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                    <color key="textColor" name="BityTextSecondary"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                            </subviews>
+                                                        </stackView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="row-sodium">
+                                                            <rect key="frame" x="0.0" y="109.33333333333333" width="329" height="54.666666666666664"/>
+                                                            <subviews>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Sodium / Salt" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="sodium-t" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                                    <rect key="frame" x="0.0" y="16" width="200" height="22"/>
+                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                    <color key="textColor" name="BityTextPrimary"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="right" horizontalHuggingPriority="251" text="&lt; 2,300 mg / day" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="sodium-v" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                                                                    <rect key="frame" x="200" y="16" width="129" height="22"/>
+                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                    <color key="textColor" name="BityTextSecondary"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                            </subviews>
+                                                        </stackView>
+                                                    </subviews>
+                                                </stackView>
+                                            </subviews>
+                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstItem="health-rows" firstAttribute="leading" secondItem="health-card" secondAttribute="leading" constant="16" id="hr-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                                <constraint firstAttribute="trailing" secondItem="health-rows" secondAttribute="trailing" constant="16" id="hr-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                                <constraint firstItem="health-rows" firstAttribute="top" secondItem="health-card" secondAttribute="top" constant="4" id="hr-t" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="4"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                                <constraint firstAttribute="bottom" secondItem="health-rows" secondAttribute="bottom" constant="4" id="hr-b" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="4"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                                <constraint firstAttribute="height" constant="172" id="hc-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="172"/>
+                                </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </constraint>
+                                            </constraints>
+                                            <userDefinedRuntimeAttributes>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
+                                                    <real key="value" value="24"/>
+                                                </userDefinedRuntimeAttribute>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO"/>
+                                            </userDefinedRuntimeAttributes>
+                                        </view>
+                                    </subviews>
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                                    </userDefinedRuntimeAttributes>
+                                </stackView>
+                            </subviews>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </stackView>
+                    </subviews>
+                    <viewLayoutGuide key="contentLayoutGuide" id="scroll-content"/>
+                    <viewLayoutGuide key="frameLayoutGuide" id="scroll-frame"/>
+                    <constraints>
+                        <constraint firstItem="title" firstAttribute="top" secondItem="scroll-content" secondAttribute="top" id="title-t"/>
+                        <constraint firstItem="title" firstAttribute="leading" secondItem="scroll-frame" secondAttribute="leading" constant="16" id="title-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="scroll-frame" firstAttribute="trailing" secondItem="title" secondAttribute="trailing" constant="11" id="title-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="11"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="subtitle" firstAttribute="top" secondItem="title" secondAttribute="bottom" constant="8" id="sub-t" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="8"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="subtitle" firstAttribute="leading" secondItem="scroll-frame" secondAttribute="leading" constant="16" id="sub-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="scroll-frame" firstAttribute="trailing" secondItem="subtitle" secondAttribute="trailing" constant="16" id="sub-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="content" firstAttribute="top" secondItem="subtitle" secondAttribute="bottom" constant="24" id="content-t" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="content" firstAttribute="leading" secondItem="scroll-frame" secondAttribute="leading" constant="16" id="content-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="scroll-frame" firstAttribute="trailing" secondItem="content" secondAttribute="trailing" constant="16" id="content-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="scroll-content" firstAttribute="bottom" secondItem="content" secondAttribute="bottom" constant="24" id="content-b" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="24"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                    </constraints>
+                </scrollView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cta">
+                    <rect key="frame" x="16" y="792" width="361" height="50"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="cta-h" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="50"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                    </constraints>
+                    <state key="normal" title=""/>
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="safe"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="bg" firstAttribute="top" secondItem="root" secondAttribute="top" id="bg-t"/>
+                <constraint firstItem="bg" firstAttribute="leading" secondItem="root" secondAttribute="leading" id="bg-l"/>
+                <constraint firstAttribute="trailing" secondItem="bg" secondAttribute="trailing" id="bg-r"/>
+                <constraint firstAttribute="bottom" secondItem="bg" secondAttribute="bottom" id="bg-b"/>
+                <constraint firstItem="back" firstAttribute="top" secondItem="safe" secondAttribute="top" id="back-t"/>
+                <constraint firstItem="back" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="16" id="back-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstItem="scroll" firstAttribute="top" secondItem="back" secondAttribute="bottom" constant="10" id="scroll-t" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="10"/>
+                                </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstItem="scroll" firstAttribute="leading" secondItem="root" secondAttribute="leading" id="scroll-l"/>
+                <constraint firstAttribute="trailing" secondItem="scroll" secondAttribute="trailing" id="scroll-r"/>
+                <constraint firstItem="cta" firstAttribute="top" secondItem="scroll" secondAttribute="bottom" constant="16" id="cta-gap" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstItem="cta" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="16" id="cta-l" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstAttribute="trailing" secondItem="cta" secondAttribute="trailing" constant="16" id="cta-r" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                    <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                    </userDefinedRuntimeAttributes>
+                </constraint>
+                <constraint firstItem="safe" firstAttribute="bottom" secondItem="cta" secondAttribute="bottom" id="cta-b"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="20"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <namedColor name="BityGray6">
+            <color red="0.949" green="0.949" blue="0.969" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="BityTextPrimary">
+            <color red="0.145" green="0.145" blue="0.161" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="BityTextSecondary">
+            <color red="0.557" green="0.557" blue="0.576" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

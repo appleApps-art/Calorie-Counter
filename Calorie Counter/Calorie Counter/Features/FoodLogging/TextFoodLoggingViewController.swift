@@ -25,6 +25,8 @@ final class TextFoodLoggingViewController: BaseViewController {
         super.init(nibName: "TextFoodLoggingViewController")
     }
 
+    override var analyticsScreen: AnalyticsScreen? { .textLog }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.tr("textLog.title")

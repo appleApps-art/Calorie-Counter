@@ -1,110 +1,142 @@
 import Foundation
 
-final class BarcodeFoodLoggingViewModel {
-    let statusText = Observable(L10n.tr("barcode.status"))
-    let productTitleText = Observable("")
-    let productDetailsText = Observable("")
-    let isLoading = Observable(false)
-    let foundProduct = Observable<BarcodeProduct?>(nil)
-    let canLogProduct = Observable(false)
+enum BarcodeCameraPhase: Equatable {
+    case idle
+    case identifying
+    case recognized
+}
 
-    var onLogged: (() -> Void)?
+final class BarcodeFoodLoggingViewModel {
+    let statusText = Observable(L10n.tr("barcode.camera.hint"))
+    let phase = Observable(BarcodeCameraPhase.idle)
+    let isLoading = Observable(false)
+
+    var onClose: (() -> Void)?
+    var onSwitchMode: ((HomeQuickLogAction) -> Void)?
+    var onProductReady: ((ProductDetailsDraft) -> Void)?
 
     private let lookupBarcodeProductUseCase: LookupBarcodeProductUseCase
-    private let logFoodUseCase: LogFoodUseCase
+    private let selectedMealType: MealType
+    private let diaryDate: Date
+    private var lookupTask: Task<Void, Never>?
+    private var recognizedTask: Task<Void, Never>?
+    private var lookupGeneration = 0
 
     init(
         lookupBarcodeProductUseCase: LookupBarcodeProductUseCase,
-        logFoodUseCase: LogFoodUseCase
+        mealType: MealType = .snacks,
+        date: Date = Date()
     ) {
         self.lookupBarcodeProductUseCase = lookupBarcodeProductUseCase
-        self.logFoodUseCase = logFoodUseCase
+        selectedMealType = mealType
+        diaryDate = date
+    }
+
+    func closeTapped() {
+        cancelLookups()
+        onClose?()
+    }
+
+    func switchMode(_ action: HomeQuickLogAction) {
+        cancelLookups()
+        onSwitchMode?(action)
+    }
+
+    func resumeIdleIfNeeded() {
+        guard phase.value == .recognized else { return }
+        resetToIdle()
+    }
+
+    func captureFailed(_ error: Error) {
+        fail(with: error.localizedDescription)
+    }
+
+    func showIdleMessage(_ message: String) {
+        fail(with: message)
     }
 
     func lookup(barcode: String) {
         let trimmed = barcode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            statusText.value = L10n.tr("barcode.enter")
+        guard let normalized = BarcodeNormalization.normalize(trimmed) else {
+            fail(with: L10n.tr("barcode.error.invalid"))
             return
         }
 
+        cancelLookups()
+        lookupGeneration += 1
+        let generation = lookupGeneration
         isLoading.value = true
-        canLogProduct.value = false
-        statusText.value = L10n.tr("barcode.lookingUp")
-        foundProduct.value = nil
-        productTitleText.value = ""
-        productDetailsText.value = ""
+        statusText.value = L10n.tr("barcode.camera.identifying")
+        phase.value = .identifying
 
-        Task { @MainActor in
+        lookupTask = Task { @MainActor in
             do {
-                let product = try await lookupBarcodeProductUseCase.execute(barcode: trimmed)
-                foundProduct.value = product
-                productTitleText.value = product.name
-                productDetailsText.value = details(for: product)
-                canLogProduct.value = true
-                statusText.value = L10n.format("barcode.found", sourceLabel(product.source))
+                let product = try await lookupBarcodeProductUseCase.execute(barcode: normalized)
+                guard generation == lookupGeneration, !Task.isCancelled else { return }
+                let draft = await makeDraft(from: product)
+                guard generation == lookupGeneration, !Task.isCancelled else { return }
+                statusText.value = L10n.tr("barcode.camera.recognized")
+                phase.value = .recognized
+                isLoading.value = false
+                scheduleProductPresentation(draft)
             } catch {
-                foundProduct.value = nil
-                canLogProduct.value = false
-                statusText.value = error.localizedDescription
+                guard generation == lookupGeneration, !Task.isCancelled else { return }
+                Analytics.tracker.track(.foodLogFailed(method: "barcode"))
+                fail(with: error.localizedDescription)
             }
-            isLoading.value = false
         }
     }
 
-    func logAsSnackTapped() {
-        logTapped(mealType: .snacks)
+    func beginCapture() {
+        cancelLookups()
+        isLoading.value = true
+        statusText.value = L10n.tr("barcode.camera.identifying")
+        phase.value = .identifying
     }
 
-    func logTapped(mealType: MealType) {
-        guard let product = foundProduct.value else { return }
-        let draft = product.toFoodProduct(preferServing: false)
-        do {
-            try logFoodUseCase.execute(from: draft, mealType: mealType)
-            statusText.value = L10n.format("barcode.loggedAs", mealType.localizedTitle)
-            onLogged?()
-        } catch {
-            statusText.value = error.localizedDescription
-        }
-    }
-
-    func foodEntryDraft() -> FoodProduct? {
-        foundProduct.value?.toFoodProduct(preferServing: false)
-    }
-
-    private func sourceLabel(_ source: BarcodeProductSource) -> String {
-        switch source {
-        case .openFoodFacts:
-            return L10n.tr("barcode.source.off")
-        case .spoonacular:
-            return L10n.tr("barcode.source.spoonacular")
+    private func scheduleProductPresentation(_ draft: ProductDetailsDraft) {
+        recognizedTask?.cancel()
+        recognizedTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            guard !Task.isCancelled, phase.value == .recognized else { return }
+            onProductReady?(draft)
         }
     }
 
-    private func details(for product: BarcodeProduct) -> String {
-        var lines: [String] = []
-        lines.append(L10n.format("barcode.line", product.barcode))
-        if let brand = product.brand, !brand.isEmpty {
-            lines.append(L10n.format("barcode.brand", brand))
+    private func makeDraft(from product: BarcodeProduct) async -> ProductDetailsDraft {
+        var imageData: Data?
+        if let url = product.imageURL {
+            imageData = try? await URLSession.shared.data(from: url).0
+            if imageData?.isEmpty == true {
+                imageData = nil
+            }
         }
-        if let quantity = product.quantityLabel, !quantity.isEmpty {
-            lines.append(L10n.format("barcode.quantity", quantity))
-        }
-        if let calories = product.caloriesPer100g {
-            lines.append(L10n.format("barcode.calories100", Int(calories.rounded())))
-        }
-        if let protein = product.proteinPer100g {
-            lines.append(L10n.format("barcode.protein100", Int(protein.rounded())))
-        }
-        if let carbs = product.carbsPer100g {
-            lines.append(L10n.format("barcode.carbs100", Int(carbs.rounded())))
-        }
-        if let fats = product.fatsPer100g {
-            lines.append(L10n.format("barcode.fats100", Int(fats.rounded())))
-        }
-        if lines.count <= 1 {
-            lines.append(L10n.tr("barcode.noNutrition"))
-        }
-        return lines.joined(separator: "\n")
+        return ProductDetailsMath.draft(
+            from: product,
+            imageData: imageData,
+            mealType: selectedMealType,
+            date: diaryDate
+        )
+    }
+
+    private func fail(with message: String) {
+        isLoading.value = false
+        statusText.value = message
+        phase.value = .idle
+    }
+
+    private func resetToIdle() {
+        cancelLookups()
+        isLoading.value = false
+        statusText.value = L10n.tr("barcode.camera.hint")
+        phase.value = .idle
+    }
+
+    private func cancelLookups() {
+        lookupGeneration += 1
+        lookupTask?.cancel()
+        recognizedTask?.cancel()
+        lookupTask = nil
+        recognizedTask = nil
     }
 }

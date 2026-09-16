@@ -5,7 +5,7 @@ enum AIAssistantUserContextBuilder {
         from summary: DailyDiarySummary,
         profile: UserProfile? = nil,
         preferences: UserPreferenceProfile? = nil,
-        locale: String = Locale.current.identifier,
+        locale: String = Locale.deviceIdentifier,
         timezone: String = TimeZone.current.identifier,
         recipe: Recipe? = nil
     ) -> AIAssistantUserContext {
@@ -35,6 +35,7 @@ enum AIAssistantUserContextBuilder {
                 carbs: summary.totalCarbs,
                 fats: summary.totalFats,
                 waterMilliliters: summary.waterMilliliters,
+                localHour: Calendar.current.component(.hour, from: Date()),
                 meals: summary.foodEntries.map {
                     .init(
                         id: $0.id.uuidString,
@@ -98,8 +99,8 @@ final class BuildAIAssistantUserContextUseCase {
         self.userPreferenceRepository = userPreferenceRepository
     }
 
-    func execute(recipe: Recipe? = nil) throws -> AIAssistantUserContext {
-        let summary = try fetchDailyDiaryUseCase.execute()
+    func execute(recipe: Recipe? = nil, date: Date = Date()) throws -> AIAssistantUserContext {
+        let summary = try fetchDailyDiaryUseCase.execute(for: date)
         let profile = try? userProfileRepository.fetchProfile()
         let preferences = UserPreferenceProfile(preferences: (try? userPreferenceRepository.fetchAll()) ?? [])
         return AIAssistantUserContextBuilder.make(

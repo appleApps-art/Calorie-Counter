@@ -9,7 +9,7 @@ protocol LocalNotificationScheduling {
 }
 
 final class LocalNotificationScheduler: LocalNotificationScheduling {
-    static let identifierPrefix = "avo.reminder."
+    static let identifierPrefix = "bity.reminder."
 
     private let center: UNUserNotificationCenter
 

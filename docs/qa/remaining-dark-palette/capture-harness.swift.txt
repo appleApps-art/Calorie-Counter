@@ -1,0 +1,119 @@
+import UIKit
+import XCTest
+@testable import Calorie_Counter
+
+@MainActor
+final class RemainingPaletteCaptureTests: XCTestCase {
+    func testCaptureRemainingPalette() async throws {
+        let container = DIContainer(coreDataStack: CoreDataStack(inMemory: true))
+        let now = Date()
+        let pantryItems = ["Помідори", "Огірок", "Кіноа", "Куряче філе", "Яйця", "Оливкова олія"].map {
+            PantryItem(id: UUID(), name: $0, quantityText: "200 г", createdAt: now, updatedAt: now)
+        }
+        let recipes = ["Грецький йогурт", "Салат із куркою", "Запечені овочі"].map {
+            Recipe(id: UUID(), title: $0, readyInMinutes: 25, servings: 1, calories: 450,
+                protein: 20, carbs: 40, fats: 15, ingredients: [], steps: [])
+        }
+        let plan = MealPlan(id: UUID(), title: "Підтримка ваги", weeks: 1,
+            recipes: recipes + recipes, createdAt: now, dayLayouts: [3, 3])
+        let planModel = MealPlanPreviewViewModel(plan: plan, mealPlanRepository: container.mealPlanRepository,
+            searchRecipesUseCase: container.searchRecipesUseCase,
+            fetchDailyDiaryUseCase: container.fetchDailyDiaryUseCase, logFoodUseCase: container.logFoodUseCase)
+        try await capture("meal-plan", MealPlanPreviewViewController(viewModel: planModel), bottom: true)
+        let pantryModel = MyPantryViewModel(fetchPantryItemsUseCase: container.fetchPantryItemsUseCase,
+            savePantryItemUseCase: container.savePantryItemUseCase, deletePantryItemsUseCase: container.deletePantryItemsUseCase,
+            searchRecipesUseCase: container.searchRecipesUseCase)
+        try await capture("pantry-selected", MyPantryViewController(viewModel: pantryModel)) {
+            pantryModel.items.value = pantryItems
+            pantryModel.isSelecting.value = true
+            pantryModel.selectedIDs.value = Set(pantryItems.prefix(3).map(\.id))
+        }
+        let settingsModel = container.makeSettingsViewModel()
+        try await capture("settings", SettingsViewController(viewModel: settingsModel), bottom: true)
+        try await capture("theme-sheet", SettingsOptionPickerViewController(title: "Тема",
+            options: [.init(title: "Системна", isSelected: false), .init(title: "Світла", isSelected: false), .init(title: "Темна", isSelected: true)],
+            analyticsScreen: .settings, onSave: { _ in }))
+        try await capture("goals-sheet", SettingsOptionPickerViewController(title: "Цілі харчування",
+            options: [.init(title: "Схуднути", isSelected: false), .init(title: "Підтримувати вагу", isSelected: true), .init(title: "Набрати вагу", isSelected: false)],
+            analyticsScreen: .settings, onSave: { _ in }))
+        try await capture("health-sheet", SettingsHealthSyncViewController(viewModel: settingsModel, onOpenHealth: {})) {
+            settingsModel.healthAuthorization.value = .authorized
+        }
+        try await capture("weight-sheet", SettingsWeightGoalViewController(isMetric: true, kilograms: 64, onSave: { _ in }))
+        let notificationsModel = NotificationsInboxViewModel(inboxStore: container.notificationInboxStore)
+        let notifications = [
+            NotificationInboxRow(id: "1", title: "Час випити води", body: "Ще одна склянка допоможе досягти денної цілі.", timeText: "2 год тому", date: now, symbolName: "drop.fill", imageName: nil),
+            NotificationInboxRow(id: "2", title: "Час вечері", body: "Додайте свій прийом їжі до щоденника.", timeText: "4 год тому", date: now, symbolName: "moon.fill", imageName: nil)
+        ]
+        try await capture("notifications", NotificationsInboxViewController(viewModel: notificationsModel)) {
+            notificationsModel.sections.value = [NotificationInboxSection(title: "Сьогодні", rows: notifications)]
+            notificationsModel.allowsNotifications.value = true
+        }
+        var filters = RecipeSearchFilters.empty
+        filters.excludedIngredients = ["Глютен", "Соя", "Молоко"]
+        let filterModel = RecipeFiltersViewModel(filters: filters, voiceRecorder: container.voiceFoodAudioRecorder,
+            transcribeFoodVoiceUseCase: container.transcribeFoodVoiceUseCase)
+        try await capture("recipe-filters", RecipeFiltersViewController(viewModel: filterModel), bottom: true)
+        let createModel = CreateRecipeFormViewModel(kind: .recipe, fetchPantryItemsUseCase: container.fetchPantryItemsUseCase,
+            createRecipeUseCase: container.createRecipeUseCase, createMealPlanUseCase: container.createMealPlanUseCase,
+            voiceRecorder: container.voiceFoodAudioRecorder, transcribeFoodVoiceUseCase: container.transcribeFoodVoiceUseCase)
+        try await capture("create-recipe", CreateRecipeFormViewController(viewModel: createModel), bottom: true) {
+            createModel.pantryItems.value = pantryItems
+            createModel.selectedPantryIds.value = Set(pantryItems.map(\.id))
+        }
+    }
+
+    private func capture(_ name: String, _ screen: UIViewController, bottom: Bool = false, configure: () -> Void = {}) async throws {
+        screen.overrideUserInterfaceStyle = .dark
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+        window.overrideUserInterfaceStyle = .dark
+        window.rootViewController = screen
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        screen.loadViewIfNeeded()
+        for (styleName, style) in [("dark", UIUserInterfaceStyle.dark), ("light", .light), ("dark-after-switch", .dark)] {
+            screen.overrideUserInterfaceStyle = style
+            window.overrideUserInterfaceStyle = style
+            try await Task.sleep(nanoseconds: 250_000_000)
+            configure()
+            window.layoutIfNeeded()
+            try await Task.sleep(nanoseconds: 150_000_000)
+            XCTAssertEqual(screen.traitCollection.userInterfaceStyle, style, name)
+            if name.hasSuffix("-sheet"), style == .dark {
+                XCTAssertEqual(screen.view.backgroundColor?.resolvedColor(with: screen.traitCollection),
+                    AppColor.gray6.resolvedColor(with: screen.traitCollection), name)
+            }
+            let scroll = views(screen.view).compactMap { $0 as? UIScrollView }.first
+            scroll?.contentOffset.y = -(scroll?.adjustedContentInset.top ?? 0)
+            screen.view.setNeedsLayout()
+            screen.view.layoutIfNeeded()
+            attach(name + "-" + styleName, screen)
+            for card in views(screen.view).compactMap({ $0 as? AdaptiveView }) where card.applyCardShadow && !card.useLiveGlass && !card.applyButtonGlass {
+                XCTAssertEqual(card.backgroundColor?.resolvedColor(with: card.traitCollection),
+                    card.cardFillColor.resolvedColor(with: card.traitCollection), name)
+            }
+            if bottom && styleName == "dark", let scroll {
+                scroll.contentOffset.y = max(-scroll.adjustedContentInset.top,
+                    scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+                screen.view.layoutIfNeeded()
+                attach(name + "-dark-bottom", screen)
+            }
+        }
+    }
+
+    private func attach(_ name: String, _ screen: UIViewController) {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(bounds: screen.view.bounds, format: format).image { context in
+            screen.view.layer.render(in: context.cgContext)
+        }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = "PaletteReviewed-" + name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func views(_ root: UIView) -> [UIView] {
+        [root] + root.subviews.flatMap(views)
+    }
+}

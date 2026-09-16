@@ -59,6 +59,7 @@ struct UserProfile: Equatable {
     var age: Int?
     var heightCm: Double?
     var weightKg: Double?
+    var targetWeightKg: Double? = nil
     var activityLevel: ActivityLevel?
     var goalType: GoalType?
     var avatarFileName: String?
@@ -73,6 +74,7 @@ struct UserProfile: Equatable {
         age: nil,
         heightCm: nil,
         weightKg: nil,
+        targetWeightKg: nil,
         activityLevel: nil,
         goalType: nil,
         avatarFileName: nil,
@@ -96,4 +98,9 @@ struct NutritionPlan: Equatable {
     var tdee: Double
     var goals: UserGoals
     var goalType: GoalType
+    var estimatedGoalDate: Date?
+
+    var activityBurnTarget: Double {
+        max(0, tdee - bmr)
+    }
 }

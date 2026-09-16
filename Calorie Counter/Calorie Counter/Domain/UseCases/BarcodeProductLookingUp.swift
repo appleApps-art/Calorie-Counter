@@ -6,6 +6,18 @@ enum BarcodeNormalization {
         guard (8...14).contains(digits.count) else { return nil }
         return digits
     }
+
+    static func groupedDisplay(_ raw: String) -> String {
+        let digits = String(raw.filter(\.isNumber).prefix(14))
+        guard digits.count > 1 else { return digits }
+        if digits.count <= 7 {
+            return "\(digits.prefix(1)) \(digits.dropFirst())"
+        }
+        let head = digits.prefix(1)
+        let middle = digits.dropFirst().prefix(6)
+        let tail = digits.dropFirst(7)
+        return "\(head) \(middle) \(tail)"
+    }
 }
 
 enum BarcodeLookupError: LocalizedError, Equatable {

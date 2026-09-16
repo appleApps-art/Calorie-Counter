@@ -1,0 +1,18 @@
+---
+description: Before any UI color/background/asset change, read THIS screen in Figma. Other screens are not a source.
+alwaysApply: true
+---
+
+# Figma: this screen only
+
+Before changing a screen’s background, card fill, shadow, image, or chrome:
+
+1. Call Figma `get_design_context` on **that screen’s node** (file `M37Q2Q2mOe0UwzTWeA2Ofl`).
+2. In the reply, quote what you actually read: token name + hex (e.g. `backgrounds/accent` `#e7fffc`, `backgrounds/primary` white).
+3. Map only to an existing `AppColor` / asset that matches that token. Then change code.
+
+**Stop. Do not write UI code** if Figma MCP is down, the node is unknown, or the dump has no fill. Ask the user for the node or wait. Copying Home / Recipe Detail / onboarding / `appBackground` onto another screen is inventing.
+
+Other screens, older chat conclusions, and “it looks similar” are not sources.
+
+This screen’s Create Recipe pantry frame is mint canvas (`#e7fffc`) with **white** cards + shadow — not white page + gray6, not `appBackground`.

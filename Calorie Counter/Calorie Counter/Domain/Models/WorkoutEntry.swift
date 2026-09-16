@@ -6,4 +6,6 @@ struct WorkoutEntry: Identifiable, Equatable {
     let durationMinutes: Double
     let caloriesBurned: Double
     let date: Date
+    var source: String? = nil
+    var healthSampleID: String? = nil
 }

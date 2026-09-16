@@ -1,0 +1,28 @@
+---
+description: After any code change, test it before saying done. UI, logic, and backend all count.
+alwaysApply: true
+---
+
+# Always test what you coded
+
+Never skip verification. UI, business logic, backend, and worker code all require a real check.
+
+After writing or changing code:
+
+1. Exercise the changed path the way a user or caller would.
+2. If it fails, fix it and re-test. Do not leave a known break.
+3. Only say the user can review when the check passed.
+
+How to test:
+
+- **Logic / data:** unit or integration tests, run them.
+- **UI:** run the screen or the closest harness; check the actual bug state, not only that it compiled.
+- **Backend / worker:** hit the endpoint or script with a real request.
+
+Do not:
+
+- treat compile success as a test
+- ask the user to discover whether the change works
+- say “ready for review” after an untested change
+
+If you cannot run a check, say exactly what you could not verify. Do not claim it works.

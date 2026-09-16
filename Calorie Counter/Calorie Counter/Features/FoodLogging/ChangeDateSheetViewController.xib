@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light" />
+    <dependencies>
+        <deployment identifier="iOS" />
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506" />
+        <capability name="Safe area layout guides" minToolsVersion="9.0" />
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0" />
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ChangeDateSheetViewController" customModule="Calorie_Counter" customModuleProvider="target">
+            <connections>
+                <outlet property="calendarHost" destination="picker" id="o-picker" />
+                <outlet property="closeButton" destination="close" id="o-close" />
+                <outlet property="selectButton" destination="select" id="o-select" />
+                <outlet property="titleLabel" destination="title" id="o-title" />
+                <outlet property="view" destination="root" id="o-view" />
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder" />
+        <view contentMode="scaleToFill" id="root">
+            <rect key="frame" x="0.0" y="0.0" width="402" height="522" />
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" />
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="close">
+                    <constraints>
+                        <constraint firstAttribute="width" constant="44" id="cw" />
+                        <constraint firstAttribute="height" constant="44" id="ch" />
+                    </constraints>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Change date" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
+                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17" />
+                    <color key="textColor" name="BityTextPrimary" />
+                    <nil key="highlightedColor" />
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="picker">
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace" />
+                </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" translatesAutoresizingMaskIntoConstraints="NO" id="select">
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="sh" />
+                    </constraints>
+                    <state key="normal" title="Select" />
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="safe" />
+            <color key="backgroundColor" name="BityGray6" />
+            <constraints>
+                <constraint firstItem="close" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="16" id="cl" />
+                <constraint firstItem="close" firstAttribute="top" secondItem="root" secondAttribute="top" constant="16" id="ct" />
+                <constraint firstItem="title" firstAttribute="centerX" secondItem="root" secondAttribute="centerX" id="tcx" />
+                <constraint firstItem="title" firstAttribute="centerY" secondItem="close" secondAttribute="centerY" id="tcy" />
+                <constraint firstItem="picker" firstAttribute="top" secondItem="close" secondAttribute="bottom" constant="24" id="pt" />
+                <constraint firstItem="picker" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="10" id="pl" />
+                <constraint firstAttribute="trailing" secondItem="picker" secondAttribute="trailing" constant="10" id="pr" />
+                <constraint firstItem="select" firstAttribute="top" secondItem="picker" secondAttribute="bottom" constant="24" id="selt" />
+                <constraint firstItem="select" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="10" id="sell" />
+                <constraint firstAttribute="trailing" secondItem="select" secondAttribute="trailing" constant="10" id="selr" />
+                <constraint firstItem="root" firstAttribute="bottom" secondItem="select" secondAttribute="bottom" constant="26" id="selb" />
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics" />
+            <point key="canvasLocation" x="139" y="20" />
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="BityGray6">
+            <color red="0.949" green="0.949" blue="0.969" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+        <namedColor name="BityTextPrimary">
+            <color red="0.102" green="0.102" blue="0.102" alpha="1" colorSpace="custom" customColorSpace="sRGB" />
+        </namedColor>
+    </resources>
+</document>

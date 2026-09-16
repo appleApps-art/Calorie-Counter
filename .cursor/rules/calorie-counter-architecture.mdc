@@ -82,7 +82,7 @@ Shared logging flow stubs live in `Features/FoodLogging/`.
 
 ## Adaptive sizing (mandatory for all UI sizes)
 
-Design canvas: iPhone **393×852**.
+Design canvas: iPhone **402×874**.
 
 Use only:
 

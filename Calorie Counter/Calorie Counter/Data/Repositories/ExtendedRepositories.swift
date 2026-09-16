@@ -179,6 +179,7 @@ final class ProgressPhotoRepository: ProgressPhotoRepositoryProtocol {
 
 protocol ChatHistoryRepositoryProtocol {
     func fetchRecent(limit: Int) throws -> [ChatHistoryMessage]
+    func fetchAll() throws -> [ChatHistoryMessage]
     func append(_ message: ChatHistoryMessage) throws
     func replaceAll(_ messages: [ChatHistoryMessage]) throws
 }
@@ -199,6 +200,13 @@ final class ChatHistoryRepository: ChatHistoryRepositoryProtocol {
             return all
         }
         return Array(all.suffix(limit))
+    }
+
+    func fetchAll() throws -> [ChatHistoryMessage] {
+        let context = coreDataStack.viewContext
+        let request = CDChatMessage.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
+        return try context.fetch(request).compactMap(ChatMessageMapper.map)
     }
 
     func append(_ message: ChatHistoryMessage) throws {

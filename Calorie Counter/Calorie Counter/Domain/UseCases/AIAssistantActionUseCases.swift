@@ -31,6 +31,12 @@ final class ParseAIAssistantActionsUseCase {
 
     private func parseFoodLog(_ args: [String: Any]) -> FoodLogProposal? {
         guard let name = ToolCallValue.string(args["name"]), !name.isEmpty else { return nil }
+        let kindRaw = ToolCallValue.string(args["kind"])?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let catalogKind = FoodProductKind(rawValue: kindRaw ?? "")
+        let steps = ToolCallValue.stringArray(args["steps"])
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let ingredientLines = Self.parseIngredientLines(args["ingredients"])
         return FoodLogProposal(
             name: name,
             mealType: ToolCallValue.mealType(args["mealType"]),
@@ -45,8 +51,43 @@ final class ParseAIAssistantActionsUseCase {
             portionMilliliters: ToolCallValue.number(args["portionMilliliters"]),
             confidence: min(1, max(0, ToolCallValue.number(args["confidence"]) ?? 0.5)),
             notes: ToolCallValue.string(args["notes"]) ?? "",
-            source: ToolCallValue.string(args["source"]) ?? "text"
+            source: ToolCallValue.string(args["source"]) ?? "text",
+            imageURL: ToolCallValue.url(args["imageURL"]) ?? ToolCallValue.url(args["image"]),
+            ingredientLines: ingredientLines,
+            recipeSteps: steps,
+            catalogExternalId: ToolCallValue.string(args["externalRecipeId"])
+                ?? ToolCallValue.string(args["catalogExternalId"]),
+            catalogKind: catalogKind ?? (steps.isEmpty ? nil : .recipe),
+            foodType: ToolCallValue.string(args["foodType"]).flatMap(FoodType.init(rawValue:))
         )
+    }
+
+    private static func parseIngredientLines(_ value: Any?) -> [String] {
+        let strings = ToolCallValue.stringArray(value)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        if !strings.isEmpty {
+            return strings
+        }
+        guard let items = value as? [Any] else { return [] }
+        return items.compactMap { item in
+            if let string = item as? String {
+                let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed.isEmpty ? nil : trimmed
+            }
+            let dict = ToolCallValue.dictionary(item)
+            guard let name = ToolCallValue.string(dict["name"])?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !name.isEmpty else {
+                return nil
+            }
+            if let grams = ToolCallValue.number(dict["grams"]), grams > 0 {
+                return "\(name) \(ProductDetailsMath.formatGrams(grams))"
+            }
+            if let milliliters = ToolCallValue.number(dict["milliliters"]), milliliters > 0 {
+                return "\(name) \(L10n.format("editMeal.mlValue", Int(milliliters.rounded())))"
+            }
+            return name
+        }
     }
 
     private func parseReplace(_ args: [String: Any]) -> FoodReplaceProposal? {
@@ -69,7 +110,8 @@ final class ParseAIAssistantActionsUseCase {
             protein: ToolCallValue.number(args["protein"]) ?? 0,
             carbs: ToolCallValue.number(args["carbs"]) ?? 0,
             fats: ToolCallValue.number(args["fats"]) ?? 0,
-            portionLabel: ToolCallValue.string(args["portionLabel"])
+            portionLabel: ToolCallValue.string(args["portionLabel"]),
+            imageURL: ToolCallValue.url(args["imageURL"]) ?? ToolCallValue.url(args["image"])
         )
     }
 
@@ -103,7 +145,12 @@ final class ParseAIAssistantActionsUseCase {
                 fats: ToolCallValue.number(dict["fats"]) ?? 0,
                 cookTimeMinutes: ToolCallValue.number(dict["cookTimeMinutes"]),
                 externalRecipeId: ToolCallValue.string(dict["externalRecipeId"]),
-                ingredients: ToolCallValue.stringArray(dict["ingredients"])
+                imageURL: ToolCallValue.url(dict["imageURL"]) ?? ToolCallValue.url(dict["image"]),
+                ingredients: ToolCallValue.stringArray(dict["ingredients"]),
+                steps: ToolCallValue.stringArray(dict["steps"]),
+                mealType: ToolCallValue.string(dict["mealType"]).flatMap(MealType.init(rawValue:)),
+                portionGrams: ToolCallValue.number(dict["portionGrams"]),
+                portionMilliliters: ToolCallValue.number(dict["portionMilliliters"])
             )
         }
         guard !options.isEmpty else { return nil }
@@ -125,6 +172,7 @@ final class ParseAIAssistantActionsUseCase {
             fats: ToolCallValue.number(args["fats"]) ?? 0,
             cookTimeMinutes: ToolCallValue.number(args["cookTimeMinutes"]),
             externalRecipeId: ToolCallValue.string(args["externalRecipeId"]),
+            imageURL: ToolCallValue.url(args["imageURL"]) ?? ToolCallValue.url(args["image"]),
             ingredients: ToolCallValue.stringArray(args["ingredients"]),
             steps: ToolCallValue.stringArray(args["steps"])
         )
@@ -204,71 +252,52 @@ final class ConfirmAIAssistantActionUseCase {
         self.awardXPUseCase = awardXPUseCase
     }
 
-    func execute(_ action: AIAssistantAction) throws {
+    @discardableResult
+    func execute(_ action: AIAssistantAction) throws -> FoodEntry? {
         switch action {
         case .logFood(let proposal):
-            _ = try logFoodUseCase.execute(proposal.toFoodEntry())
+            return try logFoodUseCase.execute(proposal.toFoodEntry())
         case .replaceFood(let proposal):
             if let targetId = proposal.targetEntryId {
-                _ = try replaceFoodEntryUseCase.execute(targetId: targetId, with: proposal.newItem)
-            } else if let name = proposal.targetName {
+                return try replaceFoodEntryUseCase.execute(targetId: targetId, with: proposal.newItem)
+            }
+            if let name = proposal.targetName {
                 let today = try foodEntryRepository.fetchEntries(for: Date())
                 if let match = today.last(where: { $0.name.localizedCaseInsensitiveContains(name) }) {
-                    _ = try replaceFoodEntryUseCase.execute(targetId: match.id, with: proposal.newItem)
-                } else {
-                    _ = try logFoodUseCase.execute(proposal.newItem.toFoodEntry())
+                    return try replaceFoodEntryUseCase.execute(targetId: match.id, with: proposal.newItem)
                 }
-            } else {
-                _ = try logFoodUseCase.execute(proposal.newItem.toFoodEntry())
             }
+            return try logFoodUseCase.execute(proposal.newItem.toFoodEntry())
         case .swapFood(let proposal):
-            let alternative = FoodLogProposal(
-                name: proposal.alternative.name,
-                mealType: .snacks,
-                calories: proposal.alternative.calories,
-                protein: proposal.alternative.protein,
-                carbs: proposal.alternative.carbs,
-                fats: proposal.alternative.fats,
-                fiber: 0,
-                sugar: 0,
-                sodium: 0,
-                notes: proposal.savingsNote ?? "",
-                source: "swap"
-            )
             if let targetId = proposal.applyToEntryId {
-                _ = try replaceFoodEntryUseCase.execute(targetId: targetId, with: alternative)
-            } else {
-                _ = try logFoodUseCase.execute(alternative.toFoodEntry())
-                try awardXPUseCase?.execute(kind: .foodSwap)
+                let existing = try foodEntryRepository.fetchEntry(id: targetId)
+                let alternative = proposal.asFoodLogProposal(mealType: existing?.mealType ?? .snacks)
+                return try replaceFoodEntryUseCase.execute(targetId: targetId, with: alternative)
             }
+            let entry = try logFoodUseCase.execute(proposal.asFoodLogProposal().toFoodEntry())
+            try awardXPUseCase?.execute(kind: .foodSwap)
+            return entry
         case .mealSuggestions:
-            break
+            return nil
         case .saveRecipe(let proposal):
             try recipeRepository.save(proposal.toRecipe())
+            return nil
         case .swapRecipeIngredient(let proposal):
             try applyRecipeIngredientSwap(proposal)
+            return nil
         case .logWater(let proposal):
             _ = try logWaterUseCase.execute(amountMilliliters: proposal.amountMilliliters)
+            return nil
         case .savePreference(let proposal):
             _ = try saveUserPreferenceUseCase.execute(kind: proposal.kind, value: proposal.value, note: proposal.note)
+            return nil
         }
     }
 
-    func executeMealSuggestion(_ option: MealSuggestionOption, mealType: MealType) throws {
-        let proposal = FoodLogProposal(
-            name: option.title,
-            mealType: mealType,
-            calories: option.calories,
-            protein: option.protein,
-            carbs: option.carbs,
-            fats: option.fats,
-            fiber: 0,
-            sugar: 0,
-            sodium: 0,
-            notes: option.summary,
-            source: "suggestion"
-        )
-        _ = try logFoodUseCase.execute(proposal.toFoodEntry())
+    @discardableResult
+    func executeMealSuggestion(_ option: MealSuggestionOption, mealType: MealType) throws -> FoodEntry {
+        let proposal = option.asFoodLogProposal(mealType: mealType)
+        return try logFoodUseCase.execute(proposal.toFoodEntry())
     }
 
     private func applyRecipeIngredientSwap(_ proposal: RecipeIngredientSwapProposal) throws {
