@@ -103,7 +103,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
             color: AppColor.labelVibrantPrimary,
             kern: -0.23
         )
-        sourceTitleLabel.textAlignment = .left
+        sourceTitleLabel.textAlignment = .natural
         configureSourceButton(pantrySourceButton, title: L10n.tr("recipes.create.myPantry"), action: #selector(pantrySourceTapped))
         configureSourceButton(customSourceButton, title: L10n.tr("recipes.create.customIngredients"), action: #selector(customSourceTapped))
         configureSourceTrack()

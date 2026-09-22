@@ -137,15 +137,16 @@ struct PantryItem: Equatable, Identifiable {
 
     static let useByFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .autoupdatingCurrent
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("d MMM")
         return formatter
     }()
 
     static let expiryDisplayFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .autoupdatingCurrent
-        formatter.dateFormat = "d MMMM yyyy"
+        formatter.locale = .appFormatting
+        // A template, not a fixed pattern: Japanese, Chinese and Korean put the year first.
+        formatter.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
         return formatter
     }()
 

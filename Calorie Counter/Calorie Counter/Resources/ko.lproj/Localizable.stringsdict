@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>rewards.dayStreakPill</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%d일 연속</string>
+		</dict>
+	</dict>
+	<key>rewards.weeksActivePill</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@weeks@</string>
+		<key>weeks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%d주 활동</string>
+		</dict>
+	</dict>
+	<key>rewards.swapsPill</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>교체 %d회</string>
+		</dict>
+	</dict>
+	<key>rewards.swaps</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>교체 %d회</string>
+		</dict>
+	</dict>
+	<key>rewards.swapsProgress</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%1$d/%2$#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%2$d회</string>
+		</dict>
+	</dict>
+	<key>rewards.swapsBadge</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>교체 %d회 배지</string>
+		</dict>
+	</dict>
+	<key>paywall.onboarding.title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>저와 함께 %d일 무료로 체험해 보세요!</string>
+		</dict>
+	</dict>
+	<key>paywall.plan.trialDays</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>%d일 무료</string>
+		</dict>
+	</dict>
+	<key>photo.camera.freeScansLeft</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@scans@</string>
+		<key>scans</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>other</key>
+			<string>무료 스캔 %d회 남음</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

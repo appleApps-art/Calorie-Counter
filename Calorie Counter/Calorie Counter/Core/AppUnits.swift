@@ -14,7 +14,7 @@ struct AppUnits {
     func mass(_ grams: Double) -> Double { usesMetric ? grams : grams / Self.gramsPerOunce }
     func milliliters(_ displayed: Double) -> Double { usesMetric ? displayed : displayed * Self.millilitersPerFluidOunce }
     func weightText(_ kilograms: Double, signed: Bool = false) -> String {
-        String(format: signed ? "%+.1f %@" : "%.1f %@", locale: .current, weight(kilograms), weightSymbol)
+        String(format: signed ? "%+.1f %@" : "%.1f %@", locale: .appFormatting, weight(kilograms), weightSymbol)
     }
     func volumeText(_ milliliters: Double) -> String { "\(number(volume(milliliters))) \(volumeSymbol)" }
     func massText(_ grams: Double) -> String { "\(number(mass(grams))) \(portionSymbol)" }
@@ -27,7 +27,7 @@ struct AppUnits {
     }
     func number(_ value: Double) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.numberStyle = .decimal
         formatter.usesGroupingSeparator = false
         formatter.maximumFractionDigits = usesMetric ? 1 : 2

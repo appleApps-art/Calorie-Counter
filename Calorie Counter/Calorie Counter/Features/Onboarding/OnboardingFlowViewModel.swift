@@ -87,7 +87,7 @@ final class OnboardingFlowViewModel {
         _ = try completeOnboardingUseCase.execute(profile: profile)
     }
 
-    static func display(for plan: NutritionPlan, locale: Locale = .current) -> OnboardingPlanDisplay {
+    static func display(for plan: NutritionPlan, locale: Locale = .appFormatting) -> OnboardingPlanDisplay {
         let calories = groupedInteger(plan.goals.calorieTarget, locale: locale)
         let sodium = groupedInteger(plan.goals.sodiumTarget, locale: locale)
         let water = liters(plan.goals.waterTargetMilliliters, locale: locale)

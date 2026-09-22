@@ -21,7 +21,8 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
 
     private let viewModel: BarcodeFoodLoggingViewModel
     private let scanner: CameraBarcodeScanner
-    private let showsFreeScanQuota: Bool
+    /// Free tries left on a free account; nil for Premium, which has no counter.
+    private let freeScansLeft: Int?
     private var isTorchOn = false
     private let frameCornerRadius: CGFloat = 26
     private var lastLayoutSize: CGSize = .zero
@@ -33,11 +34,11 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
     init(
         viewModel: BarcodeFoodLoggingViewModel,
         scanner: CameraBarcodeScanner = CameraBarcodeScanner(),
-        showsFreeScanQuota: Bool = true
+        freeScansLeft: Int? = nil
     ) {
         self.viewModel = viewModel
         self.scanner = scanner
-        self.showsFreeScanQuota = showsFreeScanQuota
+        self.freeScansLeft = freeScansLeft
         super.init(nibName: "BarcodeScannerViewController")
         hidesBottomBarWhenPushed = true
     }
@@ -235,8 +236,8 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
 
         tooltipView.useLiveGlass = false
         tooltipView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
-        tooltipView.isHidden = !showsFreeScanQuota
-        tooltipLabel.text = L10n.tr("photo.camera.freeScans")
+        tooltipView.isHidden = freeScansLeft == nil
+        tooltipLabel.text = L10n.format("photo.camera.freeScansLeft", freeScansLeft ?? 0)
         tooltipLabel.textAlignment = .center
         OnboardingStyle.lockFigmaFont(tooltipLabel, size: 15, weight: .regular, color: .white, kern: -0.23)
 

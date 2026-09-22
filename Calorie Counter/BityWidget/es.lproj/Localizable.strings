@@ -1,0 +1,10 @@
+"widget.displayName" = "Hoy";
+"widget.description" = "Calorías restantes, macros y un acceso rápido para registrar comida.";
+"widget.remaining" = "restantes";
+"widget.log" = "Registrar";
+"widget.protein" = "Proteínas";
+"widget.carbs" = "Carbohidratos";
+"widget.fats" = "Grasas";
+"widget.water" = "Agua";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

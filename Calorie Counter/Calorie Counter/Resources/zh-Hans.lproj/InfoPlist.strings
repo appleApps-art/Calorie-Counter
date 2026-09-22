@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "相机用于扫描食品条形码，以及通过照片记录餐食。";
+"NSMicrophoneUsageDescription" = "麦克风用于通过语音记录食物。";
+"NSSpeechRecognitionUsageDescription" = "语音识别用于通过语音记录食物。";
+"NSPhotoLibraryUsageDescription" = "照片访问权限用于保存进度照片和分析餐食照片。";
+"NSHealthShareUsageDescription" = "健康数据用于导入体重、饮水、体能训练和营养信息，让你的日记保持最新。";
+"NSHealthUpdateUsageDescription" = "当你在 Bity 中记录食物、饮水、体重或体能训练时，健康 App 会同步更新。";

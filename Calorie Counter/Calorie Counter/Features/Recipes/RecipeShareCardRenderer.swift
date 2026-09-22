@@ -280,7 +280,7 @@ enum RecipeShareCardRenderer {
         nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         let amountLabel = UILabel()
-        amountLabel.textAlignment = .right
+        amountLabel.textAlignment = .trailing
         amountLabel.text = amount
         styleLabel(amountLabel, size: 15, weight: .regular, color: color, kern: -0.23, wraps: false)
         amountLabel.setContentHuggingPriority(.required, for: .horizontal)

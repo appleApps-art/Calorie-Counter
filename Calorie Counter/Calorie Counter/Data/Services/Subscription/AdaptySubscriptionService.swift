@@ -14,11 +14,13 @@ protocol SubscriptionStatusProviding: AnyObject {
 
 final class AdaptySubscriptionService: SubscriptionStatusProviding {
     #if DEBUG
+    private static let debugPremiumProductID = "debug.premium"
+
     private static var forcePremium: Bool {
         if QALaunchConfiguration.isActive, let override = QALaunchConfiguration.premium {
             return override
         }
-        return true
+        return !QALaunchConfiguration.usesRealSubscription
     }
     #endif
 
@@ -53,6 +55,10 @@ final class AdaptySubscriptionService: SubscriptionStatusProviding {
         else {
             return .free
         }
+        #if DEBUG
+        // What the debug override saved is not a purchase.
+        if decoded.status.productID == Self.debugPremiumProductID { return .free }
+        #endif
         return decoded.status
     }
 
@@ -181,7 +187,7 @@ final class AdaptySubscriptionService: SubscriptionStatusProviding {
         guard Self.forcePremium else { return nil }
         return SubscriptionStatus(
             tier: .premium,
-            productID: "debug.premium",
+            productID: Self.debugPremiumProductID,
             expirationDate: nil,
             isEligibleForTrial: false
         )
@@ -226,8 +232,32 @@ final class AdaptySubscriptionService: SubscriptionStatusProviding {
             id: product.vendorProductId,
             displayName: product.localizedTitle,
             displayPrice: product.localizedPrice ?? "",
-            periodLabel: periodLabel(for: product)
+            periodLabel: periodLabel(for: product),
+            price: product.price,
+            priceLocale: product.priceLocale,
+            period: product.subscriptionPeriod.flatMap(Self.domainPeriod),
+            freeTrialDays: Self.freeTrialDays(product.subscriptionOffer)
         )
+    }
+
+    private static func domainPeriod(_ period: AdaptySubscriptionPeriod) -> SubscriptionPeriod? {
+        let unit: SubscriptionPeriod.Unit
+        switch period.unit {
+        case .day: unit = .day
+        case .week: unit = .week
+        case .month: unit = .month
+        case .year: unit = .year
+        case .unknown: return nil
+        }
+        return SubscriptionPeriod(unit: unit, count: period.numberOfUnits)
+    }
+
+    /// Adapty only attaches the introductory offer the user is still eligible for.
+    private static func freeTrialDays(_ offer: AdaptySubscriptionOffer?) -> Int? {
+        guard let offer, offer.paymentMode == .freeTrial,
+              let period = domainPeriod(offer.subscriptionPeriod)
+        else { return nil }
+        return period.days * max(offer.numberOfPeriods, 1)
     }
 
     private func periodLabel(for product: AdaptyPaywallProduct) -> String {

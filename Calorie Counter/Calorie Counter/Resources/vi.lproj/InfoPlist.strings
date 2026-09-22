@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "Camera được dùng để quét mã vạch và ghi bữa ăn từ ảnh.";
+"NSMicrophoneUsageDescription" = "Micrô được dùng để ghi món ăn bằng giọng nói.";
+"NSSpeechRecognitionUsageDescription" = "Nhận dạng giọng nói được dùng để ghi món ăn bằng giọng nói.";
+"NSPhotoLibraryUsageDescription" = "Quyền truy cập ảnh được dùng để lưu ảnh tiến độ và phân tích ảnh bữa ăn.";
+"NSHealthShareUsageDescription" = "Dữ liệu Sức khỏe được dùng để nhập cân nặng, nước, bài tập và dinh dưỡng, giúp nhật ký luôn được cập nhật.";
+"NSHealthUpdateUsageDescription" = "Sức khỏe được cập nhật khi bạn ghi món ăn, nước, cân nặng hoặc bài tập trong Bity.";

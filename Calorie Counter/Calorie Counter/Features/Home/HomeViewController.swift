@@ -231,6 +231,12 @@ final class HomeViewController: BaseViewController, UIScrollViewDelegate {
             weight: .regular
         )
         markAllEatenButton.setContentHuggingPriority(.required, for: .horizontal)
+        // One line, never squeezed: a long diary title ("Ernährungstagebuch") wraps instead,
+        // otherwise the button title broke into three clipped lines.
+        markAllEatenButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        markAllEatenButton.configuration?.titleLineBreakMode = .byTruncatingTail
+        markAllEatenButton.titleLabel?.numberOfLines = 1
+        diaryTitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         OnboardingStyle.styleGlassSymbolButton(
             diaryAddButton,
             systemName: "plus",

@@ -161,7 +161,7 @@ enum ChatMarkdownRenderer {
         let textStart = start + max(markerWidth, step)
         paragraph.firstLineHeadIndent = start
         paragraph.headIndent = textStart
-        paragraph.tabStops = [NSTextTab(textAlignment: .left, location: textStart)]
+        paragraph.tabStops = [NSTextTab(textAlignment: .natural, location: textStart)]
         paragraph.defaultTabInterval = textStart
         var markerAttributes = attributes
         if marker == "•" { markerAttributes[.foregroundColor] = AppColor.teal }

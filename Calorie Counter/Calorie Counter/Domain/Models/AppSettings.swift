@@ -131,6 +131,73 @@ struct SubscriptionProduct: Equatable {
     var displayName: String
     var displayPrice: String
     var periodLabel: String
+    /// The numbers behind the paywall copy: the price per month of a yearly plan, the savings badge
+    /// and the free-trial timeline all come from these.
+    var price: Decimal? = nil
+    var priceLocale: Locale? = nil
+    var period: SubscriptionPeriod? = nil
+    var freeTrialDays: Int? = nil
+    /// Stand-in plans shown until the store returns real products; they cannot be bought.
+    var isPlaceholder = false
+
+    /// The design's plans, shown while App Store products are not set up or cannot load.
+    static let placeholders: [SubscriptionProduct] = [
+        SubscriptionProduct(
+            id: "bity.placeholder.yearly",
+            displayName: "Bity Premium",
+            displayPrice: "$49.99",
+            periodLabel: "",
+            price: Decimal(string: "49.99"),
+            priceLocale: Locale(identifier: "en_US"),
+            period: SubscriptionPeriod(unit: .year, count: 1),
+            freeTrialDays: 7,
+            isPlaceholder: true
+        ),
+        SubscriptionProduct(
+            id: "bity.placeholder.monthly",
+            displayName: "Bity Premium",
+            displayPrice: "$9.99",
+            periodLabel: "",
+            price: Decimal(string: "9.99"),
+            priceLocale: Locale(identifier: "en_US"),
+            period: SubscriptionPeriod(unit: .month, count: 1),
+            freeTrialDays: nil,
+            isPlaceholder: true
+        )
+    ]
+}
+
+struct SubscriptionPeriod: Equatable {
+    enum Unit: String {
+        case day
+        case week
+        case month
+        case year
+    }
+
+    var unit: Unit
+    var count: Int
+
+    /// Length in weeks, to compare plans of different periods.
+    var weeks: Double {
+        let count = Double(max(count, 1))
+        switch unit {
+        case .day: return count / 7
+        case .week: return count
+        case .month: return count * 52 / 12
+        case .year: return count * 52
+        }
+    }
+
+    var days: Int {
+        let count = max(self.count, 1)
+        switch unit {
+        case .day: return count
+        case .week: return count * 7
+        case .month: return count * 30
+        case .year: return count * 365
+        }
+    }
 }
 
 enum SubscriptionPlacement: String, CaseIterable, Equatable {

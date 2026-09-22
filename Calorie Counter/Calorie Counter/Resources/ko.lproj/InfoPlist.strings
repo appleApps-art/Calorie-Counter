@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "카메라는 바코드를 스캔하고 사진으로 식사를 기록하는 데 사용됩니다.";
+"NSMicrophoneUsageDescription" = "마이크는 음성으로 음식을 기록하는 데 사용됩니다.";
+"NSSpeechRecognitionUsageDescription" = "음성 인식은 음성으로 음식을 기록하는 데 사용됩니다.";
+"NSPhotoLibraryUsageDescription" = "사진 접근 권한은 진행 사진을 저장하고 식사 사진을 분석하는 데 사용됩니다.";
+"NSHealthShareUsageDescription" = "건강 데이터는 체중, 수분, 운동, 영양 정보를 가져와 일지를 최신 상태로 유지하는 데 사용됩니다.";
+"NSHealthUpdateUsageDescription" = "Bity에서 음식, 수분, 체중 또는 운동을 기록하면 건강 앱이 업데이트됩니다.";

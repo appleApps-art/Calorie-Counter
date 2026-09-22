@@ -76,7 +76,7 @@ struct DiaryWidgetView: View {
     }
 
     private var remainingText: String {
-        guard entry.hasData else { return "—" }
+        guard entry.hasData else { return "-" }
         return "\(Int(entry.snapshot.remainingCalories.rounded()))"
     }
 
@@ -100,7 +100,7 @@ struct DiaryWidgetView: View {
     }
 
     private func metricText(current: Double, target: Double, unit: String) -> String {
-        guard entry.hasData else { return "—" }
+        guard entry.hasData else { return "-" }
         return "\(Int(current.rounded()))/\(Int(target.rounded())) \(unit)"
     }
 }

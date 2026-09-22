@@ -122,5 +122,65 @@
 			<string>Значок за %d заміни</string>
 		</dict>
 	</dict>
+	<key>paywall.onboarding.title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Спробуйте %d день безкоштовно зі мною!</string>
+			<key>few</key>
+			<string>Спробуйте %d дні безкоштовно зі мною!</string>
+			<key>many</key>
+			<string>Спробуйте %d днів безкоштовно зі мною!</string>
+			<key>other</key>
+			<string>Спробуйте %d дня безкоштовно зі мною!</string>
+		</dict>
+	</dict>
+	<key>paywall.plan.trialDays</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d день безкоштовно</string>
+			<key>few</key>
+			<string>%d дні безкоштовно</string>
+			<key>many</key>
+			<string>%d днів безкоштовно</string>
+			<key>other</key>
+			<string>%d дня безкоштовно</string>
+		</dict>
+	</dict>
+	<key>photo.camera.freeScansLeft</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@scans@</string>
+		<key>scans</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Залишився %d безкоштовний скан</string>
+			<key>few</key>
+			<string>Залишилось %d безкоштовні скани</string>
+			<key>many</key>
+			<string>Залишилось %d безкоштовних сканів</string>
+			<key>other</key>
+			<string>Залишилось %d безкоштовного скану</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

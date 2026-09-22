@@ -1,0 +1,10 @@
+"widget.displayName" = "오늘";
+"widget.description" = "남은 칼로리, 매크로, 빠른 음식 기록.";
+"widget.remaining" = "남음";
+"widget.log" = "기록";
+"widget.protein" = "단백질";
+"widget.carbs" = "탄수화물";
+"widget.fats" = "지방";
+"widget.water" = "수분";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

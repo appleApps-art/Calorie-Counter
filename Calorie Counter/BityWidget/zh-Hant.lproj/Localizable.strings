@@ -1,0 +1,10 @@
+"widget.displayName" = "今天";
+"widget.description" = "剩餘熱量、三大營養素和快速記錄飲食的捷徑。";
+"widget.remaining" = "剩餘";
+"widget.log" = "記錄";
+"widget.protein" = "蛋白質";
+"widget.carbs" = "碳水";
+"widget.fats" = "脂肪";
+"widget.water" = "飲水";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

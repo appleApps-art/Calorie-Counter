@@ -843,15 +843,30 @@ final class AIFoodSearchService: AIFoodSearching {
             return string.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         guard let map = value as? [String: Any] else { return "" }
-        let language = locale
+        let picked = catalogLanguageKeys(for: locale).lazy.compactMap { map[$0] }.first
+            ?? map["en"] ?? map.values.first
+        return (picked as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    /// Catalog translations are keyed like the server keys them: Traditional Chinese and
+    /// Brazilian Portuguese have their own "zh-hant" and "pt-br", every other language its bare code.
+    static func catalogLanguageKeys(for locale: String) -> [String] {
+        let parts = locale
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "_", with: "-")
             .lowercased()
             .split(separator: "-")
-            .first
-            .map(String.init) ?? "en"
-        let picked = map[language] ?? map["en"] ?? map.values.first
-        return (picked as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            .map(String.init)
+        guard let language = parts.first, !language.isEmpty else { return ["en"] }
+        switch language {
+        case "zh":
+            let traditional = parts.contains("hant") || parts.contains { ["tw", "hk", "mo"].contains($0) }
+            return traditional ? ["zh-hant", "zh"] : ["zh", "zh-hant"]
+        case "pt":
+            return parts.contains("br") ? ["pt-br", "pt"] : ["pt", "pt-br"]
+        default:
+            return [language]
+        }
     }
 
     private static func stringValue(_ value: Any?) -> String? {

@@ -44,6 +44,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidEnterBackground(_ scene: UIScene) {
         analyticsLifecycle.appDidEnterBackground()
+        appCoordinator?.handleSceneDidEnterBackground()
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {

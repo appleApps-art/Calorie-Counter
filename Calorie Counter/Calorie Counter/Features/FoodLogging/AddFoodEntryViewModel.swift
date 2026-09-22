@@ -252,10 +252,10 @@ final class AddFoodEntryViewModel {
             : draft.servings == 1
             ? L10n.format("product.entry.nutritionSummaryOne", draft.servings)
             : L10n.format("product.entry.nutritionSummaryMany", draft.servings)
-        caloriesText.value = needsNutritionRecalculation ? "—" : "\(Int(draft.loggedCalories.rounded()))"
-        proteinText.value = needsNutritionRecalculation ? "—" : ProductDetailsMath.formatGrams(draft.loggedProtein)
-        fatText.value = needsNutritionRecalculation ? "—" : ProductDetailsMath.formatGrams(draft.loggedFats)
-        carbsText.value = needsNutritionRecalculation ? "—" : ProductDetailsMath.formatGrams(draft.loggedCarbs)
+        caloriesText.value = needsNutritionRecalculation ? "-" : "\(Int(draft.loggedCalories.rounded()))"
+        proteinText.value = needsNutritionRecalculation ? "-" : ProductDetailsMath.formatGrams(draft.loggedProtein)
+        fatText.value = needsNutritionRecalculation ? "-" : ProductDetailsMath.formatGrams(draft.loggedFats)
+        carbsText.value = needsNutritionRecalculation ? "-" : ProductDetailsMath.formatGrams(draft.loggedCarbs)
         canAddEntry.value = !isRecalculatingNutrition.value
         addButtonTitle.value = L10n.tr(isRecalculatingNutrition.value
             ? "product.entry.recalculating"
@@ -293,7 +293,7 @@ final class AddFoodEntryViewModel {
 
     private static func dateBadgeText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("MMMd")
         let day = formatter.string(from: date)
         if Calendar.current.isDateInToday(date) {

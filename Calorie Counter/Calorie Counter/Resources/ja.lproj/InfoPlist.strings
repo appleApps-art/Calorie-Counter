@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "カメラは、バーコードのスキャンと写真からの食事記録に使用します。";
+"NSMicrophoneUsageDescription" = "マイクは、音声で食事を記録するために使用します。";
+"NSSpeechRecognitionUsageDescription" = "音声認識は、音声で食事を記録するために使用します。";
+"NSPhotoLibraryUsageDescription" = "写真へのアクセスは、進捗写真の保存と食事写真の分析に使用します。";
+"NSHealthShareUsageDescription" = "ヘルスケアのデータは、体重、水分、ワークアウト、栄養を読み込んで日記を最新に保つために使用します。";
+"NSHealthUpdateUsageDescription" = "Bityで食事、水分、体重、ワークアウトを記録すると、ヘルスケアが更新されます。";

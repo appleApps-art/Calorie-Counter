@@ -21,6 +21,8 @@ final class ProductDetailsViewModel {
     let recipeSteps = Observable<[String]>([])
     let suggestionVisible = Observable(false)
     let canAddSuggestion = Observable(false)
+    /// The AI health suggestion is a Premium insight; a free account does not get the card.
+    var showsInsights = true
     let relatedRecipe = Observable<Recipe?>(nil)
     let relatedRecipeLoading = Observable(false)
     let relatedRecipeUnavailable = Observable(false)
@@ -312,7 +314,11 @@ final class ProductDetailsViewModel {
         ingredients.value = []
         recipeSteps.value = []
         wantToCookVisible.value = relatedRecipeLoader != nil && !foundNoRelatedRecipes
-        canAddSuggestion.value = showsAddToDiary.value && draft.suggestion != nil
+        canAddSuggestion.value = showsInsights && showsAddToDiary.value && draft.suggestion != nil
+        guard showsInsights else {
+            suggestionVisible.value = false
+            return
+        }
         if let suggestion = draft.suggestion {
             suggestionVisible.value = true
             suggestionNameText.value = suggestion.name

@@ -66,6 +66,12 @@ final class AIAssistantViewModel {
     var onRecipeIngredientSwapProposed: ((RecipeIngredientSwapProposal) -> Void)?
     /// Returns true when the plan screen actually applied the swap.
     var onMealPlanSwapProposed: ((MealPlanSwapProposal) -> Bool)?
+    /// Asked before a message goes out; false keeps what was typed and calls `onLimitReached`.
+    var allowsSending: () -> Bool = { true }
+    /// Gets the held back message as a retry, to send once Premium unlocks.
+    var onLimitReached: ((_ retry: @escaping () -> Void) -> Void)?
+    /// A message that got its answer, so a free try is counted only when it was worth one.
+    var onMessageAnswered: (() -> Void)?
     private(set) var currentConversationID = UUID()
 
     private let aiAssistantService: AIAssistantServiceProtocol
@@ -161,6 +167,10 @@ final class AIAssistantViewModel {
 
     func selectCategory(_ category: AIChatCategory) {
         guard !isSending.value else { return }
+        guard allowsSending() else {
+            onLimitReached? { [weak self] in self?.selectCategory(category) }
+            return
+        }
         selectedCategory.value = category
         send(text: L10n.tr(category.titleKey))
     }
@@ -367,6 +377,14 @@ final class AIAssistantViewModel {
         let image = pendingImage
         pendingImage = nil
         guard (!trimmed.isEmpty || image != nil), !isSending.value else { return }
+        guard allowsSending() else {
+            // The text stays in the field; a photo waits in the retry instead of riding along later.
+            onLimitReached? { [weak self] in
+                self?.pendingImage = image
+                self?.send(text: text)
+            }
+            return
+        }
 
         isSending.value = true
         statusText.value = L10n.tr("ai.sending")
@@ -427,6 +445,7 @@ final class AIAssistantViewModel {
                 if statusText.value == L10n.tr("ai.sending") {
                     statusText.value = L10n.tr("common.done")
                 }
+                onMessageAnswered?()
                 Analytics.tracker.track(.aiMessageCompleted(
                     success: true,
                     actionCount: actions.count,

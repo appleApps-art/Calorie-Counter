@@ -122,6 +122,11 @@ final class EditMealViewController: BaseViewController, UITextFieldDelegate, PHP
     }
 
     override func bindViewModel() {
+        viewModel.onLimitReached = { [weak self] retry in
+            guard let self else { return }
+            view.endEditing(true)
+            PremiumPrompt.requirePremium(from: self, then: retry)
+        }
         viewModel.titleText.bind { [weak self] value in
             self?.titleLabel.text = value
             OnboardingStyle.lockFigmaFont(
@@ -296,7 +301,7 @@ final class EditMealViewController: BaseViewController, UITextFieldDelegate, PHP
 
     private func configureComposer() {
         aiTitleLabel.adaptFontSize = false
-        aiTitleLabel.textAlignment = .left
+        aiTitleLabel.textAlignment = .natural
         aiTitleLabel.attributedText = Self.sparklesTitle(L10n.tr("editMeal.aiTitle"))
         aiTitleLabel.lineBreakMode = .byTruncatingTail
         aiTitleLabel.setContentHuggingPriority(.required, for: .horizontal)
@@ -609,7 +614,7 @@ final class EditMealViewController: BaseViewController, UITextFieldDelegate, PHP
     private static func sparklesTitle(_ text: String) -> NSAttributedString {
         let font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .left
+        paragraph.alignment = .natural
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: AppColor.labelVibrantPrimary,

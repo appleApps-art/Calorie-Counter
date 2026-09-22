@@ -186,7 +186,7 @@
                                         <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="cal-header">
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="Calories per Serving" translatesAutoresizingMaskIntoConstraints="NO" id="cal-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" text="0 — 650 kcal" textAlignment="right" translatesAutoresizingMaskIntoConstraints="NO" id="cal-val" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" text="0-650 kcal" textAlignment="right" translatesAutoresizingMaskIntoConstraints="NO" id="cal-val" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
                                             </subviews>
                                         </stackView>
                                         <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="650" minValue="0.0" maxValue="650" translatesAutoresizingMaskIntoConstraints="NO" id="slider">

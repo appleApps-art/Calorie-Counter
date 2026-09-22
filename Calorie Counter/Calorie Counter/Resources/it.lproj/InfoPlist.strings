@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "La fotocamera serve a scansionare i codici a barre e a registrare i pasti dalle foto.";
+"NSMicrophoneUsageDescription" = "Il microfono serve a registrare i pasti con la voce.";
+"NSSpeechRecognitionUsageDescription" = "Il riconoscimento vocale serve a registrare i pasti con la voce.";
+"NSPhotoLibraryUsageDescription" = "L’accesso alle foto serve a salvare le foto dei progressi e ad analizzare le foto dei pasti.";
+"NSHealthShareUsageDescription" = "I dati di Salute servono a importare peso, acqua, allenamenti e alimentazione per tenere aggiornato il diario.";
+"NSHealthUpdateUsageDescription" = "Salute viene aggiornata quando registri cibo, acqua, peso o allenamenti in Bity.";

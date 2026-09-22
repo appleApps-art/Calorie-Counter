@@ -26,6 +26,9 @@ final class ProgressCoordinator {
         viewModel.onUpgrade = { [weak self] in
             self?.openPaywall()
         }
+        viewModel.onRequirePremium = { [weak self] then in
+            self?.openPaywall(then: then)
+        }
         viewModel.onLogWeight = { [weak self] in
             self?.openLogWeight()
         }
@@ -61,7 +64,7 @@ final class ProgressCoordinator {
         navigationController.pushViewController(viewController, animated: true)
     }
 
-    func openPaywall() {
+    func openPaywall(then action: (() -> Void)? = nil) {
         guard let presenter = navigationController.topViewController else { return }
         PremiumGate.requirePremium(
             isPremium: container.subscriptionService.currentStatus().isPremium,
@@ -70,6 +73,7 @@ final class ProgressCoordinator {
             placement: .main
         ) { [weak self] in
             self?.progressViewModel?.viewDidLoad()
+            action?()
         }
     }
 

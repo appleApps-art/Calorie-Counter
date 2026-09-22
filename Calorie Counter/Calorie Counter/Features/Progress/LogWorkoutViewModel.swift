@@ -169,7 +169,7 @@ final class LogWorkoutViewModel {
 
     private static func dateBadgeText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("MMMd")
         let day = formatter.string(from: date)
         if Calendar.current.isDateInToday(date) {

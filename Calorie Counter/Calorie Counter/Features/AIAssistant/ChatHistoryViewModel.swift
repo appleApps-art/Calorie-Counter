@@ -38,12 +38,14 @@ final class ChatHistoryViewModel {
     private var chipCategories: [String: AIChatCategory] = [:]
     private let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = .appFormatting
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter
     }()
     private let olderDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = .appFormatting
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter

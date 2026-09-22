@@ -989,6 +989,8 @@ const createRecipeSections = (() => {
     pt: "PT",
     ja: "JP",
     zh: "CN",
+    "zh-hant": "TW",
+    "pt-br": "BR",
     ko: "KR",
     th: "TH",
     vi: "VN",
@@ -1006,7 +1008,8 @@ const createRecipeSections = (() => {
 
   function normalizeSectionsLocale(locale) {
     const raw = String(locale || "").trim().replace(/_/g, "-");
-    const language = (raw.split("-")[0] || "").toLowerCase() || "en";
+    // Traditional Chinese and Brazilian Portuguese keep their own sections and translations.
+    const language = localeLanguage(raw) || "en";
     let region = "";
     for (const part of raw.split("-").slice(1)) {
       if (/^[A-Za-z]{2}$/.test(part)) {
@@ -1271,7 +1274,7 @@ const createRecipeSections = (() => {
 
     function leftoverEnglish(text, language) {
       if (!language || language === "en") return false;
-      const nonLatin = ["uk", "ru", "bg", "sr", "el", "he", "ar", "zh", "ja", "ko", "th", "hi"];
+      const nonLatin = ["uk", "ru", "bg", "sr", "el", "he", "ar", "zh", "zh-hant", "ja", "ko", "th", "hi"];
       if (!nonLatin.includes(language)) return false;
       return /[A-Za-z]{3,}/.test(String(text || ""));
     }
@@ -6220,6 +6223,19 @@ async function requestRecipeJSON(env, messages, signal) {
 const RECIPE_CREATE_UNIT_NAMES = {
   uk: { pcs: "шт", tbsp: "ст. л.", tsp: "ч. л." },
   ru: { pcs: "шт", tbsp: "ст. л.", tsp: "ч. л." },
+  fr: { pcs: "pièce(s)", tbsp: "c. à s.", tsp: "c. à c." },
+  de: { pcs: "Stk.", tbsp: "EL", tsp: "TL" },
+  it: { pcs: "pz", tbsp: "cucchiai", tsp: "cucchiaini" },
+  es: { pcs: "ud.", tbsp: "cda.", tsp: "cdta." },
+  pt: { pcs: "un.", tbsp: "colher(es) de sopa", tsp: "colher(es) de chá" },
+  "pt-br": { pcs: "un.", tbsp: "colher(es) de sopa", tsp: "colher(es) de chá" },
+  tr: { pcs: "adet", tbsp: "yemek kaşığı", tsp: "çay kaşığı" },
+  ja: { pcs: "個", tbsp: "大さじ", tsp: "小さじ" },
+  ko: { pcs: "개", tbsp: "큰술", tsp: "작은술" },
+  zh: { pcs: "个", tbsp: "汤匙", tsp: "茶匙" },
+  "zh-hant": { pcs: "個", tbsp: "湯匙", tsp: "茶匙" },
+  vi: { pcs: "cái", tbsp: "muỗng canh", tsp: "muỗng cà phê" },
+  ar: { pcs: "حبة", tbsp: "ملعقة كبيرة", tsp: "ملعقة صغيرة" },
 };
 
 function localizedRecipeUnit(unit, locale) {
@@ -6872,8 +6888,25 @@ function applySnippetCalories(recipes) {
   });
 }
 
+const DEFAULT_RECIPE_SERVING = {
+  uk: "1 порція",
+  fr: "1 portion",
+  de: "1 Portion",
+  it: "1 porzione",
+  es: "1 ración",
+  pt: "1 porção",
+  "pt-br": "1 porção",
+  tr: "1 porsiyon",
+  ja: "1人分",
+  ko: "1인분",
+  zh: "1 份",
+  "zh-hant": "1 份",
+  vi: "1 khẩu phần",
+  ar: "حصة واحدة",
+};
+
 function defaultRecipeServing(locale) {
-  return localeLanguage(locale) === "uk" ? "1 порція" : "1 serving";
+  return DEFAULT_RECIPE_SERVING[localeLanguage(locale)] || "1 serving";
 }
 
 function recipeNeedsNutrition(recipe) {
@@ -7243,8 +7276,27 @@ function recipeWebQuery(query, locale) {
   if (/(^|\s)(рецепт|рецепти|recipe|recipes|how to cook|як приготувати|як зварити)(\s|$)/i.test(q)) return q;
   const language = localeLanguage(locale);
   if (language === "uk") return `рецепт ${q}`;
+  const word = RECIPE_WEB_QUERY_WORDS[language];
+  if (word) return q.toLowerCase().includes(word.toLowerCase()) ? q : `${q} ${word}`;
   return `${q} recipe`;
 }
+
+// Web search works best when the query and the "recipe" word share a language.
+const RECIPE_WEB_QUERY_WORDS = {
+  fr: "recette",
+  de: "Rezept",
+  it: "ricetta",
+  es: "receta",
+  pt: "receita",
+  "pt-br": "receita",
+  tr: "tarifi",
+  ja: "レシピ",
+  ko: "레시피",
+  zh: "食谱",
+  "zh-hant": "食譜",
+  vi: "công thức",
+  ar: "وصفة",
+};
 
 function looksLikeInstructionTitle(title) {
   const t = String(title || "").trim();
@@ -8210,10 +8262,8 @@ async function analyzeFoodVoice(input) {
 }
 
 function foodSearchCatalogLanguage(locale) {
-  const value = String(locale || "").trim().toLowerCase().replace("_", "-");
-  if (!value) return "en";
-  const lang = value.split("-")[0];
-  return lang || "en";
+  // "zh-Hant-TW" and "pt-BR" must not fall back to the Simplified Chinese or European Portuguese catalog.
+  return localeLanguage(locale) || "en";
 }
 
 function localizedCatalogText(map, locale) {

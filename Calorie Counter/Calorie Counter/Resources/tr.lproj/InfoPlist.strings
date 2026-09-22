@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "Kamera, barkod taramak ve fotoğraftan öğün kaydetmek için kullanılır.";
+"NSMicrophoneUsageDescription" = "Mikrofon, yemekleri sesle kaydetmek için kullanılır.";
+"NSSpeechRecognitionUsageDescription" = "Konuşma tanıma, yemekleri sesle kaydetmek için kullanılır.";
+"NSPhotoLibraryUsageDescription" = "Fotoğraf erişimi, ilerleme fotoğraflarını kaydetmek ve yemek fotoğraflarını analiz etmek için kullanılır.";
+"NSHealthShareUsageDescription" = "Sağlık verileri; kilo, su, antrenman ve beslenme bilgilerini içe aktararak günlüğünü güncel tutmak için kullanılır.";
+"NSHealthUpdateUsageDescription" = "Bity'de yemek, su, kilo veya antrenman kaydettiğinde Sağlık güncellenir.";

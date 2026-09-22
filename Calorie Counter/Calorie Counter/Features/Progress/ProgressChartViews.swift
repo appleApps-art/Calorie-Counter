@@ -423,7 +423,7 @@ final class ProgressLineChartView: UIView {
             return
         }
         let column = columns[selectedIndex]
-        let title = "\(String(format: "%.1f %@", locale: .current, column.value, AppUnits.current.weightSymbol))\n\(ProgressChartMath.axisDateText(column.date))"
+        let title = "\(String(format: "%.1f %@", locale: .appFormatting, column.value, AppUnits.current.weightSymbol))\n\(ProgressChartMath.axisDateText(column.date))"
         callout.showCompact(title: title, lines: 2)
         layoutCallout(
             at: selectedIndex,

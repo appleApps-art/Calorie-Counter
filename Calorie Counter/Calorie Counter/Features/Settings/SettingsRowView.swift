@@ -89,7 +89,7 @@ final class SettingsRowView: UIView {
             kern: -0.43
         )
         detailLabel.applyWrapping()
-        detailLabel.textAlignment = .right
+        detailLabel.textAlignment = .trailing
         titleLabel.applyWrapping()
         titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         titleLabel.adjustsFontSizeToFitWidth = false
@@ -260,7 +260,7 @@ final class SettingsRowView: UIView {
         chevronWidthConstraint.designConstant = showChevron ? 12 : 0
         chevronLeadingConstraint.designConstant = showChevron ? 8 : 0
         if showChevron {
-            chevronView.image = OnboardingStyle.symbol("chevron.right", pointSize: 13, weight: .medium)?
+            chevronView.image = OnboardingStyle.symbol("chevron.forward", pointSize: 13, weight: .medium)?
                 .withTintColor(AppColor.labelsSecondary, renderingMode: .alwaysOriginal)
         }
         if showCheck {

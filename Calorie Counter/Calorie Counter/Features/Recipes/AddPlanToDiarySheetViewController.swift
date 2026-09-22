@@ -226,13 +226,13 @@ final class AddPlanToDiarySheetViewController: UIViewController, UICalendarSelec
     }
 }
 
-/// "Сьогодні, 24 жовт." for one day, "24–26 жовт." for a run of them.
+/// "Сьогодні, 24 жовт." for one day, "24-26 жовт." for a run of them.
 enum MealPlanDatesText {
     static func summary(for dates: [Date]) -> String {
         let sorted = dates.sorted()
         guard let first = sorted.first else { return L10n.tr("recipes.create.selectDates") }
         let formatter = DateFormatter()
-        formatter.locale = .autoupdatingCurrent
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("dMMM")
         guard sorted.count > 1, let last = sorted.last else {
             if Calendar.current.isDateInToday(first) {
@@ -241,8 +241,8 @@ enum MealPlanDatesText {
             return formatter.string(from: first)
         }
         let interval = DateIntervalFormatter()
-        interval.locale = .autoupdatingCurrent
+        interval.locale = .appFormatting
         interval.dateTemplate = "dMMM"
-        return interval.string(from: first, to: last)
+        return interval.string(from: first, to: last).withShortDashes
     }
 }

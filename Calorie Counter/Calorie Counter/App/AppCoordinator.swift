@@ -6,6 +6,7 @@ final class AppCoordinator {
     private var tabBarController: MainTabBarController?
     private var onboardingCoordinator: OnboardingFlowCoordinator?
     private var didShowMain = false
+    private var backgroundedAt: Date?
     private let badgeUnlockPresenter: BadgeUnlockPresenter
     private let appRatingPrompt: AppRatingPromptController
 
@@ -25,6 +26,15 @@ final class AppCoordinator {
             settingsStore: container.appSettingsStore,
             analytics: Analytics.hub
         )
+        PremiumPrompt.makeCoordinator = { [container] in container.makeSubscriptionCoordinator() }
+        PremiumPrompt.featureAccess = container.featureAccess
+        #if DEBUG
+        switch QALaunchConfiguration.freeUsage {
+        case "exhausted": container.featureAccess.exhaustFreeUses()
+        case "fresh": container.featureAccess.resetFreeUses()
+        default: break
+        }
+        #endif
     }
 
     func start() {
@@ -42,7 +52,7 @@ final class AppCoordinator {
 
     private func routeAfterSplash() {
         if isOnboardingCompleted {
-            showMain()
+            showMain(offersPaywall: true)
         } else {
             showWelcome()
         }
@@ -61,7 +71,8 @@ final class AppCoordinator {
         setRoot(coordinator.makeRootViewController())
     }
 
-    private func showMain() {
+    /// `offersPaywall` is for opening the app; right after onboarding its own paywall was just seen.
+    private func showMain(offersPaywall: Bool = false) {
         guard !didShowMain else { return }
         didShowMain = true
         onboardingCoordinator = nil
@@ -70,7 +81,12 @@ final class AppCoordinator {
         bindBadgeUnlocks(host: tabBarController)
         appRatingPrompt.attach(host: tabBarController)
         Analytics.hub.appRatingPrompt = appRatingPrompt
-        setRoot(tabBarController)
+        // The paywall goes up inside the same crossfade, so the splash dissolves straight into it.
+        setRoot(tabBarController) { [weak self] in
+            if offersPaywall {
+                self?.offerPaywall(over: tabBarController, animated: false)
+            }
+        }
         NotificationAnalyticsDelegate.shared.onOpenReminder = { [weak tabBarController] kind in
             tabBarController?.openReminder(kind)
         }
@@ -92,10 +108,31 @@ final class AppCoordinator {
         Analytics.tracker.setUserProperties(properties)
     }
 
+    func handleSceneDidEnterBackground() {
+        backgroundedAt = Date()
+    }
+
     func handleSceneDidBecomeActive() {
         guard didShowMain else { return }
+        if let backgroundedAt, Date().timeIntervalSince(backgroundedAt) >= Self.reopenInterval,
+           let tabBarController, tabBarController.presentedViewController == nil {
+            offerPaywall(over: tabBarController, animated: true)
+        }
+        backgroundedAt = nil
         presentPendingBadgeUnlocks()
         appRatingPrompt.presentIfNeeded()
+    }
+
+    /// Coming back after this long counts as opening the app again.
+    private static let reopenInterval: TimeInterval = 30 * 60
+
+    /// Without Premium, opening the app starts on the paywall; closing it reveals the app.
+    private func offerPaywall(over host: UIViewController, animated: Bool) {
+        #if DEBUG
+        if QALaunchConfiguration.isActive { return }
+        #endif
+        guard !container.subscriptionService.currentStatus().isPremium else { return }
+        container.makeSubscriptionCoordinator().presentPaywall(from: host, placement: .main, animated: animated)
     }
 
     private func presentPendingBadgeUnlocks() {
@@ -117,13 +154,15 @@ final class AppCoordinator {
         }
     }
 
-    private func setRoot(_ viewController: UIViewController) {
+    private func setRoot(_ viewController: UIViewController, alongside: (() -> Void)? = nil) {
         guard window.rootViewController != nil else {
             window.rootViewController = viewController
+            alongside?()
             return
         }
         UIView.transition(with: window, duration: 0.35, options: .transitionCrossDissolve, animations: {
             self.window.rootViewController = viewController
+            alongside?()
         })
     }
 }

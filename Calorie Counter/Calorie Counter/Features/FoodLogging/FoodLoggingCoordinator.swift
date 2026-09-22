@@ -16,6 +16,13 @@ final class FoodLoggingCoordinator {
     func start() {}
 
     func openBarcodeScanner(mealType: MealType = .snacks, date: Date = Date(), navigationController: UINavigationController? = nil) {
+        // A free account scans one barcode; after that the paywall comes first.
+        guard PremiumPrompt.canUse(.barcodeScan) else {
+            PremiumPrompt.requirePremium(from: (navigationController ?? self.navigationController).topViewController) { [weak self] in
+                self?.openBarcodeScanner(mealType: mealType, date: date, navigationController: navigationController)
+            }
+            return
+        }
         Analytics.tracker.track(.foodLogStarted(method: "barcode", source: "quick_log", mealType: mealType.rawValue))
         let viewModel = BarcodeFoodLoggingViewModel(
             lookupBarcodeProductUseCase: container.lookupBarcodeProductUseCase,
@@ -24,13 +31,18 @@ final class FoodLoggingCoordinator {
         )
         let viewController = BarcodeScannerViewController(
             viewModel: viewModel,
-            showsFreeScanQuota: !container.subscriptionService.currentStatus().isPremium
+            freeScansLeft: PremiumPrompt.remainingFreeUses(of: .barcodeScan)
         )
         let host = pushFoodScreen(viewController, from: navigationController)
         viewModel.onClose = { [weak self, weak host] in
             self?.popFoodScreen(host)
         }
+        viewModel.allowsLookup = { PremiumPrompt.canUse(.barcodeScan) }
+        viewModel.onLimitReached = { [weak viewController] in
+            PremiumPrompt.requirePremium(from: viewController) {}
+        }
         viewModel.onProductReady = { [weak self, weak host] draft in
+            PremiumPrompt.recordUse(of: .barcodeScan)
             self?.openProductDetails(draft, navigationController: host)
         }
         viewModel.onSwitchMode = { [weak self, weak host, weak viewController] action in
@@ -121,6 +133,9 @@ final class FoodLoggingCoordinator {
             voiceRecorder: container.voiceFoodAudioRecorder,
             transcribeFoodVoiceUseCase: container.transcribeFoodVoiceUseCase
         )
+        // Editing a meal with Bity spends the same two free messages as the chat.
+        viewModel.allowsSending = { PremiumPrompt.canUse(.aiMessage) }
+        viewModel.onMessageAnswered = { PremiumPrompt.recordUse(of: .aiMessage) }
         let viewController = EditMealViewController(viewModel: viewModel)
         let nav = AppNavigationController(rootViewController: viewController)
         nav.setNavigationBarHidden(true, animated: false)
@@ -171,6 +186,13 @@ final class FoodLoggingCoordinator {
     }
 
     func openAIPhoto(mealType: MealType, date: Date, navigationController: UINavigationController? = nil) {
+        // A free account scans one meal photo; after that the paywall comes first.
+        guard PremiumPrompt.canUse(.foodPhotoScan) else {
+            PremiumPrompt.requirePremium(from: (navigationController ?? self.navigationController).topViewController) { [weak self] in
+                self?.openAIPhoto(mealType: mealType, date: date, navigationController: navigationController)
+            }
+            return
+        }
         pushAIPhoto(mealType: mealType, date: date, navigationController: navigationController)
     }
 
@@ -183,11 +205,18 @@ final class FoodLoggingCoordinator {
         )
         let viewController = AIPhotoCameraViewController(
             viewModel: viewModel,
-            showsFreeScanQuota: !container.subscriptionService.currentStatus().isPremium
+            freeScansLeft: PremiumPrompt.remainingFreeUses(of: .foodPhotoScan)
         )
         let host = pushFoodScreen(viewController, from: navigationController)
         viewModel.onClose = { [weak self, weak host] in
             self?.popFoodScreen(host)
+        }
+        viewModel.allowsAnalysis = { PremiumPrompt.canUse(.foodPhotoScan) }
+        viewModel.onLimitReached = { [weak viewController] in
+            PremiumPrompt.requirePremium(from: viewController) {}
+        }
+        viewModel.onRecognized = {
+            PremiumPrompt.recordUse(of: .foodPhotoScan)
         }
         viewModel.onLogged = { [weak self, weak host] in
             self?.popFoodScreen(host)
@@ -355,6 +384,7 @@ final class FoodLoggingCoordinator {
             },
             fallbackImageURL: { AIAssistantAPIConfiguration.production.foodImageURL(name: $0) }
         )
+        viewModel.showsInsights = PremiumPrompt.isPremium
         viewModel.configure(draft, showsAddToDiary: showsAddToDiary, addButtonTitle: addButtonTitle)
         let viewController = ProductDetailsViewController(viewModel: viewModel)
         let nav = pushFoodScreen(viewController, from: navigationController)

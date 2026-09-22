@@ -179,7 +179,7 @@
                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="pantry-inner" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Your Products (0)" translatesAutoresizingMaskIntoConstraints="NO" id="pantry-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Your Pantry is empty — select Custom Ingredients to create recipes." numberOfLines="0" translatesAutoresizingMaskIntoConstraints="NO" id="pantry-empty" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Your Pantry is empty. Select Custom Ingredients to create recipes." numberOfLines="0" translatesAutoresizingMaskIntoConstraints="NO" id="pantry-empty" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="pantry-chips" customClass="AdaptiveStackView" customModule="Calorie_Counter" customModuleProvider="target">
                                                     <userDefinedRuntimeAttributes>
                                                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptSpacing" value="YES"/>
@@ -597,7 +597,7 @@
                                                 <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="cal-head">
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Calories per Serving" translatesAutoresizingMaskIntoConstraints="NO" id="cal-title" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
-                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="0 — 250 kcal" textAlignment="right" translatesAutoresizingMaskIntoConstraints="NO" id="cal-val" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="0-250 kcal" textAlignment="right" translatesAutoresizingMaskIntoConstraints="NO" id="cal-val" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target"/>
                                                     </subviews>
                                                 </stackView>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="250" minValue="0.0" maxValue="650" translatesAutoresizingMaskIntoConstraints="NO" id="slider"/>

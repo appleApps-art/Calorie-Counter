@@ -183,7 +183,7 @@ final class FridgePhotoResultViewController: BaseViewController, UITableViewData
             color: AppColor.labelVibrantPrimary,
             kern: -0.43
         )
-        titleLabel.textAlignment = .left
+        titleLabel.textAlignment = .natural
         titleLabel.applyLineTruncation(lines: 1)
         updateNavTextButton(selectButton, title: L10n.tr("pantry.select"))
         updateNavTextButton(selectAllButton, title: viewModel.selectAllButtonTitle)

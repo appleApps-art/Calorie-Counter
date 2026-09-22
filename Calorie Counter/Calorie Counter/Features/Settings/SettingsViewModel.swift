@@ -402,6 +402,7 @@ final class SettingsViewModel {
 
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = .appFormatting
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter
@@ -409,6 +410,7 @@ final class SettingsViewModel {
 
     private static let dateTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = .appFormatting
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter

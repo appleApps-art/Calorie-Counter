@@ -38,8 +38,8 @@ final class NutritionFactRowView: UIControl {
         dailyValueLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         titleLabel.applyLineTruncation(lines: 2)
         valueLabel.applyLineTruncation(lines: 1)
-        titleLabel.textAlignment = .left
-        valueLabel.textAlignment = .right
+        titleLabel.textAlignment = .natural
+        valueLabel.textAlignment = .trailing
     }
 
     func configureMeal(title: String, selected: Bool, showsSeparator: Bool) {
@@ -66,6 +66,10 @@ final class NutritionFactRowView: UIControl {
         titleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
         valueLabel.setContentHuggingPriority(.required, for: .horizontal)
         valueLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        // "% DV" is at least 60 pt; longer translations ("1日分の12%", "12% nhu cầu") widen it
+        // and the two-line nutrient title gives way instead of the percentage being cut.
+        dailyValueLabel.setContentHuggingPriority(UILayoutPriority(999), for: .horizontal)
+        dailyValueLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         setContentHuggingPriority(.required, for: .vertical)
         setContentCompressionResistancePriority(.required, for: .vertical)
     }

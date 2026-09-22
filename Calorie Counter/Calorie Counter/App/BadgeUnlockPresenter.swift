@@ -132,7 +132,8 @@ final class BadgeUnlockPresenter {
                 }
                 current = next
             }
-            if current is RewardDetailViewController {
+            // A celebration waits until the paywall is closed instead of landing on top of it.
+            if current is RewardDetailViewController || current is PaywallViewController {
                 return nil
             }
             if let navigation = current as? UINavigationController {

@@ -125,17 +125,24 @@ final class OnboardingFlowCoordinator {
         let continueOnboarding = { [weak self] in
             self?.continueAfterPaywall()
         }
-        subscriptionCoordinator.presentPaywall(
-            from: pager,
-            placement: .onboarding,
-            events: SubscriptionPaywallEvents(
-                onPurchased: { _ in continueOnboarding() },
-                onRestored: { _ in continueOnboarding() },
-                onCancelled: { continueOnboarding() },
-                onClosed: { continueOnboarding() },
-                onError: { _ in continueOnboarding() }
-            )
+        // A cancelled App Store sheet keeps the paywall open; only closing it or buying moves on.
+        let events = SubscriptionPaywallEvents(
+            onPurchased: { _ in continueOnboarding() },
+            onRestored: { _ in continueOnboarding() },
+            onClosed: { continueOnboarding() },
+            onError: { _ in continueOnboarding() }
         )
+        guard let paywall = subscriptionCoordinator.makePaywall(placement: .onboarding, events: events) else {
+            subscriptionCoordinator.presentPaywall(from: pager, placement: .onboarding, animated: false, events: events)
+            return
+        }
+        // The paywall covers the plan screen in the same frame: no slide, no fade. Closing it hands
+        // over to the app, which crossfades in over both.
+        pager.addChild(paywall)
+        paywall.view.frame = pager.view.bounds
+        paywall.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        pager.view.addSubview(paywall.view)
+        paywall.didMove(toParent: pager)
     }
 
     private func continueAfterPaywall() {

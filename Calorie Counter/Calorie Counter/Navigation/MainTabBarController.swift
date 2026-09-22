@@ -363,6 +363,13 @@ extension MainTabBarController {
         case .onboardingWelcome, .onboardingGoal, .onboardingSex, .onboardingActivity,
              .onboardingAge, .onboardingBody, .onboardingHealth, .onboardingPlan, .appRating:
             qaOnboarding(route)
+        case .paywallOnboarding, .paywallFeature:
+            let paywall = container.paywallFactory.makePaywall(
+                placement: route == .paywallOnboarding ? .onboarding : .main,
+                events: SubscriptionPaywallEvents()
+            )
+            paywall.modalPresentationStyle = .fullScreen
+            present(paywall, animated: false)
         }
     }
 

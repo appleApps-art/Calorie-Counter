@@ -494,6 +494,7 @@ final class RecipeDetailViewModel {
 
     private static func grouped(_ value: Double) -> String {
         let formatter = NumberFormatter()
+        formatter.locale = .appFormatting
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value.rounded())) ?? "\(Int(value.rounded()))"

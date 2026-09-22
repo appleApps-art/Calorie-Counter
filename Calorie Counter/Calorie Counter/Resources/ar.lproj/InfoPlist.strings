@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "تُستخدم الكاميرا لمسح الباركود وتسجيل الوجبات من الصور.";
+"NSMicrophoneUsageDescription" = "يُستخدم الميكروفون لتسجيل الطعام بالصوت.";
+"NSSpeechRecognitionUsageDescription" = "يُستخدم التعرّف على الكلام لتسجيل الطعام بالصوت.";
+"NSPhotoLibraryUsageDescription" = "يُستخدم الوصول إلى الصور لحفظ صور التقدم وتحليل صور الوجبات.";
+"NSHealthShareUsageDescription" = "تُستخدم بيانات صحتي لاستيراد الوزن والماء والتمارين والتغذية لتبقى يومياتك محدّثة.";
+"NSHealthUpdateUsageDescription" = "يتم تحديث صحتي عندما تسجّل الطعام أو الماء أو الوزن أو التمارين في Bity.";

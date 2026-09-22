@@ -102,7 +102,7 @@ final class AIIntroViewController: BaseViewController {
     private func configureAssistantPreview() {
         assistantMessageLabel.text = L10n.tr("ai.intro.assistantMessage")
         assistantMessageLabel.numberOfLines = 0
-        assistantMessageLabel.textAlignment = .left
+        assistantMessageLabel.textAlignment = .natural
         OnboardingStyle.lockFigmaFont(
             assistantMessageLabel,
             size: 17,

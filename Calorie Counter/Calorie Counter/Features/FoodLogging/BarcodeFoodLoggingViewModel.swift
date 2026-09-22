@@ -14,6 +14,9 @@ final class BarcodeFoodLoggingViewModel {
     var onClose: (() -> Void)?
     var onSwitchMode: ((HomeQuickLogAction) -> Void)?
     var onProductReady: ((ProductDetailsDraft) -> Void)?
+    /// Asked before each lookup: a free account that used its scan gets the paywall instead.
+    var allowsLookup: () -> Bool = { true }
+    var onLimitReached: (() -> Void)?
 
     private let lookupBarcodeProductUseCase: LookupBarcodeProductUseCase
     private let selectedMealType: MealType
@@ -59,6 +62,11 @@ final class BarcodeFoodLoggingViewModel {
         let trimmed = barcode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let normalized = BarcodeNormalization.normalize(trimmed) else {
             fail(with: L10n.tr("barcode.error.invalid"))
+            return
+        }
+        guard allowsLookup() else {
+            resetToIdle()
+            onLimitReached?()
             return
         }
 

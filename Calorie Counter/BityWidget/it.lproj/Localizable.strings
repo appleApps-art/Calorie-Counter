@@ -1,0 +1,10 @@
+"widget.displayName" = "Oggi";
+"widget.description" = "Calorie rimanenti, macro e una scorciatoia per registrare il cibo.";
+"widget.remaining" = "rimaste";
+"widget.log" = "Registra";
+"widget.protein" = "Proteine";
+"widget.carbs" = "Carboidrati";
+"widget.fats" = "Grassi";
+"widget.water" = "Acqua";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

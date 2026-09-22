@@ -41,6 +41,14 @@ final class SettingsCoordinator: NSObject, MFMailComposeViewControllerDelegate {
         viewController.onOpenHelp = { [weak self] in
             self?.openHelp()
         }
+        // The same pages the paywall links to; the privacy row waits for Bity's own policy URL.
+        viewController.onOpenTerms = {
+            UIApplication.shared.open(LegalLinks.termsOfUse)
+        }
+        viewController.onOpenPrivacy = {
+            guard let url = LegalLinks.privacyPolicy else { return }
+            UIApplication.shared.open(url)
+        }
         viewController.onCopyUserID = { [weak self] in
             self?.copyUserID()
         }

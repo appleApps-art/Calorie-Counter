@@ -49,13 +49,13 @@ final class ChatHistoryRowView: UIView {
         subtitleLabel.applyLineTruncation(lines: 1)
         titleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
         subtitleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
-        timeLabel.textAlignment = .right
+        timeLabel.textAlignment = .trailing
         if let font = timeLabel.font {
             timeLabel.font = UIFont.monospacedDigitSystemFont(ofSize: font.pointSize, weight: .regular)
         }
         timeLabel.applyLineTruncation(lines: 1)
-        timeLabel.textAlignment = .right
-        chevronView.image = OnboardingStyle.symbol("chevron.right", pointSize: 13, weight: .medium)?.withTintColor(
+        timeLabel.textAlignment = .trailing
+        chevronView.image = OnboardingStyle.symbol("chevron.forward", pointSize: 13, weight: .medium)?.withTintColor(
             AppColor.labelsPrimary,
             renderingMode: .alwaysOriginal
         )

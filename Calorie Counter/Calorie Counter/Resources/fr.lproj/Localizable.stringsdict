@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>rewards.dayStreakPill</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>SÉRIE DE %d JOUR</string>
+			<key>other</key>
+			<string>SÉRIE DE %d JOURS</string>
+		</dict>
+	</dict>
+	<key>rewards.weeksActivePill</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@weeks@</string>
+		<key>weeks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d SEMAINE ACTIVE</string>
+			<key>other</key>
+			<string>%d SEMAINES ACTIVES</string>
+		</dict>
+	</dict>
+	<key>rewards.swapsPill</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d REMPLACEMENT</string>
+			<key>other</key>
+			<string>%d REMPLACEMENTS</string>
+		</dict>
+	</dict>
+	<key>rewards.swaps</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d remplacement</string>
+			<key>other</key>
+			<string>%d remplacements</string>
+		</dict>
+	</dict>
+	<key>rewards.swapsProgress</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%1$d/%2$#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%2$d remplacement</string>
+			<key>other</key>
+			<string>%2$d remplacements</string>
+		</dict>
+	</dict>
+	<key>rewards.swapsBadge</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@swaps@</string>
+		<key>swaps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Badge %d remplacement</string>
+			<key>other</key>
+			<string>Badge %d remplacements</string>
+		</dict>
+	</dict>
+	<key>paywall.onboarding.title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Essayez %d jour gratuit avec moi !</string>
+			<key>other</key>
+			<string>Essayez %d jours gratuits avec moi !</string>
+		</dict>
+	</dict>
+	<key>paywall.plan.trialDays</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d jour gratuit</string>
+			<key>other</key>
+			<string>%d jours gratuits</string>
+		</dict>
+	</dict>
+	<key>photo.camera.freeScansLeft</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@scans@</string>
+		<key>scans</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Encore %d scan gratuit</string>
+			<key>other</key>
+			<string>Encore %d scans gratuits</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

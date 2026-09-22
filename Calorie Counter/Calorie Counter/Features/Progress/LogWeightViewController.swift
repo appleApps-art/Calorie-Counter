@@ -142,7 +142,7 @@ final class LogWeightViewController: BaseViewController, UITextFieldDelegate {
         valueField.borderStyle = .none
         valueField.backgroundColor = .clear
         valueField.keyboardType = .decimalPad
-        valueField.textAlignment = .right
+        valueField.textAlignment = .trailing
         valueField.adjustsFontSizeToFitWidth = false
         valueField.tintColor = AppColor.labelsPrimary
         valueField.font = UIFont.systemFont(ofSize: 34, weight: .regular)

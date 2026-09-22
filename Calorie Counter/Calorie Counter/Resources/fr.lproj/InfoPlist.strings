@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "L’appareil photo sert à scanner les codes-barres et à enregistrer des repas à partir de photos.";
+"NSMicrophoneUsageDescription" = "Le micro sert à enregistrer vos repas à la voix.";
+"NSSpeechRecognitionUsageDescription" = "La reconnaissance vocale sert à enregistrer vos repas à la voix.";
+"NSPhotoLibraryUsageDescription" = "L’accès aux photos sert à enregistrer vos photos de progression et à analyser vos photos de repas.";
+"NSHealthShareUsageDescription" = "Les données de Santé servent à importer le poids, l’eau, les entraînements et la nutrition pour garder votre journal à jour.";
+"NSHealthUpdateUsageDescription" = "Santé est mis à jour quand vous enregistrez un repas, de l’eau, votre poids ou un entraînement dans Bity.";

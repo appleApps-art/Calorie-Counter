@@ -39,6 +39,8 @@ final class ProgressViewModel {
     var onSeeAllPhotos: (() -> Void)?
     var onAddPhoto: (() -> Void)?
     var onUpgrade: (() -> Void)?
+    /// Opens the paywall for a locked chart period; `then` shows it once Premium unlocks.
+    var onRequirePremium: ((_ then: @escaping () -> Void) -> Void)?
     var onLogWeight: (() -> Void)?
     var onLogExercise: (() -> Void)?
     var onCaptureProgressPhoto: (() -> Void)?
@@ -79,6 +81,16 @@ final class ProgressViewModel {
     }
 
     func reload() {
+        // A purchase made on another screen shows here as soon as the tab comes back.
+        let premium = refreshSubscriptionStatusUseCase.cached().isPremium
+        if premium != isPremium.value {
+            isPremium.value = premium
+        }
+        if !premium {
+            caloriePeriod.value = .week
+            expenditurePeriod.value = .week
+            weightPeriod.value = .week
+        }
         do {
             summary = try fetchProgressSummaryUseCase.execute()
             publish()
@@ -88,18 +100,28 @@ final class ProgressViewModel {
     }
 
     func selectCaloriePeriod(_ period: ProgressChartPeriod) {
+        guard allows(period, retry: { [weak self] in self?.selectCaloriePeriod(period) }) else { return }
         caloriePeriod.value = period
         publishCalories()
     }
 
     func selectExpenditurePeriod(_ period: ProgressChartPeriod) {
+        guard allows(period, retry: { [weak self] in self?.selectExpenditurePeriod(period) }) else { return }
         expenditurePeriod.value = period
         publishExpenditure()
     }
 
     func selectWeightPeriod(_ period: ProgressChartPeriod) {
+        guard allows(period, retry: { [weak self] in self?.selectWeightPeriod(period) }) else { return }
         weightPeriod.value = period
         publishWeight()
+    }
+
+    /// A free account keeps the week view; longer trends are part of Premium analytics.
+    private func allows(_ period: ProgressChartPeriod, retry: @escaping () -> Void) -> Bool {
+        guard period != .week, !isPremium.value else { return true }
+        onRequirePremium?(retry)
+        return false
     }
 
     func logTapped() {

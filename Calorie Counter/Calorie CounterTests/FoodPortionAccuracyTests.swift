@@ -66,7 +66,7 @@ final class FoodPortionAccuracyTests: XCTestCase {
         viewModel.commitIngredient(id: draft.ingredients[1].id, text: "")
         viewModel.addEntryTapped()
         XCTAssertFalse(viewModel.canAddEntry.value)
-        XCTAssertEqual(viewModel.caloriesText.value, "—")
+        XCTAssertEqual(viewModel.caloriesText.value, "-")
         XCTAssertTrue(try harness.food.fetchEntries(for: draft.date).isEmpty)
         await fulfillment(of: [requested], timeout: 2)
         XCTAssertTrue(analyzer.requests[0].text.contains("ONE serving"))
@@ -102,7 +102,7 @@ final class FoodPortionAccuracyTests: XCTestCase {
         await fulfillment(of: [firstRequest], timeout: 2)
         await complete(analyzer, request: 0, with: .failure(FoodPhotoAnalysisError.invalidResponse), viewModel: viewModel)
         XCTAssertFalse(viewModel.errorText.value.isEmpty)
-        XCTAssertEqual(viewModel.caloriesText.value, "—")
+        XCTAssertEqual(viewModel.caloriesText.value, "-")
         XCTAssertEqual(viewModel.addButtonTitle.value, L10n.tr("product.entry.retryNutrition"))
         XCTAssertTrue(try harness.food.fetchEntries(for: draft.date).isEmpty)
 
@@ -155,7 +155,7 @@ final class FoodPortionAccuracyTests: XCTestCase {
         result.assistantMessage = "Which ingredient and how much?"
         await complete(analyzer, request: 0, with: .success(result), viewModel: viewModel)
         XCTAssertEqual(viewModel.errorText.value, result.assistantMessage)
-        XCTAssertEqual(viewModel.caloriesText.value, "—")
+        XCTAssertEqual(viewModel.caloriesText.value, "-")
         XCTAssertTrue(try harness.food.fetchEntries(for: draft.date).isEmpty)
     }
 
@@ -171,7 +171,7 @@ final class FoodPortionAccuracyTests: XCTestCase {
         await fulfillment(of: [requested], timeout: 2)
         await complete(analyzer, request: 0, with: .success(analysis(calories: .nan)), viewModel: viewModel)
         XCTAssertEqual(viewModel.draft.value?.calories, draft.calories)
-        XCTAssertEqual(viewModel.caloriesText.value, "—")
+        XCTAssertEqual(viewModel.caloriesText.value, "-")
         XCTAssertFalse(viewModel.errorText.value.isEmpty)
         XCTAssertTrue(try harness.food.fetchEntries(for: draft.date).isEmpty)
     }

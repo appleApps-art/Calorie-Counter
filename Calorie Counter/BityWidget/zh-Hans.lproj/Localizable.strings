@@ -1,0 +1,10 @@
+"widget.displayName" = "今天";
+"widget.description" = "剩余热量、宏量营养素和快速记录饮食的入口。";
+"widget.remaining" = "剩余";
+"widget.log" = "记录";
+"widget.protein" = "蛋白质";
+"widget.carbs" = "碳水";
+"widget.fats" = "脂肪";
+"widget.water" = "饮水";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

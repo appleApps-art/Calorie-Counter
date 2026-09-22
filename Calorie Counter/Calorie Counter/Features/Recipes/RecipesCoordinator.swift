@@ -94,7 +94,15 @@ final class RecipesCoordinator {
         navigationController.present(sheet, animated: true)
     }
 
+    /// Meal plans and generated recipes are Premium; a free account sees the paywall first and
+    /// lands in the form right after buying.
     private func showCreateForm(_ kind: CreateRecipeFormKind) {
+        PremiumPrompt.requirePremium(from: navigationController.topViewController ?? navigationController) { [weak self] in
+            self?.pushCreateForm(kind)
+        }
+    }
+
+    private func pushCreateForm(_ kind: CreateRecipeFormKind) {
         let viewModel = CreateRecipeFormViewModel(
             kind: kind,
             fetchPantryItemsUseCase: container.fetchPantryItemsUseCase,
@@ -197,6 +205,13 @@ final class RecipesCoordinator {
     }
 
     private func openFridgeCamera() {
+        // A free account scans its fridge once; after that the paywall comes first.
+        guard PremiumPrompt.canUse(.fridgeScan) else {
+            PremiumPrompt.requirePremium(from: navigationController.topViewController) { [weak self] in
+                self?.openFridgeCamera()
+            }
+            return
+        }
         let viewModel = FoodPhotoAnalysisViewModel(
             analyzeFoodPhotoUseCase: container.analyzeFoodPhotoUseCase,
             searchFoodProductsUseCase: container.searchFoodProductsUseCase,
@@ -204,6 +219,13 @@ final class RecipesCoordinator {
         )
         viewModel.onClose = { [weak self] in
             self?.navigationController.popViewController(animated: true)
+        }
+        viewModel.allowsAnalysis = { PremiumPrompt.canUse(.fridgeScan) }
+        viewModel.onLimitReached = { [weak self] in
+            PremiumPrompt.requirePremium(from: self?.navigationController.topViewController) {}
+        }
+        viewModel.onRecognized = {
+            PremiumPrompt.recordUse(of: .fridgeScan)
         }
         viewModel.onFridgeItemsReady = { [weak self] items in
             self?.showFridgeResult(items)
@@ -216,7 +238,7 @@ final class RecipesCoordinator {
         navigationController.pushViewController(
             AIPhotoCameraViewController(
                 viewModel: viewModel,
-                showsFreeScanQuota: !container.subscriptionService.currentStatus().isPremium
+                freeScansLeft: PremiumPrompt.remainingFreeUses(of: .fridgeScan)
             ),
             animated: true
         )
@@ -253,13 +275,24 @@ final class RecipesCoordinator {
     }
 
     private func openPantryBarcode() {
+        guard PremiumPrompt.canUse(.barcodeScan) else {
+            PremiumPrompt.requirePremium(from: navigationController.topViewController) { [weak self] in
+                self?.openPantryBarcode()
+            }
+            return
+        }
         let viewModel = BarcodeFoodLoggingViewModel(
             lookupBarcodeProductUseCase: container.lookupBarcodeProductUseCase
         )
         viewModel.onClose = { [weak self] in
             self?.navigationController.popViewController(animated: true)
         }
+        viewModel.allowsLookup = { PremiumPrompt.canUse(.barcodeScan) }
+        viewModel.onLimitReached = { [weak self] in
+            PremiumPrompt.requirePremium(from: self?.navigationController.topViewController) {}
+        }
         viewModel.onProductReady = { [weak self] draft in
+            PremiumPrompt.recordUse(of: .barcodeScan)
             self?.openPantryProductDetails(draft, addsToPantry: true)
         }
         viewModel.onSwitchMode = { [weak self] action in
@@ -269,7 +302,7 @@ final class RecipesCoordinator {
         navigationController.pushViewController(
             BarcodeScannerViewController(
                 viewModel: viewModel,
-                showsFreeScanQuota: !container.subscriptionService.currentStatus().isPremium
+                freeScansLeft: PremiumPrompt.remainingFreeUses(of: .barcodeScan)
             ),
             animated: true
         )

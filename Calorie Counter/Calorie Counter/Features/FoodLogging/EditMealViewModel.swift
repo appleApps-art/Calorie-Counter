@@ -59,6 +59,10 @@ final class EditMealViewModel {
     var onOpenFood: ((UUID) -> Void)?
     var onClose: (() -> Void)?
     var onSaved: (() -> Void)?
+    /// Asked before a message goes to Bity; false keeps the text and calls `onLimitReached`.
+    var allowsSending: () -> Bool = { true }
+    var onLimitReached: ((_ retry: @escaping () -> Void) -> Void)?
+    var onMessageAnswered: (() -> Void)?
 
     let mealType: MealType
     let date: Date
@@ -303,6 +307,13 @@ final class EditMealViewModel {
         let image = pendingImage
         pendingImage = nil
         guard (!trimmed.isEmpty || image != nil), !isSending.value, !isFinished else { return }
+        guard allowsSending() else {
+            onLimitReached? { [weak self] in
+                self?.pendingImage = image
+                self?.send(text: text)
+            }
+            return
+        }
         reload()
         scanningItemIDs.value = EditMealAssistantScan.targetItemIDs(for: trimmed, items: items.value)
         assistantMessage.value = nil
@@ -353,6 +364,7 @@ final class EditMealViewModel {
                 if appliedCount == 0 || content.contains("?") || content.contains("？") {
                     assistantMessage.value = content.isEmpty ? L10n.tr("editMeal.ai.noChanges") : content
                 }
+                onMessageAnswered?()
                 Analytics.tracker.track(.mealAICompleted(mealType: mealType.rawValue, success: true))
             } catch {
                 guard !Task.isCancelled, !isFinished else { return }

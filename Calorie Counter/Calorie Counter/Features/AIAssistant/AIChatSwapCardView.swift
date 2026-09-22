@@ -65,7 +65,7 @@ final class AIChatSwapCardView: UIView {
             card.showsHairlineBorder = true
             card.useLiveGlass = false
         }
-        arrowView.image = OnboardingStyle.symbol("arrow.right", pointSize: 14)?.withTintColor(
+        arrowView.image = OnboardingStyle.symbol("arrow.forward", pointSize: 14)?.withTintColor(
             AppColor.labelsPrimary,
             renderingMode: .alwaysOriginal
         )

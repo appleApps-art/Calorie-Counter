@@ -33,7 +33,7 @@ final class AIChatAssistantBubbleView: UIView {
         messageLabel.isHidden = false
         messageLabel.text = text
         messageLabel.numberOfLines = 0
-        messageLabel.textAlignment = .left
+        messageLabel.textAlignment = .natural
         OnboardingStyle.lockFigmaFont(
             messageLabel,
             size: 17,

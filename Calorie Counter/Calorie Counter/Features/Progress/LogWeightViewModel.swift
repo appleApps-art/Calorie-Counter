@@ -164,7 +164,7 @@ final class LogWeightViewModel {
     private static func format(_ value: Double) -> String {
         let stepped = (value * 10).rounded() / 10
         let formatter = NumberFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 1
         formatter.minimumFractionDigits = 0
@@ -180,7 +180,7 @@ final class LogWeightViewModel {
 
     private static func dateBadgeText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("MMMd")
         let day = formatter.string(from: date)
         if Calendar.current.isDateInToday(date) {

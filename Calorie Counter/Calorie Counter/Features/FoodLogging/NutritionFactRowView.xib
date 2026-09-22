@@ -40,7 +40,7 @@
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="12% DV" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" translatesAutoresizingMaskIntoConstraints="NO" id="dv" customClass="AdaptiveLabel" customModule="Calorie_Counter" customModuleProvider="target">
                     <rect key="frame" x="294" y="17" width="60" height="18"/>
                     <constraints>
-                        <constraint firstAttribute="width" constant="60" id="dvw" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="60" id="dvw" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                             <userDefinedRuntimeAttributes>
                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                     <real key="value" value="60"/>

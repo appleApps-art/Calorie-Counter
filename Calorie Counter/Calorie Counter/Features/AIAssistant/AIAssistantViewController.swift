@@ -119,6 +119,11 @@ final class AIAssistantViewController: BaseViewController, UITableViewDataSource
     }
 
     override func bindViewModel() {
+        viewModel.onLimitReached = { [weak self] retry in
+            guard let self else { return }
+            view.endEditing(true)
+            PremiumPrompt.requirePremium(from: self, then: retry)
+        }
         viewModel.titleText.bind { [weak self] value in
             self?.titleLabel.text = value
             OnboardingStyle.lockFigmaFont(

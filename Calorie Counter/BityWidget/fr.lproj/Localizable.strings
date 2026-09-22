@@ -1,0 +1,10 @@
+"widget.displayName" = "Aujourd’hui";
+"widget.description" = "Calories restantes, macros et un raccourci pour enregistrer un repas.";
+"widget.remaining" = "restantes";
+"widget.log" = "Ajouter";
+"widget.protein" = "Protéines";
+"widget.carbs" = "Glucides";
+"widget.fats" = "Lipides";
+"widget.water" = "Eau";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

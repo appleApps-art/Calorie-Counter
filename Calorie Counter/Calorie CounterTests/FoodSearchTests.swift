@@ -26,12 +26,34 @@ final class FoodSearchTests: XCTestCase {
             ),
             "Йогурт"
         )
+        // The request has no `lc`, so `product_name` is the maker's language; an English
+        // reader gets the English name when the product has one.
         XCTAssertEqual(
             OpenFoodFactsLocalizedName.pick(
                 productName: "Jogurt",
                 productNameEn: "Yogurt",
                 productNameUk: "Йогурт",
                 locale: "en-US"
+            ),
+            "Yogurt"
+        )
+        XCTAssertEqual(
+            OpenFoodFactsLocalizedName.pick(
+                productName: "Jogurt",
+                productNameEn: "Yogurt",
+                productNameUk: "Йогурт",
+                productNameLocal: "Yaourt",
+                locale: "fr-FR"
+            ),
+            "Yaourt"
+        )
+        XCTAssertEqual(
+            OpenFoodFactsLocalizedName.pick(
+                productName: "Jogurt",
+                productNameEn: "Yogurt",
+                productNameUk: "Йогурт",
+                productNameLocal: nil,
+                locale: "fr-FR"
             ),
             "Jogurt"
         )

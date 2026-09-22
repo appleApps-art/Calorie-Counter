@@ -48,7 +48,7 @@ final class NotificationRowView: UIView {
             color: AppColor.labelsSecondary,
             kern: -0.08
         )
-        timeLabel.textAlignment = .right
+        timeLabel.textAlignment = .trailing
         timeLabel.adjustsFontSizeToFitWidth = true
         timeLabel.minimumScaleFactor = 0.8
         if let font = timeLabel.font {

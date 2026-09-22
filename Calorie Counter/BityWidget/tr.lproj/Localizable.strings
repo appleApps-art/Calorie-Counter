@@ -1,0 +1,10 @@
+"widget.displayName" = "Bugün";
+"widget.description" = "Kalan kalori, makrolar ve hızlı yemek kaydı.";
+"widget.remaining" = "kaldı";
+"widget.log" = "Kaydet";
+"widget.protein" = "Protein";
+"widget.carbs" = "Karbonhidrat";
+"widget.fats" = "Yağ";
+"widget.water" = "Su";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

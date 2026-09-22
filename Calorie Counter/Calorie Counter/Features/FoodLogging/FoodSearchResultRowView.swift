@@ -115,7 +115,7 @@ final class FoodSearchResultRowView: UIView {
         addGestureRecognizer(tap)
         OnboardingStyle.stylePlainSymbolButton(
             chevronButton,
-            systemName: "chevron.right",
+            systemName: "chevron.forward",
             foregroundColor: AppColor.iconSecondary
         )
         chevronButton?.isUserInteractionEnabled = false

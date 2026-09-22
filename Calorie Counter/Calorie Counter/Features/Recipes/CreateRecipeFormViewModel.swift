@@ -329,23 +329,12 @@ final class CreateRecipeFormViewModel {
         return (0..<3).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
     }
 
+    /// "Oct 24 - 26, 2026", "24.-26. Okt. 2026", "2026年10月24日～26日": the system knows each
+    /// language's day, month and year order; only its long dash is swapped for a hyphen.
     private static func formatRange(start: Date, end: Date) -> String {
-        let calendar = Calendar.current
-        let monthDay = DateFormatter()
-        monthDay.locale = .autoupdatingCurrent
-        monthDay.setLocalizedDateFormatFromTemplate("MMMd")
-        let year = DateFormatter()
-        year.locale = .autoupdatingCurrent
-        year.setLocalizedDateFormatFromTemplate("y")
-        if calendar.isDate(start, equalTo: end, toGranularity: .day) {
-            return "\(monthDay.string(from: start)), \(year.string(from: start))"
-        }
-        if calendar.isDate(start, equalTo: end, toGranularity: .month) {
-            let day = DateFormatter()
-            day.locale = .autoupdatingCurrent
-            day.setLocalizedDateFormatFromTemplate("d")
-            return "\(monthDay.string(from: start))–\(day.string(from: end)), \(year.string(from: end))"
-        }
-        return "\(monthDay.string(from: start)) – \(monthDay.string(from: end)), \(year.string(from: end))"
+        let interval = DateIntervalFormatter()
+        interval.locale = .appFormatting
+        interval.dateTemplate = "yMMMd"
+        return interval.string(from: start, to: end).withShortDashes
     }
 }

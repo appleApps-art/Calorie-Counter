@@ -86,6 +86,15 @@ final class ProgressViewController: BaseViewController {
         viewModel.isPremium.bind { [weak self] _ in
             self?.refreshPremiumChrome()
         }
+        viewModel.caloriePeriod.bind { [weak self] period in
+            self?.caloriesPeriodControl.selectedPeriod = period
+        }
+        viewModel.expenditurePeriod.bind { [weak self] period in
+            self?.expenditurePeriodControl.selectedPeriod = period
+        }
+        viewModel.weightPeriod.bind { [weak self] period in
+            self?.weightPeriodControl.selectedPeriod = period
+        }
         viewModel.insightText.bind { [weak self] _ in
             self?.refreshPremiumChrome()
         }
@@ -262,14 +271,21 @@ final class ProgressViewController: BaseViewController {
         addFirstPhotoButton.addTarget(self, action: #selector(addPhotoTapped), for: .touchUpInside)
         photosStack.alignment = .fill
         photosStack.distribution = .fillEqually
+        // A locked period snaps back to the one the chart still shows.
         caloriesPeriodControl.onSelect = { [weak self] period in
-            self?.viewModel.selectCaloriePeriod(period)
+            guard let self else { return }
+            viewModel.selectCaloriePeriod(period)
+            caloriesPeriodControl.selectedPeriod = viewModel.caloriePeriod.value
         }
         expenditurePeriodControl.onSelect = { [weak self] period in
-            self?.viewModel.selectExpenditurePeriod(period)
+            guard let self else { return }
+            viewModel.selectExpenditurePeriod(period)
+            expenditurePeriodControl.selectedPeriod = viewModel.expenditurePeriod.value
         }
         weightPeriodControl.onSelect = { [weak self] period in
-            self?.viewModel.selectWeightPeriod(period)
+            guard let self else { return }
+            viewModel.selectWeightPeriod(period)
+            weightPeriodControl.selectedPeriod = viewModel.weightPeriod.value
         }
         caloriesChartView.onSelect = { _ in }
         expenditureChartView.onSelect = { _ in }

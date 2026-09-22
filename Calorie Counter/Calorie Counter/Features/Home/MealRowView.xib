@@ -113,7 +113,7 @@
                             </userDefinedRuntimeAttributes>
                         </constraint>
                     </constraints>
-                    <imageReference key="image" image="chevron.right" catalog="system"/>
+                    <imageReference key="image" image="chevron.forward" catalog="system"/>
                 </imageView>
             </subviews>
             <color key="backgroundColor" name="BityCard"/>
@@ -159,7 +159,7 @@
         </view>
     </objects>
     <resources>
-        <image name="chevron.right" catalog="system" width="10" height="13"/>
+        <image name="chevron.forward" catalog="system" width="10" height="13"/>
         <namedColor name="BityBreakfast">
             <color red="1" green="0.91" blue="0.784" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

@@ -5,7 +5,19 @@
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
+		<string>ar</string>
+		<string>zh-Hans</string>
+		<string>zh-Hant</string>
+		<string>fr</string>
+		<string>de</string>
+		<string>it</string>
+		<string>ja</string>
+		<string>ko</string>
+		<string>pt-BR</string>
+		<string>es</string>
+		<string>tr</string>
 		<string>uk</string>
+		<string>vi</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

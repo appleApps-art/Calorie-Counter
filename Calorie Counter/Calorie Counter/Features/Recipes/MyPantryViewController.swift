@@ -64,7 +64,7 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
         suggestionImageView.layer.cornerCurve = .continuous
         suggestionImageView.layer.cornerRadius = .adaptWidth(12)
         suggestionImageView.backgroundColor = AppColor.fillVibrantTertiary
-        suggestionChevron.image = OnboardingStyle.symbol("chevron.right", pointSize: 17, weight: .medium)
+        suggestionChevron.image = OnboardingStyle.symbol("chevron.forward", pointSize: 17, weight: .medium)
         suggestionChevron.contentMode = .center
         suggestionChevron.tintColor = AppColor.iconSecondary
         suggestionLoader.translatesAutoresizingMaskIntoConstraints = false
@@ -264,7 +264,7 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
     private func refreshChrome() {
         titleLabel.text = viewModel.navTitle
         titleLabel.contentMode = .left
-        titleLabel.textAlignment = .left
+        titleLabel.textAlignment = .natural
         OnboardingStyle.lockFigmaFont(
             titleLabel,
             size: 17,
@@ -272,7 +272,7 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
             color: AppColor.labelVibrantPrimary,
             kern: -0.43
         )
-        titleLabel.textAlignment = .left
+        titleLabel.textAlignment = .natural
         titleLabel.applyLineTruncation(lines: 1)
         updateNavTextButton(selectButton, title: L10n.tr("pantry.select"))
         updateNavTextButton(selectAllButton, title: viewModel.selectAllButtonTitle)

@@ -184,14 +184,14 @@ enum ProgressChartMath {
 
     static func axisDateText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("MMMd")
         return formatter.string(from: date)
     }
 
     static func photoDateText(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("dMMMyyyy")
         return formatter.string(from: date)
     }
@@ -206,6 +206,7 @@ enum ProgressChartMath {
 
     static func groupedNumber(_ value: Double) -> String {
         let formatter = NumberFormatter()
+        formatter.locale = .appFormatting
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value.rounded())) ?? "\(Int(value.rounded()))"
@@ -213,6 +214,7 @@ enum ProgressChartMath {
 
     static func axisNumber(_ value: Double) -> String {
         let formatter = NumberFormatter()
+        formatter.locale = .appFormatting
         formatter.numberStyle = .decimal
         formatter.usesGroupingSeparator = false
         formatter.minimumFractionDigits = 0

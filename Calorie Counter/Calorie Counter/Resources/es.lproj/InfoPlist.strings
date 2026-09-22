@@ -1,0 +1,6 @@
+"NSCameraUsageDescription" = "La cámara se usa para escanear códigos de barras y registrar comidas a partir de fotos.";
+"NSMicrophoneUsageDescription" = "El micrófono se usa para registrar comidas con la voz.";
+"NSSpeechRecognitionUsageDescription" = "El reconocimiento de voz se usa para registrar comidas con la voz.";
+"NSPhotoLibraryUsageDescription" = "El acceso a las fotos se usa para guardar fotos de progreso y analizar fotos de comidas.";
+"NSHealthShareUsageDescription" = "Los datos de Salud se usan para importar peso, agua, entrenamientos y nutrición y mantener tu diario al día.";
+"NSHealthUpdateUsageDescription" = "Salud se actualiza cuando registras comida, agua, peso o entrenamientos en Bity.";

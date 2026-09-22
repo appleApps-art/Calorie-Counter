@@ -47,7 +47,8 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
 
     private let viewModel: FoodPhotoAnalysisViewModel
     private let capturer: FoodPhotoCapturing
-    private let showsFreeScanQuota: Bool
+    /// Free tries left on a free account; nil for Premium, which has no counter.
+    private let freeScansLeft: Int?
     private var isTorchOn = false
     private var hasStarted = false
     private var isCameraReady = false
@@ -62,11 +63,11 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
     init(
         viewModel: FoodPhotoAnalysisViewModel,
         capturer: FoodPhotoCapturing = CameraFoodPhotoCapturer(),
-        showsFreeScanQuota: Bool = true
+        freeScansLeft: Int? = nil
     ) {
         self.viewModel = viewModel
         self.capturer = capturer
-        self.showsFreeScanQuota = showsFreeScanQuota
+        self.freeScansLeft = freeScansLeft
         super.init(nibName: "AIPhotoCameraViewController")
         hidesBottomBarWhenPushed = true
     }
@@ -82,7 +83,7 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
         if viewModel.inventoryMode {
             applyFridgeScanFrame()
         }
-        tooltipView.isHidden = !showsFreeScanQuota
+        tooltipView.isHidden = freeScansLeft == nil
         capturer.attachPreview(to: previewView)
         previewView.bringSubviewToFront(overlayView)
         capturer.onPhotoCaptured = { [weak self] data in
@@ -298,8 +299,8 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
 
         tooltipView.useLiveGlass = false
         tooltipView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
-        tooltipView.isHidden = !showsFreeScanQuota
-        tooltipLabel.text = L10n.tr("photo.camera.freeScans")
+        tooltipView.isHidden = freeScansLeft == nil
+        tooltipLabel.text = L10n.format("photo.camera.freeScansLeft", freeScansLeft ?? 0)
         tooltipLabel.textAlignment = .center
         OnboardingStyle.lockFigmaFont(tooltipLabel, size: 15, weight: .regular, color: .white, kern: -0.23)
 

@@ -1,0 +1,10 @@
+"widget.displayName" = "Heute";
+"widget.description" = "Verbleibende Kalorien, Makros und eine Abkürzung zum Erfassen von Essen.";
+"widget.remaining" = "übrig";
+"widget.log" = "Erfassen";
+"widget.protein" = "Eiweiß";
+"widget.carbs" = "Kohlenhydrate";
+"widget.fats" = "Fett";
+"widget.water" = "Wasser";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

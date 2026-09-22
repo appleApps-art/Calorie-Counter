@@ -79,7 +79,7 @@ final class WantToCookRowView: UIView {
         ])
         OnboardingStyle.stylePlainSymbolButton(
             chevronButton,
-            systemName: "chevron.right",
+            systemName: "chevron.forward",
             foregroundColor: AppColor.iconSecondary
         )
         chevronButton.isUserInteractionEnabled = false

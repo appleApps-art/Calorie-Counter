@@ -323,7 +323,7 @@ final class HomeViewModel {
     private func dateTitle(for date: Date) -> String {
         let calendar = Calendar.current
         let formatter = DateFormatter()
-        formatter.locale = .current
+        formatter.locale = .appFormatting
         formatter.setLocalizedDateFormatFromTemplate("MMM d")
         let short = formatter.string(from: date)
         if calendar.isDateInToday(date) {
@@ -363,6 +363,7 @@ final class HomeViewModel {
 
     private func grouped(_ value: Int) -> String {
         let formatter = NumberFormatter()
+        formatter.locale = .appFormatting
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
@@ -370,6 +371,7 @@ final class HomeViewModel {
 
     private func sodiumString(_ grams: Double) -> String {
         let formatter = NumberFormatter()
+        formatter.locale = .appFormatting
         formatter.minimumFractionDigits = grams.truncatingRemainder(dividingBy: 1) == 0 ? 0 : 1
         formatter.maximumFractionDigits = 1
         return formatter.string(from: NSNumber(value: grams)) ?? "0"

@@ -165,8 +165,12 @@ final class DIContainer {
     private(set) lazy var healthSyncService: HealthSyncing = HealthKitSyncService()
     private(set) lazy var subscriptionService: AdaptySubscriptionService = AdaptySubscriptionService()
     private(set) lazy var notificationInboxStore: NotificationInboxStoring = NotificationInboxStore()
-    private(set) lazy var paywallFactory: SubscriptionPaywallPresenting = AdaptyPaywallFactory(
-        service: subscriptionService
+    private(set) lazy var paywallFactory: NativePaywallFactory = NativePaywallFactory(
+        subscription: refreshSubscriptionStatusUseCase,
+        trialReminder: TrialReminderScheduler()
+    )
+    private(set) lazy var featureAccess: FeatureAccessController = FeatureAccessController(
+        subscriptionService: subscriptionService
     )
     private(set) lazy var progressPhotoFileStore: ProgressPhotoFileStoring = LocalImageFileStore(folderName: "ProgressPhotos")
     private(set) lazy var avatarFileStore: LocalImageFileStoring = LocalImageFileStore(folderName: "ProfileAvatar")
@@ -588,7 +592,7 @@ final class DIContainer {
         initialInput: String? = nil,
         isPersistentSession: Bool = false
     ) -> AIAssistantViewModel {
-        AIAssistantViewModel(
+        let viewModel = AIAssistantViewModel(
             aiAssistantService: aiAssistantService,
             fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
             logWaterUseCase: logWaterUseCase,
@@ -604,6 +608,10 @@ final class DIContainer {
             voiceRecorder: voiceFoodAudioRecorder,
             transcribeFoodVoiceUseCase: transcribeFoodVoiceUseCase
         )
+        // A free account gets two answers from Bity; the screen shows the paywall after that.
+        viewModel.allowsSending = { [featureAccess] in featureAccess.canUse(.aiMessage) }
+        viewModel.onMessageAnswered = { [featureAccess] in featureAccess.recordUse(of: .aiMessage) }
+        return viewModel
     }
 
     func makeSubscriptionCoordinator() -> SubscriptionCoordinator {

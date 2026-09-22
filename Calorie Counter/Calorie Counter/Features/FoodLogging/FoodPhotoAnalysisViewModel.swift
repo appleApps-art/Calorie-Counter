@@ -30,6 +30,11 @@ final class FoodPhotoAnalysisViewModel {
     var onViewDetails: ((ProductDetailsDraft) -> Void)?
     var onAddEntry: ((ProductDetailsDraft) -> Void)?
     var onFridgeItemsReady: (([PantryItem]) -> Void)?
+    /// Asked before each analysis: a free account that used its scan gets the paywall instead.
+    var allowsAnalysis: () -> Bool = { true }
+    var onLimitReached: (() -> Void)?
+    /// A photo was recognized (food or fridge); this is what spends a free scan.
+    var onRecognized: (() -> Void)?
 
     let inventoryMode: Bool
 
@@ -209,6 +214,12 @@ final class FoodPhotoAnalysisViewModel {
     private func startAnalysis(imageData: Data) {
         captureWatchdog?.cancel()
         guard !isAnalyzing.value else { return }
+        guard allowsAnalysis() else {
+            capturedImage.value = nil
+            phase.value = .idle
+            onLimitReached?()
+            return
+        }
         recognizedTask?.cancel()
         isAnalyzing.value = true
         canConfirmLog.value = false
@@ -237,12 +248,14 @@ final class FoodPhotoAnalysisViewModel {
                     }
                     isAnalyzing.value = false
                     Analytics.tracker.track(.recognized("fridge", confidence: result.confidence))
+                    onRecognized?()
                     onFridgeItemsReady?(items)
                     return
                 }
                 // A result card for a leaf or a wall would offer to log 0 kcal with a "good" health score.
                 if result.findsNoFood { throw FoodPhotoAnalysisError.noFood }
                 Analytics.tracker.track(.recognized("photo", confidence: result.confidence))
+                onRecognized?()
                 analysis.value = result
                 resultTitleText.value = result.name
                 resultDetailsText.value = details(for: result)

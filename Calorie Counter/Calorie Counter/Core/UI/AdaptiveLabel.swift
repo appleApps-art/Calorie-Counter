@@ -20,6 +20,9 @@ final class AdaptiveLabel: UILabel {
     override func awakeFromNib() {
         super.awakeFromNib()
         storedDesignFontSize = font?.pointSize
+        // XIBs store absolute sides. In Arabic the layout mirrors, so a label pinned to the
+        // right-hand trailing edge must align to the left, and the other way round.
+        textAlignment = textAlignment.mirrored(for: UIView.userInterfaceLayoutDirection(for: semanticContentAttribute))
         refreshFont()
     }
 
@@ -135,5 +138,22 @@ extension UILabel {
         )
         attributedText = mutable
         textAlignment = paragraph.alignment
+    }
+}
+
+extension NSTextAlignment {
+    /// The end of a line in the app's reading direction: right in most languages, left in Arabic.
+    /// `.natural` is the start of a line.
+    static var trailing: NSTextAlignment {
+        NSTextAlignment.right.mirrored(for: UIView.userInterfaceLayoutDirection(for: .unspecified))
+    }
+
+    func mirrored(for direction: UIUserInterfaceLayoutDirection) -> NSTextAlignment {
+        guard direction == .rightToLeft else { return self }
+        switch self {
+        case .left: return .right
+        case .right: return .left
+        default: return self
+        }
     }
 }

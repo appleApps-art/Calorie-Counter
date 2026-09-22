@@ -1,0 +1,10 @@
+"widget.displayName" = "今日";
+"widget.description" = "残りカロリー、マクロ、食事記録へのショートカット。";
+"widget.remaining" = "残り";
+"widget.log" = "記録";
+"widget.protein" = "たんぱく質";
+"widget.carbs" = "炭水化物";
+"widget.fats" = "脂質";
+"widget.water" = "水分";
+"widget.grams" = "g";
+"widget.milliliters" = "ml";

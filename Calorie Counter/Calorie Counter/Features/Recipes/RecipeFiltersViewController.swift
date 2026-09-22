@@ -76,7 +76,7 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
             color: AppColor.labelsPrimary,
             kern: -0.43
         )
-        caloriesValueLabel.textAlignment = .right
+        caloriesValueLabel.textAlignment = .trailing
         caloriesSlider.minimumValue = 0
         caloriesSlider.maximumValue = Float(RecipeSearchFilters.calorieCeiling)
         caloriesSlider.minimumTrackTintColor = AppColor.teal

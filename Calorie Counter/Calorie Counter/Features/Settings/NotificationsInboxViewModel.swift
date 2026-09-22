@@ -26,12 +26,14 @@ final class NotificationsInboxViewModel {
     private let permissionUseCase: RequestNotificationPermissionUseCase?
     private let timeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
+        formatter.locale = .appFormatting
         formatter.unitsStyle = .abbreviated
         formatter.dateTimeStyle = .numeric
         return formatter
     }()
     private let olderDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = .appFormatting
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter
@@ -39,6 +41,7 @@ final class NotificationsInboxViewModel {
 
     private let clockFormatter: DateFormatter = {
         let formatter = DateFormatter()
+        formatter.locale = .appFormatting
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter

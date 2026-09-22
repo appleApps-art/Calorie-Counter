@@ -80,6 +80,8 @@ enum QARoute: String, CaseIterable {
     case onboardingHealth
     case onboardingPlan
     case appRating
+    case paywallOnboarding
+    case paywallFeature
 }
 
 enum QALaunchConfiguration {
@@ -89,6 +91,12 @@ enum QALaunchConfiguration {
     static var isActive: Bool {
         if environment["BITY_QA"] == "1" { return true }
         return arguments.contains(where: { $0 == "-qa" || $0.hasPrefix("-qa") })
+    }
+
+    /// `-useRealSubscription` runs a debug build on the Adapty status instead of forced Premium,
+    /// outside QA mode: onboarding, the paywalls and the free limits behave as in the store build.
+    static var usesRealSubscription: Bool {
+        arguments.contains("-useRealSubscription")
     }
 
     static var skipOnboarding: Bool {
@@ -114,6 +122,11 @@ enum QALaunchConfiguration {
         case "system": return .system
         default: return isActive ? .light : nil
         }
+    }
+
+    /// `-qaFreeUsage exhausted` spends every free try, `fresh` gives them all back.
+    static var freeUsage: String? {
+        value("-qaFreeUsage")?.lowercased()
     }
 
     static var premium: Bool? {
