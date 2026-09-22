@@ -195,7 +195,7 @@ final class ChatHistoryViewModel {
     private func refreshChipCategories() {
         // Resolve translations once per reload, including old chats written in
         // the other supported language.
-        let bundles = ["en", "uk"].compactMap { language -> Bundle? in
+        let bundles = Bundle.main.localizations.filter { $0 != "Base" }.compactMap { language -> Bundle? in
             guard let path = Bundle.main.path(forResource: language, ofType: "lproj") else { return nil }
             return Bundle(path: path)
         }

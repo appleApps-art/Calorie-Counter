@@ -4,6 +4,15 @@ struct SpoonacularRecipeSearchResponse: Decodable {
     let results: [SpoonacularRecipeSearchItem]?
 }
 
+struct SpoonacularPantryMatchResponse: Decodable {
+    struct Match: Decodable {
+        let id: Int
+        let missedIngredientCount: Int?
+    }
+
+    let results: [Match]?
+}
+
 struct SpoonacularRecipeSearchItem: Decodable {
     let id: Int
     var foodType: FoodType? = nil
@@ -27,6 +36,7 @@ struct SpoonacularRecipeInformation: Decodable {
     let nutrition: SpoonacularNutrition?
     let extendedIngredients: [SpoonacularExtendedIngredient]?
     let analyzedInstructions: [SpoonacularAnalyzedInstruction]?
+    var dishTypes: [String]? = nil
 }
 
 struct SpoonacularExtendedIngredient: Decodable {
@@ -131,15 +141,15 @@ enum SpoonacularServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid Spoonacular proxy URL"
+            return L10n.tr("common.errorGeneric")
         case .invalidResponse:
-            return "Invalid Spoonacular response"
+            return L10n.tr("common.errorGeneric")
         case .server(let message):
             return message
         case .http(_, let message, _):
             return message
         case .decodingFailed:
-            return "Failed to decode Spoonacular response"
+            return L10n.tr("common.errorGeneric")
         case .transport(let underlying):
             return underlying.localizedDescription
         }
@@ -174,7 +184,7 @@ enum SpoonacularMapper {
         return Recipe(
             id: UUID(),
             externalId: String(item.id),
-            title: item.title ?? "Recipe",
+            title: item.title ?? L10n.tr("recipes.generic"),
             summary: stripHTML(item.summary),
             imageURL: foodImageURL(item.image, useIngredientCDN: false),
             readyInMinutes: item.readyInMinutes,
@@ -188,7 +198,10 @@ enum SpoonacularMapper {
             sourceName: nil,
             origin: .spoonacular,
             weightGrams: grams(from: item.nutrition?.weightPerServing),
-            foodType: item.foodType ?? .dish
+            foodType: item.foodType ?? .dish,
+            fiber: nutrients["fiber"],
+            sugar: nutrients["sugar"],
+            sodium: nutrients["sodium"]
         )
     }
 
@@ -197,7 +210,7 @@ enum SpoonacularMapper {
         let ingredients = (info.extendedIngredients ?? []).enumerated().map { index, ingredient in
             RecipeIngredient(
                 id: ingredient.id.map(String.init) ?? "ing-\(index)",
-                name: ingredient.name ?? ingredient.original ?? "Ingredient",
+                name: ingredient.name ?? ingredient.original ?? L10n.tr("food.generic.ingredient"),
                 amount: ingredient.amount,
                 unit: ingredient.unit,
                 originalText: ingredient.original
@@ -211,7 +224,7 @@ enum SpoonacularMapper {
         return Recipe(
             id: UUID(),
             externalId: String(info.id),
-            title: info.title ?? "Recipe",
+            title: info.title ?? L10n.tr("recipes.generic"),
             summary: stripHTML(info.summary),
             imageURL: foodImageURL(info.image, useIngredientCDN: false),
             readyInMinutes: info.readyInMinutes,
@@ -225,7 +238,11 @@ enum SpoonacularMapper {
             sourceName: info.sourceName,
             origin: .spoonacular,
             weightGrams: grams(from: info.nutrition?.weightPerServing),
-            foodType: info.foodType ?? .dish
+            foodType: info.foodType ?? .dish,
+            dishTypes: info.dishTypes ?? [],
+            fiber: nutrients["fiber"],
+            sugar: nutrients["sugar"],
+            sodium: nutrients["sodium"]
         )
     }
 
@@ -233,7 +250,7 @@ enum SpoonacularMapper {
         FoodProduct(
             id: UUID(),
             externalId: String(item.id),
-            name: item.name ?? "Ingredient",
+            name: item.name ?? L10n.tr("food.generic.ingredient"),
             brand: nil,
             kind: .ingredient,
             imageURL: foodImageURL(item.image, useIngredientCDN: true),
@@ -253,7 +270,7 @@ enum SpoonacularMapper {
         return FoodProduct(
             id: UUID(),
             externalId: String(info.id),
-            name: info.name ?? "Ingredient",
+            name: info.name ?? L10n.tr("food.generic.ingredient"),
             brand: nil,
             kind: .ingredient,
             imageURL: foodImageURL(info.image, useIngredientCDN: true),
@@ -275,7 +292,7 @@ enum SpoonacularMapper {
         FoodProduct(
             id: UUID(),
             externalId: String(item.id),
-            name: item.title ?? "Product",
+            name: item.title ?? L10n.tr("food.generic.product"),
             brand: item.brand,
             kind: .product,
             imageURL: productImageURL(id: item.id, raw: item.image),
@@ -361,7 +378,10 @@ enum SpoonacularMapper {
             source: .spoonacular,
             servingGrams: item.servings?.unit == nil ? nil
                 : grams(from: SpoonacularMassAmount(amount: item.servings?.size, unit: item.servings?.unit)),
-            servingMilliliters: milliliters(amount: item.servings?.size, unit: item.servings?.unit)
+            servingMilliliters: milliliters(amount: item.servings?.size, unit: item.servings?.unit),
+            fiberPerServing: nutrients["fiber"],
+            sugarPerServing: nutrients["sugar"],
+            sodiumPerServing: nutrients["sodium"]
         )
     }
 

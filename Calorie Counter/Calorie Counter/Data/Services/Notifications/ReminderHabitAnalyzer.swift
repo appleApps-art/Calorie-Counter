@@ -88,6 +88,9 @@ final class ReminderHabitAnalyzer: ReminderHabitAnalyzing {
                     minDays: minDays,
                     calendar: calendar
                 ).map { [$0] }
+            case .comeback:
+                // It speaks to someone who is away, so there is no habit to learn its time from.
+                learned = nil
             }
 
             guard let times = learned, !times.isEmpty else { continue }

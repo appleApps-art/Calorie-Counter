@@ -31,19 +31,72 @@ struct RecipeSearchFilters: Equatable {
             || !excludedIngredients.isEmpty
     }
 
-    var searchQuery: String {
-        var parts: [String] = []
-        parts.append(contentsOf: mealTypes)
-        parts.append(contentsOf: cuisines)
-        parts.append(contentsOf: diets)
-        parts.append(contentsOf: difficulties)
-        if let maxReadyMinutes {
-            parts.append(L10n.format("recipes.filters.underMin", maxReadyMinutes))
+    var searchParameters: RecipeSearchParameters {
+        RecipeSearchParameters(
+            type: Self.catalogValues(for: mealTypes, in: Self.mealTypeValues),
+            cuisine: Self.catalogValues(for: cuisines, in: Self.cuisineValues),
+            diet: Self.catalogValues(for: diets, in: Self.dietValues),
+            maxReadyTime: maxReadyMinutes,
+            maxCalories: maxCalories < Self.calorieCeiling ? maxCalories : nil,
+            excludeIngredients: excludedIngredients.isEmpty ? nil : excludedIngredients.joined(separator: ",")
+        )
+    }
+
+    private static let mealTypeValues = [
+        "recipes.filters.breakfast": "breakfast",
+        "recipes.filters.lunch": "main course",
+        "recipes.filters.dinner": "main course",
+        "recipes.filters.snack": "snack"
+    ]
+
+    private static let cuisineValues = [
+        "recipes.filters.italian": "italian",
+        "recipes.filters.asian": "asian",
+        "recipes.filters.mexican": "mexican",
+        "recipes.filters.greek": "greek"
+    ]
+
+    private static let dietValues = [
+        "recipes.filters.vegetarian": "vegetarian",
+        "recipes.filters.vegan": "vegan",
+        "recipes.filters.lean": "vegan"
+    ]
+
+    /// The create-recipe form speaks diary meal names and localized titles; the catalog only
+    /// understands its own vocabulary, where lunch and dinner are both a main course.
+    static func catalogMealType(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch trimmed.lowercased() {
+        case MealType.breakfast.rawValue: return "breakfast"
+        case MealType.lunch.rawValue, MealType.dinner.rawValue: return "main course"
+        case MealType.snacks.rawValue: return "snack"
+        default: return catalogValue(trimmed, in: mealTypeValues)
         }
-        if !excludedIngredients.isEmpty {
-            parts.append(excludedIngredients.joined(separator: ", "))
+    }
+
+    static func catalogCuisine(_ value: String) -> String? {
+        catalogValue(value, in: cuisineValues)
+    }
+
+    static func catalogDiet(_ value: String) -> String? {
+        catalogValue(value, in: dietValues)
+    }
+
+    private static func catalogValue(_ value: String, in values: [String: String]) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let direct = values[trimmed] { return direct }
+        return values.first { L10n.tr($0.key).caseInsensitiveCompare(trimmed) == .orderedSame }?.value
+    }
+
+    private static func catalogValues(for titles: [String], in values: [String: String]) -> String? {
+        var result: [String] = []
+        for title in titles {
+            guard let value = values.first(where: { L10n.tr($0.key).caseInsensitiveCompare(title) == .orderedSame })?.value,
+                  !result.contains(value) else { continue }
+            result.append(value)
         }
-        return parts.joined(separator: " ")
+        return result.isEmpty ? nil : result.joined(separator: ",")
     }
 
     func matches(_ recipe: Recipe) -> Bool {
@@ -121,6 +174,19 @@ struct RecipeSearchFilters: Equatable {
 
     func contains(_ title: String, in values: [String]) -> Bool {
         values.contains { $0.caseInsensitiveCompare(title) == .orderedSame }
+    }
+}
+
+struct RecipeSearchParameters: Equatable, Encodable {
+    var type: String?
+    var cuisine: String?
+    var diet: String?
+    var maxReadyTime: Int?
+    var maxCalories: Int?
+    var excludeIngredients: String?
+
+    var isEmpty: Bool {
+        self == RecipeSearchParameters()
     }
 }
 

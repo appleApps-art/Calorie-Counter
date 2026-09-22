@@ -145,7 +145,7 @@ struct PantryItem: Equatable, Identifiable {
     static let expiryDisplayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = .autoupdatingCurrent
-        formatter.setLocalizedDateFormatFromTemplate("d MMMM yyyy")
+        formatter.dateFormat = "d MMMM yyyy"
         return formatter
     }()
 
@@ -154,6 +154,7 @@ struct PantryItem: Equatable, Identifiable {
         let quantity: String
         let amount: Double?
         let unit: String?
+        let label = ingredient.quantityText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if let grams = ingredient.grams {
             amount = grams
             unit = "g"
@@ -162,6 +163,17 @@ struct PantryItem: Equatable, Identifiable {
             amount = milliliters
             unit = "ml"
             quantity = amountText(milliliters, unit: "ml")
+        } else if !label.isEmpty {
+            // A photo shows counts and packs ("3 шт", "1 пачка") far more reliably than weights;
+            // only a plain g/ml label parses into a mergeable amount.
+            quantity = label
+            if let parsed = ProductDetailsMath.parsePortion(label) {
+                amount = parsed.value
+                unit = parsed.isMilliliters ? "ml" : "g"
+            } else {
+                amount = nil
+                unit = nil
+            }
         } else {
             amount = nil
             unit = nil

@@ -389,7 +389,8 @@ final class EditMealViewModel {
                     replacements[targetId] = proposal.newItem
                 }
                 appliedCount += 1
-            case .swapFood, .mealSuggestions, .logWater, .saveRecipe, .savePreference, .swapRecipeIngredient:
+            case .swapFood, .mealSuggestions, .logWater, .saveRecipe, .savePreference, .swapRecipeIngredient,
+                 .swapMealPlanMeal:
                 break
             }
         }

@@ -46,9 +46,15 @@ final class NutritionFactRowView: UIControl {
         configure(title: title, value: "", dailyValue: nil, showsSeparator: showsSeparator)
         valueLabel.isHidden = true
         valueWidthConstraint?.designConstant = 0
-        checkImageView.isHidden = !selected
         checkImageView.image = OnboardingStyle.symbol("checkmark", pointSize: 17)
         checkImageView.tintColor = AppColor.teal
+        setMealSelected(selected)
+    }
+
+    /// Moving the checkmark must not rebuild the row: its adapted metrics are only recomputed
+    /// when the screen resizes, so a fresh row would come back with unadapted heights.
+    func setMealSelected(_ selected: Bool) {
+        checkImageView.isHidden = !selected
     }
 
     private func commonInit() {

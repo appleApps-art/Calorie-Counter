@@ -7,10 +7,6 @@ final class OnboardingFeatureRowView: UIView {
 
     private var iconName: String?
 
-    override var intrinsicContentSize: CGSize {
-        CGSize(width: UIView.noIntrinsicMetric, height: 38)
-    }
-
     override init(frame: CGRect) {
         super.init(frame: frame)
         commonInit()
@@ -22,11 +18,24 @@ final class OnboardingFeatureRowView: UIView {
     }
 
     func configure(icon: String, title: String) {
+        relaxFixedHeight()
         iconName = icon
         titleLabel.text = title
         OnboardingStyle.lockFigmaFont(titleLabel, size: 17, weight: .regular, color: AppColor.textPrimary, kern: -0.43)
         titleLabel.applyWrapping()
         refreshIconChrome()
+    }
+
+    /// The nib pins a row to 38pt; on a narrow screen the text needs a second line, so the pin
+    /// becomes a minimum instead of cutting the label in half.
+    private func relaxFixedHeight() {
+        let fixed = constraints.filter {
+            $0.firstItem === self && $0.secondItem == nil
+                && $0.firstAttribute == .height && $0.relation == .equal
+        }
+        guard !fixed.isEmpty else { return }
+        NSLayoutConstraint.deactivate(fixed)
+        fixed.forEach { heightAnchor.constraint(greaterThanOrEqualToConstant: $0.constant).isActive = true }
     }
 
     private func commonInit() {
@@ -51,8 +60,10 @@ final class OnboardingFeatureRowView: UIView {
     }
 
     private func refreshIconChrome() {
-        let wellColor = AppColor.gray6
-        let iconColor = AppColor.iconSecondary
+        // The design puts the glyph in a black well on white, and in a grey one on black.
+        let isDark = traitCollection.userInterfaceStyle == .dark
+        let wellColor = isDark ? AppColor.fillTertiary : UIColor.black
+        let iconColor = isDark ? AppColor.iconSecondary : UIColor.white
         iconContainerView.backgroundColor = wellColor
         iconImageView.tintColor = iconColor
         guard let iconName else { return }

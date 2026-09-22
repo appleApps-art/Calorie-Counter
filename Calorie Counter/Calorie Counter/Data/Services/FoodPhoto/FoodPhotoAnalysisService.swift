@@ -23,11 +23,13 @@ struct FoodPhotoAnalyzeAPIIngredient: Decodable {
     let name: String
     let grams: Double?
     let milliliters: Double?
+    let quantity: String?
 
-    init(name: String, grams: Double?, milliliters: Double?) {
+    init(name: String, grams: Double?, milliliters: Double?, quantity: String? = nil) {
         self.name = name
         self.grams = grams
         self.milliliters = milliliters
+        self.quantity = quantity
     }
 
     init(from decoder: Decoder) throws {
@@ -35,18 +37,23 @@ struct FoodPhotoAnalyzeAPIIngredient: Decodable {
             name = text
             grams = nil
             milliliters = nil
+            quantity = nil
             return
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = try container.decode(String.self, forKey: .name)
         grams = decodeFlexibleDouble(container, forKey: .grams)
         milliliters = decodeFlexibleDouble(container, forKey: .milliliters)
+        let label = (try? container.decodeIfPresent(String.self, forKey: .quantity))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        quantity = (label?.isEmpty ?? true) ? nil : label
     }
 
     private enum CodingKeys: String, CodingKey {
         case name
         case grams
         case milliliters
+        case quantity
     }
 }
 
@@ -265,6 +272,7 @@ final class FoodPhotoAnalysisService: FoodPhotoAnalysisServiceProtocol {
         userContext: AIAssistantUserContext?,
         inventoryMode: Bool
     ) async throws -> FoodPhotoAnalysis {
+        try NetworkMonitor.shared.requireOnline()
         guard var components = URLComponents(url: configuration.baseURL, resolvingAgainstBaseURL: false) else {
             throw FoodPhotoAnalysisError.invalidResponse
         }
@@ -325,7 +333,7 @@ final class FoodPhotoAnalysisService: FoodPhotoAnalysisServiceProtocol {
 
         guard let analysis = decoded.analysis else {
             throw FoodPhotoAnalysisError.analysisFailed(
-                message: decoded.error ?? "No food analysis returned"
+                message: L10n.tr("photo.error.analysisFailed")
             )
         }
 
@@ -373,9 +381,14 @@ final class FoodPhotoAnalysisService: FoodPhotoAnalysisServiceProtocol {
             let name = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { return nil }
             if let parsed = ProductDetailsMath.parseIngredientLine(name), parsed.grams != nil || parsed.milliliters != nil {
-                return FoodIngredient(name: parsed.name, grams: item.grams ?? parsed.grams, milliliters: item.milliliters ?? parsed.milliliters)
+                return FoodIngredient(
+                    name: parsed.name,
+                    grams: item.grams ?? parsed.grams,
+                    milliliters: item.milliliters ?? parsed.milliliters,
+                    quantityText: item.quantity
+                )
             }
-            return FoodIngredient(name: name, grams: item.grams, milliliters: item.milliliters)
+            return FoodIngredient(name: name, grams: item.grams, milliliters: item.milliliters, quantityText: item.quantity)
         }
     }
 

@@ -60,7 +60,7 @@
                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                     <real key="value" value="44"/>
                                 </userDefinedRuntimeAttribute>
-                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                             </userDefinedRuntimeAttributes>
                         </constraint>
                         <constraint firstItem="close" firstAttribute="leading" secondItem="close-wrap" secondAttribute="leading" id="cl"/>
@@ -100,7 +100,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="44"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                                 <constraint firstItem="food-icon" firstAttribute="centerX" secondItem="food-well" secondAttribute="centerX" id="ficx"/>
@@ -118,7 +118,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="24"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                             </constraints>
@@ -142,7 +142,7 @@
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                     <real key="value" value="68"/>
                                                 </userDefinedRuntimeAttribute>
-                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstItem="food-well" firstAttribute="leading" secondItem="food-card" secondAttribute="leading" constant="16" id="fwl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
@@ -207,7 +207,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="44"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                                 <constraint firstItem="barcode-icon" firstAttribute="centerX" secondItem="barcode-well" secondAttribute="centerX" id="bicx"/>
@@ -225,7 +225,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="24"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                             </constraints>
@@ -249,7 +249,7 @@
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                     <real key="value" value="68"/>
                                                 </userDefinedRuntimeAttribute>
-                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstItem="barcode-well" firstAttribute="leading" secondItem="barcode-card" secondAttribute="leading" constant="16" id="bwl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
@@ -321,7 +321,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="44"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                                 <constraint firstItem="search-icon" firstAttribute="centerX" secondItem="search-well" secondAttribute="centerX" id="sicx"/>
@@ -339,7 +339,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="24"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                             </constraints>
@@ -363,7 +363,7 @@
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                     <real key="value" value="68"/>
                                                 </userDefinedRuntimeAttribute>
-                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstItem="search-well" firstAttribute="leading" secondItem="search-card" secondAttribute="leading" constant="16" id="swl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
@@ -428,7 +428,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="44"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                                 <constraint firstItem="voice-icon" firstAttribute="centerX" secondItem="voice-well" secondAttribute="centerX" id="vicx"/>
@@ -446,7 +446,7 @@
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                             <real key="value" value="24"/>
                                                         </userDefinedRuntimeAttribute>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                                     </userDefinedRuntimeAttributes>
                                                 </constraint>
                                             </constraints>
@@ -470,7 +470,7 @@
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                     <real key="value" value="68"/>
                                                 </userDefinedRuntimeAttribute>
-                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
                                         <constraint firstItem="voice-well" firstAttribute="leading" secondItem="voice-card" secondAttribute="leading" constant="16" id="vwl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
@@ -541,35 +541,35 @@
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                             <real key="value" value="16"/>
                         </userDefinedRuntimeAttribute>
-                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
                 <constraint firstItem="nav-title" firstAttribute="centerX" secondItem="root" secondAttribute="centerX" id="ntx"/>
                 <constraint firstItem="nav-title" firstAttribute="centerY" secondItem="close-wrap" secondAttribute="centerY" id="nty"/>
                 <constraint firstItem="nav-title" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="close-wrap" secondAttribute="trailing" constant="8" id="ntl"/>
-                <constraint firstItem="grid" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="16" id="gl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="grid" firstAttribute="leading" secondItem="root" secondAttribute="leading" constant="10" id="gl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="16"/>
+                            <real key="value" value="10"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstAttribute="trailing" secondItem="grid" secondAttribute="trailing" constant="16" id="gr" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstAttribute="trailing" secondItem="grid" secondAttribute="trailing" constant="10" id="gr" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="16"/>
+                            <real key="value" value="10"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="grid" firstAttribute="top" secondItem="close-wrap" secondAttribute="bottom" id="gt"/>
-                <constraint firstItem="safe" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="grid" secondAttribute="bottom" constant="6" id="gb" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="grid" firstAttribute="top" relation="greaterThanOrEqual" secondItem="close-wrap" secondAttribute="bottom" constant="16" id="gt"/>
+                <constraint firstItem="root" firstAttribute="bottom" secondItem="grid" secondAttribute="bottom" constant="26" id="gb" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="6"/>
+                            <real key="value" value="26"/>
                         </userDefinedRuntimeAttribute>
-                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
             </constraints>

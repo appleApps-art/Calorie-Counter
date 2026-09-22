@@ -215,6 +215,10 @@ struct MealSuggestionOption: Equatable {
     var mealType: MealType? = nil
     var portionGrams: Double? = nil
     var portionMilliliters: Double? = nil
+    var fiber: Double? = nil
+    var sugar: Double? = nil
+    /// Milligrams.
+    var sodium: Double? = nil
 
     var needsNutritionEnrichment: Bool {
         calories <= 0 || (protein == 0 && carbs == 0 && fats == 0)
@@ -228,6 +232,9 @@ struct MealSuggestionOption: Equatable {
             protein: protein,
             carbs: carbs,
             fats: fats,
+            fiber: fiber ?? 0,
+            sugar: sugar ?? 0,
+            sodium: sodium ?? 0,
             portionGrams: portionGrams,
             portionMilliliters: portionMilliliters,
             notes: summary,
@@ -254,6 +261,9 @@ struct MealSuggestionOption: Equatable {
         if next.fats == 0, let fats = product.fats {
             next.fats = fats
         }
+        if next.fiber == nil { next.fiber = product.fiber }
+        if next.sugar == nil { next.sugar = product.sugar }
+        if next.sodium == nil { next.sodium = product.sodium }
         if next.imageURL == nil {
             next.imageURL = product.imageURL
         }
@@ -332,6 +342,9 @@ struct RecipeSaveProposal: Equatable {
     var imageURL: URL? = nil
     var ingredients: [String]
     var steps: [String]
+    var fiber: Double? = nil
+    var sugar: Double? = nil
+    var sodium: Double? = nil
 
     func toRecipe() -> Recipe {
         Recipe(
@@ -351,7 +364,10 @@ struct RecipeSaveProposal: Equatable {
             },
             steps: steps,
             sourceName: "AI",
-            origin: (externalRecipeId ?? "").hasPrefix("ai-") || externalRecipeId == nil ? .openAI : .spoonacular
+            origin: (externalRecipeId ?? "").hasPrefix("ai-") || externalRecipeId == nil ? .openAI : .spoonacular,
+            fiber: fiber,
+            sugar: sugar,
+            sodium: sodium
         )
     }
 }
@@ -369,6 +385,7 @@ enum AIAssistantAction: Equatable {
     case mealSuggestions(MealSuggestionsProposal)
     case saveRecipe(RecipeSaveProposal)
     case swapRecipeIngredient(RecipeIngredientSwapProposal)
+    case swapMealPlanMeal(MealPlanSwapProposal)
     case logWater(WaterLogProposal)
     case savePreference(PreferenceSaveProposal)
 }

@@ -29,10 +29,16 @@ final class ResponsiveOnboardingRewardsTests: XCTestCase {
             ("health", { OnboardingHealthViewController() }),
             ("rating", { AppRatingViewController() })
         ]
+        // The option screens keep their heading and button in place and scroll only the choices.
+        let sectionScrollScreens = ["goal", "activity", "sex"]
         for size in sizes {
             for (name, make) in screens {
                 let controller = make()
                 host(controller, size: size)
+                if sectionScrollScreens.contains(name) {
+                    try assertOnlyTheChoicesScroll(in: controller, name: name, size: size)
+                    continue
+                }
                 let scroll = try XCTUnwrap(descendants(controller.view).compactMap { $0 as? UIScrollView }
                     .first { $0.accessibilityIdentifier == "flow.scroll" }, name)
                 let content = try XCTUnwrap(scroll.subviews.first { $0.accessibilityIdentifier == "flow.scroll.content" })
@@ -51,6 +57,46 @@ final class ResponsiveOnboardingRewardsTests: XCTestCase {
                 }
                 if ["welcome", "activity"].contains(name) { capture(controller.view, name: "\(name)-\(Int(size.width))") }
             }
+        }
+    }
+
+    private func assertOnlyTheChoicesScroll(
+        in controller: UIViewController,
+        name: String,
+        size: CGSize
+    ) throws {
+        let view = controller.view!
+        XCTAssertNil(
+            descendants(view).compactMap { $0 as? UIScrollView }.first { $0.accessibilityIdentifier == "flow.scroll" },
+            "\(name) must not put the whole screen in a scroll view"
+        )
+        let scroll = try XCTUnwrap(
+            descendants(view).compactMap { $0 as? UIScrollView }
+                .first { $0.accessibilityIdentifier == "flow.section.scroll" },
+            name
+        )
+        XCTAssertLessThanOrEqual(scroll.convert(scroll.bounds, to: view).maxY, view.bounds.maxY + 1, name)
+        assertReadableLabels(in: view, context: "\(name) \(size)")
+        let actions = descendants(view).compactMap { $0 as? UIButton }.filter { $0.configuration?.title != nil }
+        XCTAssertFalse(actions.isEmpty, name)
+        for action in actions {
+            let frame = action.convert(action.bounds, to: view)
+            XCTAssertFalse(action.isDescendant(of: scroll), "\(name): the button stays out of the scrolling list")
+            XCTAssertLessThanOrEqual(frame.maxY, view.bounds.maxY + 1, name)
+            XCTAssertGreaterThanOrEqual(frame.minX, -1, name)
+            XCTAssertLessThanOrEqual(frame.maxX, view.bounds.maxX + 1, name)
+        }
+        let choices = descendants(view).compactMap { $0 as? OnboardingOptionCardView }
+        for choice in choices {
+            let fits = choice.systemLayoutSizeFitting(
+                CGSize(width: choice.bounds.width, height: 0),
+                withHorizontalFittingPriority: .required,
+                verticalFittingPriority: .fittingSizeLevel
+            ).height
+            XCTAssertEqual(
+                choice.bounds.height, fits, accuracy: 1,
+                "\(name): a choice card is the size of its text, not of the spare space"
+            )
         }
     }
 

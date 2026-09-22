@@ -10,7 +10,6 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
 
     var onClose: (() -> Void)?
     var onLookup: ((String) -> Void)?
-    var onKeyboardFocusChanged: ((Bool) -> Void)?
 
     private var autoLookupWork: DispatchWorkItem?
     private var didSubmit = false
@@ -24,7 +23,7 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.gray6
+        view.backgroundColor = AppColor.sheetGlassTint
         titleLabel.text = L10n.tr("barcode.manual.title")
         titleLabel.textAlignment = .center
         titleLabel.adjustsFontSizeToFitWidth = true
@@ -36,12 +35,12 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
             color: AppColor.labelVibrantPrimary,
             kern: -0.43
         )
-        OnboardingStyle.styleGlassSymbolButton(closeButton, systemName: "xmark")
+        OnboardingStyle.styleGlassSymbolButton(closeButton, systemName: "xmark", foregroundColor: AppColor.iconSecondary)
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
 
         inputCard.useLiveGlass = false
         inputCard.showsHairlineBorder = true
-        inputCard.backgroundColor = AppColor.card
+        inputCard.backgroundColor = AppColor.backgroundsPrimary
         subtitleLabel.text = L10n.tr("barcode.manual.subtitle")
         OnboardingStyle.lockFigmaFont(
             subtitleLabel,
@@ -66,8 +65,11 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
         )
         barcodeTextField.addTarget(self, action: #selector(barcodeChanged), for: .editingChanged)
         configureClearButton()
-        configureLookupAccessory()
         barcodeChanged()
+        // In the design the card and the button sit right above the keyboard, not under the title.
+        NSLayoutConstraint.activate([
+            lookupButton.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: .adaptHeight(-32))
+        ])
 
         OnboardingStyle.stylePrimaryButton(
             lookupButton,
@@ -90,13 +92,7 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
         }
     }
 
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        onKeyboardFocusChanged?(true)
-    }
 
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        onKeyboardFocusChanged?(false)
-    }
 
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         if string.isEmpty { return true }
@@ -140,8 +136,6 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
         }
         let text = field.text ?? ""
         clearButton.isHidden = text.isEmpty
-        lookupButton.isEnabled = BarcodeNormalization.normalize(text) != nil
-        lookupButton.alpha = lookupButton.isEnabled ? 1 : 0.45
         scheduleAutoLookup()
     }
 
@@ -168,6 +162,8 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
 
     private func submitLookup() {
         autoLookupWork?.cancel()
+        // The button keeps its filled look in both states of the design; until the digits make up
+        // a barcode, tapping it simply does nothing.
         guard !didSubmit, let code = BarcodeNormalization.normalize(barcodeTextField.text ?? "") else { return }
         didSubmit = true
         lookupButton.isEnabled = false
@@ -200,7 +196,7 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
             withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
         )
         clearButton.setImage(image, for: .normal)
-        clearButton.tintColor = AppColor.iconSecondary
+        clearButton.tintColor = AppColor.labelsTertiary
         clearButton.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
         clearButton.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
         barcodeTextField.rightView = clearButton
@@ -208,16 +204,4 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
         clearButton.isHidden = true
     }
 
-    private func configureLookupAccessory() {
-        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 402, height: 44))
-        toolbar.sizeToFit()
-        let lookup = UIBarButtonItem(
-            title: L10n.tr("barcode.manual.lookup"),
-            style: .done,
-            target: self,
-            action: #selector(lookupTapped)
-        )
-        toolbar.items = [UIBarButtonItem.flexibleSpace(), lookup]
-        barcodeTextField.inputAccessoryView = toolbar
-    }
 }

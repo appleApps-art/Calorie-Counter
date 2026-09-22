@@ -32,8 +32,8 @@
                 <outlet property="mealTypeStack" destination="meal-stack" id="o-ms"/>
                 <outlet property="resetButton" destination="reset" id="o-reset"/>
                 <outlet property="showButton" destination="show" id="o-show"/>
-                <outlet property="suggestionsCard" destination="suggest-card" id="o-sugc"/>
-                <outlet property="suggestionsStack" destination="suggest" id="o-sug"/>
+                <outlet property="showBottomConstraint" destination="shb" id="o-shb"/>
+                <outlet property="scrollView" destination="scroll" id="o-scroll"/>
                 <outlet property="titleLabel" destination="title" id="o-title"/>
                 <outlet property="view" destination="root" id="o-view"/>
             </connections>
@@ -343,28 +343,6 @@
                                                         <userDefinedRuntimeAttribute type="boolean" keyPath="applyButtonGlass" value="YES"/>
                                                         <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
                                                             <real key="value" value="296"/>
-                                                        </userDefinedRuntimeAttribute>
-                                                    </userDefinedRuntimeAttributes>
-                                                </view>
-                                                <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="suggest-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">
-                                                    <subviews>
-                                                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="suggest">
-                                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                        </stackView>
-                                                    </subviews>
-                                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                    <constraints>
-                                                        <constraint firstItem="suggest" firstAttribute="leading" secondItem="suggest-card" secondAttribute="leading" id="sgl"/>
-                                                        <constraint firstAttribute="trailing" secondItem="suggest" secondAttribute="trailing" id="sgr"/>
-                                                        <constraint firstItem="suggest" firstAttribute="top" secondItem="suggest-card" secondAttribute="top" id="sgt"/>
-                                                        <constraint firstAttribute="bottom" secondItem="suggest" secondAttribute="bottom" id="sgb"/>
-                                                    </constraints>
-                                                    <userDefinedRuntimeAttributes>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptCornerRadius" value="YES"/>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="applyCardShadow" value="YES"/>
-                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="useLiveGlass" value="NO"/>
-                                                        <userDefinedRuntimeAttribute type="number" keyPath="designCornerRadius">
-                                                            <real key="value" value="24"/>
                                                         </userDefinedRuntimeAttribute>
                                                     </userDefinedRuntimeAttributes>
                                                 </view>

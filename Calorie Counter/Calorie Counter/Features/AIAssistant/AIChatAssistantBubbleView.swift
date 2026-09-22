@@ -41,6 +41,12 @@ final class AIChatAssistantBubbleView: UIView {
             color: AppColor.labelsPrimary,
             kern: -0.43
         )
+        // Bity writes Markdown; shown as is, the reply was littered with ** and ###.
+        messageLabel.attributedText = ChatMarkdownRenderer.attributed(
+            text,
+            style: .init(font: .systemFont(ofSize: 17, weight: .regular), color: AppColor.labelsPrimary, kern: -0.43)
+        )
+        messageLabel.accessibilityLabel = messageLabel.attributedText?.string
         applyBubbleChrome()
         applyAvatar(visible: showsAvatar)
         applyTypingAlignment(false)

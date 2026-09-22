@@ -7,6 +7,7 @@ final class RecipesCoordinator {
     private weak var recipesViewModel: RecipesViewModel?
     private weak var pantryViewModel: MyPantryViewModel?
     private weak var createFormViewModel: CreateRecipeFormViewModel?
+    private weak var mealPlanViewModel: MealPlanPreviewViewModel?
     private lazy var foodLoggingCoordinator = FoodLoggingCoordinator(
         navigationController: navigationController,
         container: container
@@ -27,8 +28,16 @@ final class RecipesCoordinator {
             transcribeFoodVoiceUseCase: container.transcribeFoodVoiceUseCase
         )
         recipesViewModel = viewModel
-        viewModel.onSelectRecipe = { [weak self] recipe in
-            self?.showRecipeDetail(recipe)
+        viewModel.onSelectRecipe = { [weak self, weak viewModel] recipe in
+            let source: String
+            if viewModel?.showsFilterResults.value == true {
+                source = "search"
+            } else if viewModel?.selectedTab.value == .saved {
+                source = "saved"
+            } else {
+                source = "browse"
+            }
+            self?.showRecipeDetail(recipe, source: source)
         }
         viewModel.onSelectMealPlan = { [weak self] plan in
             self?.showMealPlanPreview(plan)
@@ -55,6 +64,7 @@ final class RecipesCoordinator {
     }
 
     private func showSection(_ kind: RecipeBrowseSectionKind, title: String) {
+        Analytics.tracker.track(.recipeSectionOpened(section: kind.rawValue))
         let viewModel = RecipeSectionViewModel(
             kind: kind,
             title: title,
@@ -64,7 +74,7 @@ final class RecipesCoordinator {
             self?.navigationController.popViewController(animated: true)
         }
         viewModel.onSelectRecipe = { [weak self] recipe in
-            self?.showRecipeDetail(recipe)
+            self?.showRecipeDetail(recipe, source: "section")
         }
         navigationController.pushViewController(
             RecipeSectionViewController(viewModel: viewModel),
@@ -98,7 +108,7 @@ final class RecipesCoordinator {
         }
         viewModel.onCreatedRecipe = { [weak self] recipe in
             self?.recipesViewModel?.reloadAfterCreate()
-            self?.showRecipeDetail(recipe, replacingCreateForm: true)
+            self?.showRecipeDetail(recipe, source: "create", replacingCreateForm: true)
         }
         viewModel.onCreatedMealPlan = { [weak self] plan in
             self?.recipesViewModel?.reloadAfterMealPlanCreate()
@@ -122,6 +132,7 @@ final class RecipesCoordinator {
             viewController?.dismiss(animated: true)
         }
         viewModel.onApply = { [weak self, weak viewController] filters in
+            Analytics.tracker.track(.recipeFiltersApplied(count: filters.resultChips.count))
             viewController?.dismiss(animated: true)
             self?.recipesViewModel?.applyFilters(filters)
         }
@@ -133,7 +144,7 @@ final class RecipesCoordinator {
             fetchPantryItemsUseCase: container.fetchPantryItemsUseCase,
             savePantryItemUseCase: container.savePantryItemUseCase,
             deletePantryItemsUseCase: container.deletePantryItemsUseCase,
-            searchRecipesUseCase: container.searchRecipesUseCase
+            suggestPantryRecipeUseCase: container.suggestPantryRecipeUseCase
         )
         pantryViewModel = viewModel
         viewModel.onBack = { [weak self] in
@@ -154,7 +165,7 @@ final class RecipesCoordinator {
             )
         }
         viewModel.onOpenRecipe = { [weak self] recipe in
-            self?.showRecipeDetail(recipe)
+            self?.showRecipeDetail(recipe, source: "pantry")
         }
         viewModel.onCreateRecipe = { [weak self] in
             self?.showCreateForm(.recipe)
@@ -230,6 +241,7 @@ final class RecipesCoordinator {
         }
         viewModel.onAdded = { [weak self] items in
             try? self?.container.savePantryItemUseCase.execute(items: items)
+            Analytics.tracker.track(.pantryItemsAdded(count: items.count, method: "fridge_scan"))
             self?.popToPantry()
         }
         var stack = navigationController.viewControllers
@@ -341,6 +353,7 @@ final class RecipesCoordinator {
             draft,
             showsAddToDiary: true,
             addButtonTitle: addsToPantry ? L10n.tr("pantry.addTitle") : nil,
+            routesDishesToRecipe: false,
             onAdd: addsToPantry
                 ? { [weak self] draft in
                     self?.savePantryDraft(draft)
@@ -350,7 +363,20 @@ final class RecipesCoordinator {
     }
 
     private func savePantryDraft(_ draft: ProductDetailsDraft) {
-        try? container.savePantryItemUseCase.execute(PantryItem.from(draft: draft))
+        do {
+            try container.savePantryItemUseCase.execute(PantryItem.from(draft: draft))
+        } catch {
+            // Silently doing nothing is what made the button look broken.
+            let alert = UIAlertController(
+                title: L10n.tr("pantry.saveFailed.title"),
+                message: error.localizedDescription,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: L10n.tr("product.entry.ok"), style: .default))
+            (navigationController.presentedViewController ?? navigationController).present(alert, animated: true)
+            return
+        }
+        Analytics.tracker.track(.pantryItemsAdded(count: 1, method: draft.source))
         popToPantry()
     }
 
@@ -368,6 +394,8 @@ final class RecipesCoordinator {
     }
 
     private func popToPantry() {
+        // A product opened over a sheet lives in a presented stack: popping alone would leave it up.
+        navigationController.presentedViewController?.dismiss(animated: true)
         if let pantry = navigationController.viewControllers.first(where: { $0 is MyPantryViewController }) {
             navigationController.popToViewController(pantry, animated: true)
         } else {
@@ -375,8 +403,16 @@ final class RecipesCoordinator {
         }
     }
 
-    private func presentAssistant(initialInput: String? = nil) {
-        let viewModel = container.makeAIAssistantViewModel(initialInput: initialInput)
+    private func presentAssistant(initialInput: String? = nil, mealPlan: MealPlan? = nil) {
+        let viewModel = container.makeAIAssistantViewModel(
+            mealPlanContext: mealPlan,
+            initialInput: initialInput
+        )
+        viewModel.onMealPlanSwapProposed = { [weak self] proposal in
+            guard self?.mealPlanViewModel?.applySwapProposal(proposal) == true else { return false }
+            self?.navigationController.dismiss(animated: true)
+            return true
+        }
         let chat = AIAssistantViewController(viewModel: viewModel)
         chat.showsBackButton = true
         chat.showsHistoryButton = false
@@ -391,7 +427,8 @@ final class RecipesCoordinator {
         navigationController.present(nav, animated: true)
     }
 
-    private func showRecipeDetail(_ recipe: Recipe, replacingCreateForm: Bool = false) {
+    private func showRecipeDetail(_ recipe: Recipe, source: String, replacingCreateForm: Bool = false) {
+        Analytics.tracker.track(.recipeOpened(source: source, origin: recipe.origin.isAIRecipe ? "ai" : "catalog"))
         let viewModel = RecipeDetailViewModel(
             recipe: recipe,
             searchRecipesUseCase: container.searchRecipesUseCase,
@@ -404,6 +441,7 @@ final class RecipesCoordinator {
             self?.navigationController.popViewController(animated: true)
         }
         viewModel.onShare = { [weak self] image in
+            Analytics.tracker.track(.recipeShared)
             let activity = UIActivityViewController(activityItems: [image], applicationActivities: nil)
             self?.navigationController.present(activity, animated: true)
         }
@@ -413,6 +451,7 @@ final class RecipesCoordinator {
             self?.navigationController.present(alert, animated: true)
         }
         viewModel.onAddToDiary = { [weak self] draft in
+            Analytics.tracker.track(.recipeAddTapped(mealType: draft.mealType.rawValue))
             self?.foodLoggingCoordinator.openRecipeAddToDiary(draft)
         }
         viewModel.onRequestIngredientSwapChat = { [weak self] recipe, prefill in
@@ -426,13 +465,24 @@ final class RecipesCoordinator {
         }
     }
 
+    private func qaSwapMeal(showsSheet: Bool) {
+        guard let slot = mealPlanViewModel?.selectedDay.value?.slots.first else { return }
+        if showsSheet {
+            mealPlanViewModel?.onSwapOptions?(slot, Array(QACatalog.recipes.prefix(3)))
+        } else {
+            mealPlanViewModel?.swappingRecipeIndex.value = slot.recipeIndex
+        }
+    }
+
     private func showMealPlanPreview(_ plan: MealPlan, replacingCreateForm: Bool = false) {
+        Analytics.tracker.track(.mealPlanOpened)
         let viewModel = MealPlanPreviewViewModel(
             plan: plan,
             mealPlanRepository: container.mealPlanRepository,
             searchRecipesUseCase: container.searchRecipesUseCase,
             fetchDailyDiaryUseCase: container.fetchDailyDiaryUseCase,
-            logFoodUseCase: container.logFoodUseCase
+            logFoodUseCase: container.logFoodUseCase,
+            isFreshlyCreated: replacingCreateForm
         )
         viewModel.onBack = { [weak self] in
             self?.navigationController.popViewController(animated: true)
@@ -446,15 +496,17 @@ final class RecipesCoordinator {
             self?.navigationController.present(activity, animated: true)
         }
         viewModel.onEditWithBity = { [weak self] plan in
-            self?.presentAssistant(initialInput: plan.title)
+            // The plan opens the chat as a card; typing its name into the field said nothing to Bity.
+            self?.presentAssistant(mealPlan: plan)
         }
         viewModel.onDeleted = { [weak self] in
             self?.recipesViewModel?.reloadAfterMealPlanCreate()
             self?.navigationController.popViewController(animated: true)
         }
         viewModel.onOpenRecipe = { [weak self] recipe in
-            self?.showRecipeDetail(recipe)
+            self?.showRecipeDetail(recipe, source: "meal_plan")
         }
+        mealPlanViewModel = viewModel
         let viewController = MealPlanPreviewViewController(viewModel: viewModel)
         if replacingCreateForm {
             replaceCreateForm(with: viewController)
@@ -520,12 +572,12 @@ extension RecipesCoordinator {
         case .recipesSection:
             showSection(.healthyBreakfast, title: L10n.tr(RecipeBrowseSectionKind.healthyBreakfast.titleKey))
         case .recipeDetail:
-            showRecipeDetail(QACatalog.recipes[0])
+            showRecipeDetail(QACatalog.recipes[0], source: "qa")
         case .recipeDetailIngredients:
-            showRecipeDetail(QACatalog.recipes[0])
+            showRecipeDetail(QACatalog.recipes[0], source: "qa")
             recipeDetailViewModel?.selectTab(.ingredients)
         case .recipeDetailInstructions:
-            showRecipeDetail(QACatalog.recipes[0])
+            showRecipeDetail(QACatalog.recipes[0], source: "qa")
             recipeDetailViewModel?.selectTab(.instructions)
         case .recipesCreate:
             presentCreateSheet()
@@ -538,7 +590,7 @@ extension RecipesCoordinator {
             }
         case .recipesCreateMealPlan:
             showCreateForm(.mealPlan)
-        case .mealPlanPreview:
+        case .mealPlanPreview, .mealPlanSwap, .mealPlanSwapLoading:
             let plan = (try? container.fetchMealPlansUseCase.execute())?.first ?? MealPlan(
                 id: QACatalog.uuid("meal-plan"),
                 title: QACatalog.recipes[0].title,
@@ -548,9 +600,14 @@ extension RecipesCoordinator {
                 createdAt: Date()
             )
             showMealPlanPreview(plan)
+            if route != .mealPlanPreview {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                    self?.qaSwapMeal(showsSheet: route == .mealPlanSwap)
+                }
+            }
         case .pantry:
             showPantry()
-        case .pantrySelect, .pantrySelected, .pantryDelete, .pantryAdd, .pantryEdit, .fridgeResult:
+        case .pantrySelect, .pantrySelected, .pantryDelete, .pantryAdd, .pantryEdit, .fridgeResult, .pantryProduct:
             showPantry()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.qaConfigurePantry(route)
@@ -582,6 +639,10 @@ extension RecipesCoordinator {
         case .fridgeResult:
             let items = (try? container.fetchPantryItemsUseCase.execute()) ?? []
             showFridgeResult(Array(items.prefix(4)))
+        case .pantryProduct:
+            if let recipe = QACatalog.recipes(matching: "healthy").first {
+                openPantryProductDetails(ProductDetailsMath.draft(from: recipe), addsToPantry: true)
+            }
         default:
             break
         }

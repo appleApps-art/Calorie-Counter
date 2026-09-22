@@ -266,7 +266,7 @@ final class AddFoodEntryViewModel {
     }
 
     private func loadHeroImage(from draft: ProductDetailsDraft) {
-        if let data = draft.imageData, let image = UIImage(data: data) {
+        if let data = draft.imageData, let image = StoredPhoto.image(from: data, maxPixelSize: StoredPhoto.maxDimension) {
             loadedHeroKey = "data"
             heroImage.value = image
             return

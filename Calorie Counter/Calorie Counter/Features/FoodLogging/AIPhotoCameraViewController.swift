@@ -1,7 +1,7 @@
 import PhotosUI
 import UIKit
 
-final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControllerDelegate {
+final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate {
     @IBOutlet private weak var previewView: UIView!
     @IBOutlet private weak var freezeFrameView: UIImageView!
     @IBOutlet private weak var overlayView: CameraScanOverlayView!
@@ -52,6 +52,8 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
     private var hasStarted = false
     private var isCameraReady = false
     private var isPickerVisible = false
+    private let resultSheetTint = UIView()
+    private var resultSwipeDismissal: ResultPanelSwipeDismissal?
     private var lastPhotoPhase: AIPhotoPhase?
     private let frameCornerRadius: CGFloat = 26
 
@@ -130,6 +132,12 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
         overlayView.holeRect = overlayView.convert(frameView.bounds, from: frameView)
         modeControl.shrinkCameraModeTitlesToFit()
         layoutShutterButton()
+        layoutResultSheetTint()
+    }
+
+    /// The tint has to take the panel's shape: square corners would poke out of the glass.
+    private func layoutResultSheetTint() {
+        RecognitionResultPanel.layout(tint: resultSheetTint, in: resultSheet)
     }
 
     override func bindViewModel() {
@@ -144,6 +152,10 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
         }
         viewModel.analysis.bind { [weak self] _ in
             self?.renderResult()
+        }
+        viewModel.errorText.bind { [weak self] message in
+            guard !message.isEmpty else { return }
+            self?.presentError(message)
         }
         viewModel.capturedImage.bind { [weak self] image in
             self?.productImageView.image = image
@@ -178,6 +190,9 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
         config.selectionLimit = 1
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
+        // A swipe-down closes the picker without calling didFinishPicking; the shutter must not
+        // stay locked behind a picker that is already gone.
+        picker.presentationController?.delegate = self
         present(picker, animated: true)
     }
 
@@ -227,6 +242,27 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
     @objc
     private func detailsTapped() {
         viewModel.viewDetailsTapped()
+    }
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        isPickerVisible = false
+    }
+
+    /// Offline a picked photo fails at once, while the gallery is still closing; the alert waits
+    /// for it instead of being dropped.
+    private func presentError(_ message: String, attempt: Int = 0) {
+        guard viewIfLoaded?.window != nil else { return }
+        if let presented = presentedViewController {
+            guard presented.isBeingDismissed, attempt < 10 else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                self?.presentError(message, attempt: attempt + 1)
+            }
+            return
+        }
+        Haptics.error()
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.tr("product.entry.ok"), style: .default))
+        present(alert, animated: true)
     }
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
@@ -280,16 +316,7 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
     }
 
     private func configureResultSheet() {
-        resultSheet.useLiveGlass = true
-        resultSheet.applyCardShadow = true
-        resultSheet.showsDropShadow = true
-        resultSheet.matchScreenCorners = true
-        productCard.useLiveGlass = true
-        productCard.applyCardShadow = true
-        productCard.showsDropShadow = false
-        scoreCard.useLiveGlass = true
-        scoreCard.applyCardShadow = true
-        scoreCard.showsDropShadow = false
+        RecognitionResultPanel.style(sheet: resultSheet, tint: resultSheetTint, cards: [productCard, scoreCard] + microCards)
         scoreCircleView.useLiveGlass = false
         scoreCircleView.backgroundColor = AppColor.accentMint
         productImageView.contentMode = .scaleAspectFill
@@ -338,6 +365,14 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
             title: L10n.tr("photo.result.addToDiary"),
             systemImage: "square.and.arrow.up"
         )
+        // The scan result uses the deeper accent from the design, dark teal in light mode.
+        if var configuration = addButton.configuration {
+            configuration.baseBackgroundColor = AppColor.tabSelected
+            configuration.background.backgroundColor = AppColor.tabSelected
+            configuration.baseForegroundColor = AppColor.onAccent
+            addButton.configuration = configuration
+            addButton.tintColor = AppColor.tabSelected
+        }
         addButton.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
         OnboardingStyle.styleGlassButton(
             detailsButton,
@@ -349,12 +384,6 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
 
         detailsLabel.numberOfLines = 0
         detailsLabel.isHidden = true
-        microCards.forEach { card in
-            card.useLiveGlass = false
-            card.backgroundColor = AppColor.card
-            card.layer.borderWidth = 1
-            card.layer.borderColor = OnboardingStyle.fillQuaternary.resolvedColor(with: traitCollection).cgColor
-        }
         dimView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
         dimView.alpha = 0
         dimView.isHidden = true
@@ -362,11 +391,19 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
         resultSheet.isHidden = true
         resultSheet.transform = CGAffineTransform(translationX: 0, y: 48)
         pinResultScrollContent()
+        installResultSwipeDismissal()
     }
 
     private func pinResultScrollContent() {
         guard let stack = productCard.superview, let scroll = stack.superview as? UIScrollView else { return }
         scroll.pinFilledContent(stack, hugHeight: true)
+    }
+
+    private func installResultSwipeDismissal() {
+        let scroll = productCard.superview?.superview as? UIScrollView
+        resultSwipeDismissal = ResultPanelSwipeDismissal(panel: resultSheet, scrollView: scroll) { [weak self] in
+            self?.viewModel.dismissResultTapped()
+        }
     }
 
     private func applyFridgeScanFrame() {

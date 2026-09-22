@@ -96,6 +96,7 @@ final class OnboardingBodyViewController: BaseViewController {
 
     @objc
     private func unitChanged() {
+        Haptics.selection()
         isMetric = unitSegmentedControl.selectedSegmentIndex == 0
         pickerView.reloadAllComponents()
         selectDefaults()
@@ -103,11 +104,13 @@ final class OnboardingBodyViewController: BaseViewController {
 
     @objc
     private func backTapped() {
+        Haptics.light()
         onBack?()
     }
 
     @objc
     private func continueTapped() {
+        Haptics.light()
         onContinue?(selectedHeightCm, selectedWeightKg)
     }
 }

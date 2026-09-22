@@ -46,7 +46,7 @@ final class ProgressPhotoDateSectionView: UIView {
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = .adaptWidth(16)
         imageView.layer.cornerCurve = .continuous
-        if let url = photo?.fileURL, let image = UIImage(contentsOfFile: url.path) {
+        if let url = photo?.fileURL, let image = StoredPhoto.image(contentsOf: url, maxPixelSize: StoredPhoto.maxDimension) {
             imageView.accessibilityLabel = "\(photo?.pose.title ?? "") · \(dateLabel.text ?? "")"
             imageView.image = image
             imageView.isHidden = false

@@ -33,6 +33,17 @@ final class AdaptiveLabel: UILabel {
         refreshFont()
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // A wrapping label inside a stack row keeps its single-line height unless it is told how
+        // wide it ended up: that is what cut "Персональний AI-асистент" down to one line.
+        guard numberOfLines == 0, bounds.width > 1,
+              abs(preferredMaxLayoutWidth - bounds.width) > 0.5 else { return }
+        preferredMaxLayoutWidth = bounds.width
+        invalidateIntrinsicContentSize()
+        superview?.setNeedsLayout()
+    }
+
     /// Call after styling a label whose container can expand or scroll with larger text.
     /// Existing color, kerning, alignment and font weights in attributed text are preserved.
     func enableDynamicType(baseFont: UIFont? = nil, textStyle: UIFont.TextStyle = .body) {

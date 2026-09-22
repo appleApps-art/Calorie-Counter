@@ -33,57 +33,78 @@ final class OnboardingFlowCoordinator {
         goal.onContinue = { [weak self] index in
             guard let self, Self.goals.indices.contains(index) else { return }
             self.viewModel.setGoal(Self.goals[index])
+            Self.stepDone("goal", Self.goals[index].rawValue)
             self.pager.goForward()
         }
-        goal.onBack = { [weak self] in self?.pager.goBack() }
+        goal.onBack = { [weak self] in Self.stepBack("goal"); self?.pager.goBack() }
 
         let sex = OnboardingOptionsViewController.sex()
         sex.onContinue = { [weak self] index in
             guard let self, Self.sexes.indices.contains(index) else { return }
             self.viewModel.setSex(Self.sexes[index])
+            Self.stepDone("sex", Self.sexes[index].rawValue)
             self.pager.goForward()
         }
-        sex.onBack = { [weak self] in self?.pager.goBack() }
+        sex.onBack = { [weak self] in Self.stepBack("sex"); self?.pager.goBack() }
 
         let age = OnboardingAgeViewController()
         age.onContinue = { [weak self] value in
             self?.viewModel.setAge(value)
+            Self.stepDone("age", DIContainer.ageGroup(value))
             self?.pager.goForward()
         }
-        age.onBack = { [weak self] in self?.pager.goBack() }
+        age.onBack = { [weak self] in Self.stepBack("age"); self?.pager.goBack() }
 
         let body = OnboardingBodyViewController()
         body.onContinue = { [weak self] heightCm, weightKg in
             self?.viewModel.setBody(heightCm: heightCm, weightKg: weightKg)
+            // Height and weight are health data; only the fact that the step was done is sent.
+            Self.stepDone("body")
             self?.pager.goForward()
         }
-        body.onBack = { [weak self] in self?.pager.goBack() }
+        body.onBack = { [weak self] in Self.stepBack("body"); self?.pager.goBack() }
 
         let health = OnboardingHealthViewController()
         health.onContinue = { [weak self] in
+            Self.stepDone("health", "connect")
             await self?.viewModel.requestHealthAuthorization()
             await MainActor.run { self?.pager.goForward() }
         }
-        health.onMaybeLater = { [weak self] in self?.pager.goForward() }
-        health.onBack = { [weak self] in self?.pager.goBack() }
+        health.onMaybeLater = { [weak self] in
+            Self.stepDone("health", "later")
+            self?.pager.goForward()
+        }
+        health.onBack = { [weak self] in Self.stepBack("health"); self?.pager.goBack() }
 
         let activity = OnboardingOptionsViewController.activity()
         activity.onContinue = { [weak self] index in
             guard let self, Self.activities.indices.contains(index) else { return }
             self.viewModel.setActivity(Self.activities[index])
+            Self.stepDone("activity", Self.activities[index].rawValue)
             if let display = self.viewModel.makePlanDisplay() {
                 self.planScreen.apply(display)
             }
             self.presentCalculatingThenPlan()
         }
-        activity.onBack = { [weak self] in self?.pager.goBack() }
+        activity.onBack = { [weak self] in Self.stepBack("activity"); self?.pager.goBack() }
 
-        planScreen.onContinue = { [weak self] in self?.presentPaywallThenFinish() }
-        planScreen.onBack = { [weak self] in self?.pager.goBack() }
+        planScreen.onContinue = { [weak self] in
+            Self.stepDone("plan")
+            self?.presentPaywallThenFinish()
+        }
+        planScreen.onBack = { [weak self] in Self.stepBack("plan"); self?.pager.goBack() }
         planScreen.onLearnMore = { [weak self] in self?.openLearnMore() }
 
         pager.setPages([welcome, goal, sex, age, body, health, activity, planScreen])
         return pager
+    }
+
+    private static func stepDone(_ step: String, _ value: String? = nil) {
+        Analytics.tracker.track(.onboardingStepCompleted(step: step, value: value))
+    }
+
+    private static func stepBack(_ step: String) {
+        Analytics.tracker.track(.onboardingStepBack(step: step))
     }
 
     private func presentCalculatingThenPlan() {

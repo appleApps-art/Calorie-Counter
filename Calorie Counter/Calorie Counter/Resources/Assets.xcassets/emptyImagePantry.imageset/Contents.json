@@ -3,6 +3,16 @@
     {
       "filename" : "emptyImagePantry.svg",
       "idiom" : "universal"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "emptyImagePantryDark.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {

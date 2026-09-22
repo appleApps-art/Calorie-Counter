@@ -149,7 +149,20 @@
                                             <color key="textColor" name="BityTextSecondary"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <stackView opaque="NO" contentMode="scaleToFill" axis="horizontal" alignment="center" spacing="6" translatesAutoresizingMaskIntoConstraints="NO" id="chips"/>
+                                        <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="chipsScroll">
+                                            <subviews>
+                                                <stackView opaque="NO" contentMode="scaleToFill" axis="horizontal" alignment="center" spacing="6" translatesAutoresizingMaskIntoConstraints="NO" id="chips"/>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="chips" firstAttribute="top" secondItem="csc-content" secondAttribute="top" id="csc-t"/>
+                                                <constraint firstItem="chips" firstAttribute="leading" secondItem="csc-content" secondAttribute="leading" id="csc-l"/>
+                                                <constraint firstItem="csc-content" firstAttribute="trailing" secondItem="chips" secondAttribute="trailing" id="csc-r"/>
+                                                <constraint firstItem="csc-content" firstAttribute="bottom" secondItem="chips" secondAttribute="bottom" id="csc-b"/>
+                                                <constraint firstItem="chips" firstAttribute="height" secondItem="csc-frame" secondAttribute="height" id="csc-h"/>
+                                            </constraints>
+                                            <viewLayoutGuide key="contentLayoutGuide" id="csc-content"/>
+                                            <viewLayoutGuide key="frameLayoutGuide" id="csc-frame"/>
+                                        </scrollView>
                                     </subviews>
                                     <color key="backgroundColor" name="BityCard"/>
                                     <constraints>
@@ -197,7 +210,7 @@
                                         </constraint>
                                         <constraint firstItem="sub" firstAttribute="leading" secondItem="name" secondAttribute="leading" id="sl2"/>
                                         <constraint firstItem="sub" firstAttribute="trailing" secondItem="name" secondAttribute="trailing" id="sr2"/>
-                                        <constraint firstItem="chips" firstAttribute="top" secondItem="sub" secondAttribute="bottom" constant="12" id="cht" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                        <constraint firstItem="chipsScroll" firstAttribute="top" secondItem="sub" secondAttribute="bottom" constant="12" id="cht" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                     <real key="value" value="12"/>
@@ -205,9 +218,9 @@
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
-                                        <constraint firstItem="chips" firstAttribute="leading" secondItem="name" secondAttribute="leading" id="chl"/>
-                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="chips" secondAttribute="trailing" constant="16" id="chr"/>
-                                        <constraint firstAttribute="bottom" secondItem="chips" secondAttribute="bottom" constant="16" id="chb" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                        <constraint firstItem="chipsScroll" firstAttribute="leading" secondItem="hcard" secondAttribute="leading" id="chl"/>
+                                        <constraint firstAttribute="trailing" secondItem="chipsScroll" secondAttribute="trailing" id="chr"/>
+                                        <constraint firstAttribute="bottom" secondItem="chipsScroll" secondAttribute="bottom" constant="16" id="chb" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                                                     <real key="value" value="16"/>
@@ -530,9 +543,9 @@
                                 </stackView>
                                 <view hidden="YES" userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="load-sec">
                                     <subviews>
-                                        <view clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="load-anim" customClass="LottieAnimationView" customModule="Lottie">
+                                        <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="load-anim" style="medium">
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                        </view>
+                                        </activityIndicatorView>
                                     </subviews>
                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <constraints>
@@ -544,10 +557,8 @@
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
-                                        <constraint firstItem="load-anim" firstAttribute="top" secondItem="load-sec" secondAttribute="top" id="lat"/>
-                                        <constraint firstItem="load-anim" firstAttribute="leading" secondItem="load-sec" secondAttribute="leading" id="lal"/>
-                                        <constraint firstAttribute="trailing" secondItem="load-anim" secondAttribute="trailing" id="lar"/>
-                                        <constraint firstAttribute="bottom" secondItem="load-anim" secondAttribute="bottom" id="lab"/>
+                                        <constraint firstItem="load-anim" firstAttribute="centerX" secondItem="load-sec" secondAttribute="centerX" id="lacx"/>
+                                        <constraint firstItem="load-anim" firstAttribute="centerY" secondItem="load-sec" secondAttribute="centerY" id="lacy"/>
                                     </constraints>
                                 </view>
                             </subviews>

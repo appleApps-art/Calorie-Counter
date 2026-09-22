@@ -118,10 +118,11 @@ final class ProductDetailsChromeTests: XCTestCase {
     }
 
     func testRelatedRecipeFailureCanRetry() async {
+        struct SearchFailed: Error {}
         var requests = 0
         let model = ProductDetailsViewModel(relatedRecipeLoader: { _ in
             requests += 1
-            return []
+            throw SearchFailed()
         })
         model.configure(draftWithOverflowingTags())
         for _ in 0..<20 where model.relatedRecipeLoading.value { await Task.yield() }

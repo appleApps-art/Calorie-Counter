@@ -34,26 +34,12 @@ final class RecipeFiltersViewModel {
         "recipes.filters.medium",
         "recipes.filters.hard"
     ]
-    let suggestionKeys = [
-        "recipes.filters.suggest.eggs",
-        "recipes.filters.suggest.wheat",
-        "recipes.filters.suggest.sesame",
-        "recipes.filters.suggest.mustard"
-    ]
 
     let filters = Observable(RecipeSearchFilters.empty)
     let excludedQuery = Observable("")
     let isRecording = Observable(false)
     let canConfirmExcluded = Observable(false)
 
-    var suggestionTitles: [String] {
-        let excluded = filters.value.excludedIngredients
-        return suggestionKeys
-            .map { L10n.tr($0) }
-            .filter { name in
-                !excluded.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
-            }
-    }
     var onClose: (() -> Void)?
     var onApply: ((RecipeSearchFilters) -> Void)?
 
@@ -123,8 +109,9 @@ final class RecipeFiltersViewModel {
 
     func updateExcludedQuery(_ text: String) {
         excludedQuery.value = text
-        if canConfirmExcluded.value, text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            canConfirmExcluded.value = false
+        let canConfirm = text.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+        if canConfirmExcluded.value != canConfirm {
+            canConfirmExcluded.value = canConfirm
         }
     }
 

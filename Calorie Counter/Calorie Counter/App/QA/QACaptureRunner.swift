@@ -109,7 +109,7 @@ enum QACaptureRunner {
         .aiIntro, .aiChat, .aiMealSuggestion, .aiFoodSwap, .aiMealLogged, .aiHistory,
         .foodSearch, .foodSearchResults, .productDetails, .addFoodEntry, .foodRecipe, .editMeal,
         .textFood, .voiceFood, .voiceFoodResult, .photoFood, .photoFoodResult, .barcodeScanner,
-        .logWeight, .logWorkout, .rewards, .rewardDetail,
+        .logWeight, .logWorkout, .rewards, .rewardDetail, .rewardCelebration,
         .onboardingWelcome, .onboardingGoal, .onboardingSex, .onboardingActivity,
         .onboardingAge, .onboardingBody, .onboardingHealth, .onboardingPlan, .appRating
     ]

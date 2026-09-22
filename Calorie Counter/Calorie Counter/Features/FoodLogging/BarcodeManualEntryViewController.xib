@@ -175,7 +175,7 @@
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="bm-card" firstAttribute="top" secondItem="bm-close" secondAttribute="bottom" constant="8" id="bm-cardt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="bm-card" firstAttribute="top" relation="greaterThanOrEqual" secondItem="bm-close" secondAttribute="bottom" constant="8" id="bm-cardt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                             <real key="value" value="8"/>

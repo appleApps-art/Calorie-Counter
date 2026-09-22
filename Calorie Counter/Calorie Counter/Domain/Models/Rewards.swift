@@ -66,6 +66,8 @@ enum RewardLevel: String, Equatable, CaseIterable {
 enum RewardProgressUnit: Equatable {
     case days
     case weeks
+    /// A running total, not a streak: food swaps the user has accepted.
+    case swaps
 }
 
 enum RewardBadge: String, CaseIterable, Equatable {
@@ -109,7 +111,9 @@ enum RewardBadge: String, CaseIterable, Equatable {
 
     var unit: RewardProgressUnit {
         switch self {
-        case .consistentWeigher: return .weeks
+        // Weigh-ins and progress photos are weekly habits; a daily streak would be the wrong ask.
+        case .consistentWeigher, .visualJourney: return .weeks
+        case .smartChoice: return .swaps
         default: return .days
         }
     }
@@ -125,7 +129,7 @@ enum RewardBadge: String, CaseIterable, Equatable {
         case .proteinMaster: return 3
         case .earlyBirdLogger: return 5
         case .smartChoice: return 7
-        case .visualJourney: return 7
+        case .visualJourney: return 4
         case .noLateSnacks: return 3
         case .nutrientExplorer: return 7
         }
@@ -210,7 +214,8 @@ struct BadgeProgress: Equatable {
     let goal: Int
 
     var isComplete: Bool { current >= goal }
-    var showsLockedArt: Bool { current == 0 }
+    /// The badge art only lights up once it is earned, so a badge on its way never looks won.
+    var showsLockedArt: Bool { !isComplete }
     var fill: Double {
         guard goal > 0 else { return 0 }
         return min(1, Double(current) / Double(goal))
@@ -230,6 +235,8 @@ struct BadgeProgress: Equatable {
             return L10n.format("rewards.weeksActivePill", value)
         case .days:
             return L10n.format("rewards.dayStreakPill", value)
+        case .swaps:
+            return L10n.format("rewards.swapsPill", value)
         }
     }
 
@@ -240,14 +247,17 @@ struct BadgeProgress: Equatable {
             return L10n.format("rewards.weeksStreakBadge", value)
         case .days:
             return L10n.format("rewards.dayStreakBadge", value)
+        case .swaps:
+            return L10n.format("rewards.swapsBadge", value)
         }
     }
 
     var tickLabels: [String] {
         (1...goal).map { index in
             switch badge.unit {
-            case .weeks: return "W\(index)"
-            case .days: return "D\(index)"
+            case .weeks: return L10n.format("rewards.tick.week", index)
+            case .days: return L10n.format("rewards.tick.day", index)
+            case .swaps: return "\(index)"
             }
         }
     }
@@ -261,6 +271,7 @@ struct BadgeProgress: Equatable {
         switch badge.unit {
         case .weeks: return L10n.format("rewards.weeks", value)
         case .days: return L10n.format("rewards.days", value)
+        case .swaps: return L10n.format("rewards.swaps", value)
         }
     }
 
@@ -268,6 +279,7 @@ struct BadgeProgress: Equatable {
         switch badge.unit {
         case .weeks: return L10n.format("rewards.weeksProgress", current, goal)
         case .days: return L10n.format("rewards.daysProgress", current, goal)
+        case .swaps: return L10n.format("rewards.swapsProgress", current, goal)
         }
     }
 }

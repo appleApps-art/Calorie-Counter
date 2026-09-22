@@ -239,17 +239,38 @@ final class MainTabBarController: UITabBarController {
         }
     }
 
-    private func handle(_ action: HomeQuickLogAction, date: Date) {
+    private func handle(_ action: HomeQuickLogAction, mealType: MealType = .snacks, date: Date) {
         selectedIndex = Tab.home.rawValue
         switch action {
         case .scanBarcode:
-            foodLoggingCoordinator?.openBarcodeScanner(mealType: .snacks, date: date)
+            foodLoggingCoordinator?.openBarcodeScanner(mealType: mealType, date: date)
         case .search:
-            foodLoggingCoordinator?.openFoodSearch(mealType: .snacks, date: date)
+            foodLoggingCoordinator?.openFoodSearch(mealType: mealType, date: date)
         case .scanFood:
-            foodLoggingCoordinator?.openAIPhoto(mealType: .snacks, date: date)
+            foodLoggingCoordinator?.openAIPhoto(mealType: mealType, date: date)
         case .voiceLog:
-            foodLoggingCoordinator?.openVoiceLog(mealType: .snacks, date: date)
+            foodLoggingCoordinator?.openVoiceLog(mealType: mealType, date: date)
+        }
+    }
+
+    /// A tapped reminder lands where it asked the user to go: a meal reminder opens the ways to
+    /// log that very meal, the weight one opens the weight entry.
+    func openReminder(_ kind: ReminderKind) {
+        presentedViewController?.dismiss(animated: false)
+        viewControllers?.forEach { ($0 as? UINavigationController)?.popToRootViewController(animated: false) }
+        switch kind {
+        case .breakfast, .lunch, .dinner:
+            let mealType: MealType = kind == .breakfast ? .breakfast : (kind == .lunch ? .lunch : .dinner)
+            selectedIndex = Tab.home.rawValue
+            let sheet = QuickLogSheetViewController { [weak self] action in
+                self?.handle(action, mealType: mealType, date: Date())
+            }
+            present(sheet, animated: true)
+        case .weight:
+            selectedIndex = Tab.progress.rawValue
+            progressCoordinator?.openLogSheet()
+        case .water, .dailyStreak, .comeback:
+            selectedIndex = Tab.home.rawValue
         }
     }
 
@@ -302,8 +323,8 @@ extension MainTabBarController {
              .recipesSearch, .recipesSearchEmpty, .recipesFilters, .recipesSection,
              .recipesCreate, .recipesCreateRecipe, .recipesCreateCustom, .recipesCreateMealPlan,
              .pantry, .pantrySelect, .pantrySelected, .pantryDelete, .pantryAdd,
-             .fridgeResult, .pantryEdit, .recipeDetail, .recipeDetailIngredients,
-             .recipeDetailInstructions, .mealPlanPreview:
+             .fridgeResult, .pantryEdit, .pantryProduct, .recipeDetail, .recipeDetailIngredients,
+             .recipeDetailInstructions, .mealPlanPreview, .mealPlanSwap, .mealPlanSwapLoading:
             selectedIndex = Tab.recipes.rawValue
             recipesCoordinator?.qaPerform(route)
         case .progress, .progressLog, .progressPhotos:
@@ -329,12 +350,12 @@ extension MainTabBarController {
                     self?.progressCoordinator?.openChangeDate(date: Date(), maximumDate: Date(), onSelect: { _ in })
                 }
             }
-        case .rewards, .rewardDetail:
+        case .rewards, .rewardDetail, .rewardCelebration:
             selectedIndex = Tab.rewards.rawValue
-            if route == .rewardDetail {
+            if route != .rewards {
                 let detail = RewardDetailViewController(
                     progress: BadgeProgress(badge: .mealTrackerMaster, current: 7, goal: 7),
-                    playsCelebration: false
+                    playsCelebration: route == .rewardCelebration
                 )
                 detail.modalPresentationStyle = .overFullScreen
                 selectedViewController?.present(detail, animated: false)
@@ -536,10 +557,17 @@ extension MainTabBarController {
         case .appRating: controller = AppRatingViewController()
         default:
             let plan = OnboardingPlanViewController()
-            plan.apply(OnboardingPlanDisplay(
-                energyValue: "2 150", goalDateText: "15 грудня 2026", proteinValue: "135 г", fatsValue: "72 г",
-                carbsValue: "245 г", waterValue: "2 500 мл", fiberValue: "30 г", sugarValue: "50 г", sodiumValue: "2 300 мг"
-            ))
+            // Fed by the real calculator, so QA sees the numbers and units a user would.
+            var profile = UserProfile.empty
+            profile.sex = .male
+            profile.age = 30
+            profile.heightCm = 180
+            profile.weightKg = 80
+            profile.activityLevel = .moderate
+            profile.goalType = .lose
+            if let calculated = CalculateNutritionPlanUseCase().execute(profile: profile) {
+                plan.apply(OnboardingFlowViewModel.display(for: calculated))
+            }
             controller = plan
         }
         controller.modalPresentationStyle = .fullScreen

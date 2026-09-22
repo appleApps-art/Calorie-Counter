@@ -172,6 +172,19 @@ final class FoodSearchViewModel {
         loadBrowseSections()
     }
 
+    /// Back online, every category that failed for lack of a connection loads again.
+    func retryFailedBrowse() {
+        guard !failedCategories.isEmpty else { return }
+        for category in failedCategories {
+            catalogProducts[category] = nil
+            if FoodSearchCategory.productCategories.contains(category) {
+                loadedProductCategories = false
+            }
+        }
+        failedCategories.removeAll()
+        loadBrowseSections()
+    }
+
     func clearQuery() {
         dictation.cancel()
         dictation.consumeConfirm()
@@ -190,11 +203,13 @@ final class FoodSearchViewModel {
     func askBityTapped() {
         let query = queryText.value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return }
+        Analytics.tracker.track(.foodItemOpened(source: "ask_bity", foodType: nil))
         onAskBity?(query)
     }
 
     func selectItem(id: UUID) {
         if let entry = savedEntriesByID[id] {
+            Analytics.tracker.track(.foodItemOpened(source: "recent", foodType: entry.resolvedFoodType?.rawValue))
             var draft = ProductDetailsMath.draft(from: entry)
             draft.mealType = mealType
             draft.date = date
@@ -203,6 +218,10 @@ final class FoodSearchViewModel {
             return
         }
         guard let product = productsByID[id] else { return }
+        Analytics.tracker.track(.foodItemOpened(
+            source: phase.value == .results ? "search_results" : "catalog",
+            foodType: product.resolvedFoodType?.rawValue
+        ))
         onOpenDetails?(
             ProductDetailsMath.draft(
                 from: product,

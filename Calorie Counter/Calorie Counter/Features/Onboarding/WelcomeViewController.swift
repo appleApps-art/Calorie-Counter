@@ -61,23 +61,18 @@ final class WelcomeViewController: BaseViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if !didPlayEntrance, traitCollection.userInterfaceStyle != .dark {
+        if !didPlayEntrance {
             heroImageView.startAnimatingGIF()
         }
         playEntranceAnimationIfNeeded()
     }
 
     private func configureHero() {
-        if traitCollection.userInterfaceStyle == .dark {
-            heroImageView.stopAnimatingGIF()
-            heroImageView.playsOnce = true
-            heroImageView.loadGIF(named: "WelcomeDarkHero")
-        } else {
-            heroImageView.playsOnce = true
-            heroImageView.loadGIF(named: "WelcomeBityWhiteTheme1")
-            if didPlayEntrance {
-                heroImageView.startAnimatingGIF()
-            }
+        // The scan animation is the same in both themes; dark used to sit on a still frame.
+        heroImageView.playsOnce = true
+        heroImageView.loadGIF(named: "WelcomeBityWhiteTheme1")
+        if didPlayEntrance {
+            heroImageView.startAnimatingGIF()
         }
     }
 
@@ -137,6 +132,17 @@ final class WelcomeViewController: BaseViewController {
                 row.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
             }
         }
+        // The feature rows fill the card's width: sized to their text they shrank once the labels
+        // started wrapping, and the checkmarks drifted in from the edge.
+        if let features = feature1Label.superview?.superview, let host = features.superview {
+            [
+                features.leadingAnchor.constraint(equalTo: host.leadingAnchor),
+                features.trailingAnchor.constraint(equalTo: host.trailingAnchor)
+            ].forEach {
+                $0.priority = .init(999)
+                $0.isActive = true
+            }
+        }
         view.clipsToBounds = false
         OnboardingStyle.stylePrimaryButton(getStartedButton, title: L10n.tr("onboarding.start"))
         getStartedButton.addTarget(self, action: #selector(getStartedTapped), for: .touchUpInside)
@@ -194,6 +200,7 @@ final class WelcomeViewController: BaseViewController {
 
     @objc
     private func getStartedTapped() {
+        Haptics.light()
         onGetStarted?()
     }
 }

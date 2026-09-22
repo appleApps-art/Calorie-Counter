@@ -35,7 +35,15 @@ final class SearchFoodProductsUseCase {
         for start in stride(from: 0, to: unknown.count, by: 20) {
             try Task.checkCancellation()
             let indices = Array(unknown[start..<min(start + 20, unknown.count)])
-            let classified = try await aiFoodSearchService.classifyFoods(indices.map { result[$0] })
+            let classified: [FoodProduct]
+            do {
+                classified = try await aiFoodSearchService.classifyFoods(indices.map { result[$0] })
+            } catch where error.isNoConnection {
+                // Offline an unknown food opens as a product with its nutrition; it is not remembered,
+                // so it is classified properly once the app is back online.
+                indices.forEach { result[$0].foodType = .product }
+                continue
+            }
             guard classified.count == indices.count else { throw FoodPhotoAnalysisError.invalidResponse }
             for (index, item) in zip(indices, classified) {
                 guard let type = item.resolvedFoodType, item.id == result[index].id else {
@@ -378,20 +386,30 @@ final class SearchFoodProductsUseCase {
         return queries
     }
 
+    // A photo of the wrong product is worse than no photo, so a shared word is not enough:
+    // only the same name or one that contains it may lend its picture.
+    static let groceryMatchMinScore = 45
+
     private static func bestGroceryMatch(query: String, in products: [FoodProduct]) -> FoodProduct? {
         let grocery = products.filter { $0.kind != .recipe }
         guard !grocery.isEmpty else { return nil }
         var best: (FoodProduct, Int)?
         for product in grocery {
             let score = groceryMatchScore(query: query, productName: product.name, hasPhoto: product.hasPhoto)
-            guard score >= 20 else { continue }
+            guard score >= groceryMatchMinScore else { continue }
             if let current = best, current.1 >= score { continue }
             best = (product, score)
         }
-        if let best {
-            return best.0
-        }
-        return grocery.first(where: \.hasPhoto) ?? grocery.first
+        if let best { return best.0 }
+        // Names in different scripts cannot be compared word by word, so the catalog's own
+        // relevance order is the only signal left. Within one script a shared word is not enough.
+        guard let candidate = grocery.first(where: \.hasPhoto),
+              isCyrillic(query) != isCyrillic(candidate.name) else { return nil }
+        return candidate
+    }
+
+    private static func isCyrillic(_ text: String) -> Bool {
+        text.unicodeScalars.contains { $0.value >= 0x0400 && $0.value <= 0x04FF }
     }
 
     private static func groceryMatchScore(query: String, productName: String, hasPhoto: Bool) -> Int {
@@ -401,15 +419,17 @@ final class SearchFoodProductsUseCase {
         let queryKey = PantryItem.matchKey(query)
         let productKey = PantryItem.matchKey(productName)
         guard !queryKey.isEmpty, !productKey.isEmpty else { return 0 }
+        let queryTokens = Set(queryKey.split(separator: " ").map(String.init).filter { $0.count >= 3 })
+        let productTokens = Set(productKey.split(separator: " ").map(String.init).filter { $0.count >= 3 })
         var score = 0
-        if productKey.contains(queryKey) || queryKey.contains(productKey) {
+        if !queryTokens.isEmpty, queryTokens.isSubset(of: productTokens) {
+            // "Сік яблучний" pictures "яблучний сік" whatever the word order.
+            score = 60
+        } else if productKey.contains(queryKey) {
             score = 50
-        } else {
-            let queryTokens = Set(queryKey.split(separator: " ").map(String.init).filter { $0.count >= 3 })
-            let productTokens = Set(productKey.split(separator: " ").map(String.init).filter { $0.count >= 3 })
-            if !queryTokens.isEmpty, !queryTokens.isDisjoint(with: productTokens) {
-                score = 30
-            }
+        } else if queryKey.contains(productKey) {
+            // A generic product only stands in when nothing more specific matched.
+            score = 45
         }
         guard score > 0 else { return 0 }
         return score + (hasPhoto ? 10 : 0)

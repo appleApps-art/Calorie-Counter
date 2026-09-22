@@ -9,24 +9,21 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CustomLoadingOverlayView" customModule="Calorie_Counter" customModuleProvider="target">
             <connections>
-                <outlet property="animationView" destination="gif" id="o-gif"/>
+                <outlet property="activityIndicator" destination="spinner" id="o-spinner"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <view contentMode="scaleToFill" id="root">
             <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
             <subviews>
-                <view clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" translatesAutoresizingMaskIntoConstraints="NO" id="gif" customClass="LottieAnimationView" customModule="Lottie">
-                    <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="spinner" style="medium">
                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                </view>
+                </activityIndicatorView>
             </subviews>
             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <constraints>
-                <constraint firstItem="gif" firstAttribute="top" secondItem="root" secondAttribute="top" id="g-t"/>
-                <constraint firstItem="gif" firstAttribute="leading" secondItem="root" secondAttribute="leading" id="g-l"/>
-                <constraint firstAttribute="trailing" secondItem="gif" secondAttribute="trailing" id="g-r"/>
-                <constraint firstAttribute="bottom" secondItem="gif" secondAttribute="bottom" id="g-b"/>
+                <constraint firstItem="spinner" firstAttribute="centerX" secondItem="root" secondAttribute="centerX" id="s-cx"/>
+                <constraint firstItem="spinner" firstAttribute="centerY" secondItem="root" secondAttribute="centerY" id="s-cy"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
         </view>

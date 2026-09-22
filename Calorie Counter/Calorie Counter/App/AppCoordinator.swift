@@ -71,6 +71,9 @@ final class AppCoordinator {
         appRatingPrompt.attach(host: tabBarController)
         Analytics.hub.appRatingPrompt = appRatingPrompt
         setRoot(tabBarController)
+        NotificationAnalyticsDelegate.shared.onOpenReminder = { [weak tabBarController] kind in
+            tabBarController?.openReminder(kind)
+        }
         DispatchQueue.main.async { [weak self] in
             self?.presentPendingBadgeUnlocks()
         }

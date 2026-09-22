@@ -13,6 +13,10 @@ struct AIAssistantUserContext: Codable, Equatable {
     var preferences: Preferences?
     var profile: Profile?
     var recipe: RecipeContext?
+    /// The plan the user is editing right now, with every day and dish.
+    var mealPlan: MealPlanContext?
+    /// Every plan the user keeps, so Bity can talk about them from any screen.
+    var mealPlans: [MealPlanContext]?
     var mealEditing: MealEditingContext?
 
     struct MealEditingContext: Codable, Equatable {
@@ -66,6 +70,39 @@ struct AIAssistantUserContext: Codable, Equatable {
         var age: Int?
         var heightCm: Double?
         var weightKg: Double?
+    }
+
+    struct MealPlanContext: Codable, Equatable {
+        var id: String?
+        var title: String
+        var dayCount: Int?
+        var mealCount: Int?
+        var createdAt: String?
+        /// Filled for the plan under discussion; the other plans carry their headline only.
+        var days: [Day]?
+
+        struct Day: Codable, Equatable {
+            var number: Int
+            var meals: [Meal]
+            /// What the day adds up to, so Bity weighs the plan against the goals on real numbers.
+            var totals: Totals?
+
+            struct Meal: Codable, Equatable {
+                var mealType: String
+                var title: String
+                var calories: Double?
+                var protein: Double?
+                var carbs: Double?
+                var fats: Double?
+            }
+
+            struct Totals: Codable, Equatable {
+                var calories: Double
+                var protein: Double
+                var carbs: Double
+                var fats: Double
+            }
+        }
     }
 
     struct RecipeContext: Codable, Equatable {
@@ -166,15 +203,15 @@ enum AIAssistantServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid AI assistant URL"
+            return L10n.tr("common.errorGeneric")
         case .invalidResponse:
-            return "Invalid AI assistant response"
+            return L10n.tr("common.errorGeneric")
         case .emptyResponse:
             return L10n.tr("ai.error.emptyResponse")
         case .server(let message):
             return message
         case .decodingFailed:
-            return "Failed to decode AI assistant response"
+            return L10n.tr("common.errorGeneric")
         case .transport(let underlying):
             return underlying.localizedDescription
         }

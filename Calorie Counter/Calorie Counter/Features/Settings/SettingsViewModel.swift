@@ -134,6 +134,7 @@ final class SettingsViewModel {
         next.goalType = goal
         do {
             _ = try updateProfileAndGoalsUseCase.execute(next, applyNutritionGoal: true)
+            Self.trackSetting("nutrition_goal", goal.rawValue, userProperty: "goal")
             reload()
         } catch {
             nutritionGoalError.value = error.localizedDescription
@@ -143,6 +144,8 @@ final class SettingsViewModel {
     func saveWeightGoal(_ kilograms: Double) {
         var next = profile.value
         next.targetWeightKg = kilograms
+        // The target itself is health data; only that the user set one is sent.
+        Self.trackSetting("weight_goal", "set")
         saveProfile(next)
     }
 
@@ -154,6 +157,7 @@ final class SettingsViewModel {
         var next = settings.value
         next.appearanceMode = mode
         updateAppSettingsUseCase.execute(next)
+        Self.trackSetting("theme", mode.rawValue, userProperty: "theme")
         reload()
     }
 
@@ -161,10 +165,12 @@ final class SettingsViewModel {
         var next = settings.value
         next.usesMetric = isMetric
         updateAppSettingsUseCase.execute(next)
+        Self.trackSetting("units", isMetric ? "metric" : "imperial", userProperty: "units")
         reload()
     }
 
     func disconnectHealth() {
+        Self.trackSetting("health", "disconnected")
         healthAuthorization.value = .disconnected
         var next = settings.value
         next.healthSyncEnabled = false
@@ -186,6 +192,7 @@ final class SettingsViewModel {
     func saveGoals(_ next: UserGoals) {
         do {
             try saveUserGoalsUseCase.execute(next)
+            Self.trackSetting("daily_goals", "custom")
             reload()
         } catch {
             statusText.value = error.localizedDescription
@@ -204,6 +211,7 @@ final class SettingsViewModel {
     func saveAvatar(imageData: Data) {
         do {
             let stored = try saveUserAvatarUseCase.execute(imageData: imageData)
+            Self.trackSetting("avatar", "set")
             profile.value = stored
             avatarURL.value = stored.avatarURL
             statusText.value = L10n.tr("settings.photoSaved")
@@ -215,6 +223,7 @@ final class SettingsViewModel {
     func removeAvatar() {
         do {
             let stored = try deleteUserAvatarUseCase.execute()
+            Self.trackSetting("avatar", "removed")
             profile.value = stored
             avatarURL.value = stored.avatarURL
             statusText.value = L10n.tr("settings.photoRemoved")
@@ -289,6 +298,7 @@ final class SettingsViewModel {
         Task { @MainActor in
             do {
                 subscription.value = try await refreshSubscriptionStatusUseCase.restore()
+                Self.trackSetting("restore_purchases", subscription.value.isPremium ? "premium" : "nothing_found")
                 publishSubscription()
                 statusText.value = subscription.value.isPremium
                     ? L10n.tr("settings.purchasesRestored")
@@ -302,6 +312,7 @@ final class SettingsViewModel {
     func addPreference(kind: UserPreferenceKind, value: String, note: String? = nil) {
         do {
             _ = try saveUserPreferenceUseCase.execute(kind: kind, value: value, note: note)
+            Self.trackSetting("preference_added", kind.rawValue)
             reload()
         } catch {
             statusText.value = error.localizedDescription
@@ -311,6 +322,7 @@ final class SettingsViewModel {
     func deletePreference(id: UUID) {
         do {
             try deleteUserPreferenceUseCase.execute(id: id)
+            Self.trackSetting("preference_removed", "")
             reload()
         } catch {
             statusText.value = error.localizedDescription
@@ -318,8 +330,16 @@ final class SettingsViewModel {
     }
 
     func updateReminder(_ preference: ReminderPreference) {
+        Self.trackSetting("reminder_\(preference.kind.rawValue)", preference.isEnabled ? "on" : "off")
         updateReminderPreferencesUseCase.updatePreference(preference)
         reminderConfiguration.value = updateReminderPreferencesUseCase.current()
+    }
+
+    private static func trackSetting(_ name: String, _ value: String, userProperty: String? = nil) {
+        Analytics.tracker.track(.settingChanged(name: name, value: value))
+        if let userProperty {
+            Analytics.tracker.setUserProperties([userProperty: value])
+        }
     }
 
     private func publishSettings() {

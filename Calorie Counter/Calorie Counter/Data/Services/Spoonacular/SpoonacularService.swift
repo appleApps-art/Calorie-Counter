@@ -10,11 +10,16 @@ struct SpoonacularRecipeSearch: Equatable {
     var type: String? = nil
     var includeIngredients: String? = nil
     var maxReadyTime: Int? = nil
+    /// Catalog ordering, e.g. "popularity". Without it a filter-only search comes back unranked.
+    var sort: String? = nil
+    /// Grams of protein per serving at least, so a plan's meals can actually feed the protein goal.
+    var minProtein: Int? = nil
 }
 
 nonisolated protocol SpoonacularServiceProtocol {
     func searchRecipes(query: String, maxCalories: Int?, number: Int) async throws -> [Recipe]
     func searchRecipes(_ search: SpoonacularRecipeSearch) async throws -> [Recipe]
+    func pantryRecipeMatches(ingredients: [String], number: Int) async throws -> [PantryRecipeMatch]
     func recipeDetails(id: String) async throws -> Recipe
     func searchIngredients(query: String, number: Int) async throws -> [FoodProduct]
     func ingredientDetails(id: String, amount: Double, unit: String) async throws -> FoodProduct
@@ -24,6 +29,8 @@ nonisolated protocol SpoonacularServiceProtocol {
 }
 
 extension SpoonacularServiceProtocol {
+    func pantryRecipeMatches(ingredients: [String], number: Int) async throws -> [PantryRecipeMatch] { [] }
+
     func searchRecipes(_ search: SpoonacularRecipeSearch) async throws -> [Recipe] {
         try await searchRecipes(query: search.query, maxCalories: search.maxCalories, number: search.number)
     }
@@ -83,11 +90,35 @@ nonisolated final class SpoonacularService: SpoonacularServiceProtocol, @uncheck
         if let maxReadyTime = search.maxReadyTime {
             items.append(.init(name: "maxReadyTime", value: String(maxReadyTime)))
         }
+        if let sort = search.sort, !sort.isEmpty {
+            items.append(.init(name: "sort", value: sort))
+        }
+        if let minProtein = search.minProtein {
+            items.append(.init(name: "minProtein", value: String(minProtein)))
+        }
         let response: SpoonacularRecipeSearchResponse = try await get(
             path: "/v1/spoonacular/recipes/search",
             queryItems: items
         )
         return (response.results ?? []).map(SpoonacularMapper.mapSearchItem)
+    }
+
+    func pantryRecipeMatches(ingredients: [String], number: Int) async throws -> [PantryRecipeMatch] {
+        let names = ingredients
+            .map { $0.replacingOccurrences(of: ",", with: " ").trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !names.isEmpty else { return [] }
+        let response: SpoonacularPantryMatchResponse = try await get(
+            path: "/v1/spoonacular/pantry/search",
+            queryItems: [
+                .init(name: "ingredients", value: names.joined(separator: ",")),
+                .init(name: "number", value: String(number)),
+                .init(name: "locale", value: Locale.deviceIdentifier),
+            ]
+        )
+        return (response.results ?? []).map {
+            PantryRecipeMatch(id: String($0.id), missedIngredientCount: $0.missedIngredientCount ?? .max)
+        }
     }
 
     func recipeDetails(id: String) async throws -> Recipe {
@@ -182,20 +213,29 @@ nonisolated final class SpoonacularService: SpoonacularServiceProtocol, @uncheck
         queryItems: [URLQueryItem],
         timeoutInterval: TimeInterval = 30
     ) async throws -> T {
+        let request = try makeRequest(path: path, queryItems: queryItems, timeoutInterval: timeoutInterval)
+        let data = try await OfflineFallback.data(for: request) {
+            try await self.dataWithRetries(for: request)
+        }
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            throw SpoonacularServiceError.decodingFailed
+        }
+    }
+
+    private func dataWithRetries(for request: URLRequest) async throws -> Data {
         var delayNs: UInt64 = 250_000_000
         var lastError: Error = SpoonacularServiceError.invalidResponse
         for attempt in 0..<maxAttempts {
             do {
                 return try await scheduler.run {
-                    try await self.performGet(
-                        path: path,
-                        queryItems: queryItems,
-                        timeoutInterval: timeoutInterval
-                    )
+                    try await self.performGet(request)
                 }
             } catch let error as SpoonacularServiceError where error.isRetryable {
                 lastError = error
-                guard attempt < maxAttempts - 1 else { break }
+                // Retrying only helps a busy server, not a phone that lost its connection.
+                guard attempt < maxAttempts - 1, NetworkMonitor.shared.isOnline else { break }
                 let retryNs = retryNanoseconds(error.retryAfter, fallback: delayNs)
                 try await Task.sleep(nanoseconds: retryNs)
                 delayNs = min(delayNs * 2, 4_000_000_000)
@@ -208,11 +248,11 @@ nonisolated final class SpoonacularService: SpoonacularServiceProtocol, @uncheck
         throw lastError
     }
 
-    private func performGet<T: Decodable>(
+    private func makeRequest(
         path: String,
         queryItems: [URLQueryItem],
         timeoutInterval: TimeInterval
-    ) async throws -> T {
+    ) throws -> URLRequest {
         guard var components = URLComponents(url: configuration.baseURL, resolvingAgainstBaseURL: false) else {
             throw SpoonacularServiceError.invalidURL
         }
@@ -231,7 +271,10 @@ nonisolated final class SpoonacularService: SpoonacularServiceProtocol, @uncheck
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         }
+        return request
+    }
 
+    private func performGet(_ request: URLRequest) async throws -> Data {
         let data: Data
         let response: URLResponse
         do {
@@ -258,12 +301,7 @@ nonisolated final class SpoonacularService: SpoonacularServiceProtocol, @uncheck
                 retryAfter: retryAfterInterval(from: http)
             )
         }
-
-        do {
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            throw SpoonacularServiceError.decodingFailed
-        }
+        return data
     }
 
     private func isNotFound(_ error: SpoonacularServiceError) -> Bool {

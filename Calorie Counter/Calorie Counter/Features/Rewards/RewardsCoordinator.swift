@@ -19,6 +19,7 @@ final class RewardsCoordinator {
     }
 
     private func showDetail(_ progress: BadgeProgress) {
+        Analytics.tracker.track(.badgeOpened(badge: progress.badge.rawValue, earned: progress.isComplete))
         let detail = RewardDetailViewController(progress: progress)
         detail.modalPresentationStyle = .overFullScreen
         detail.modalTransitionStyle = .coverVertical

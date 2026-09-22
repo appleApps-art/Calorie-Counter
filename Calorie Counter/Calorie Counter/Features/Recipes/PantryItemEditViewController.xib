@@ -281,9 +281,30 @@
                         </stackView>
                     </subviews>
                     <constraints>
-                        <constraint firstItem="stack" firstAttribute="leading" secondItem="scroll" secondAttribute="leading" id="stl"/>
-                        <constraint firstAttribute="trailing" secondItem="stack" secondAttribute="trailing" id="str"/>
-                        <constraint firstItem="stack" firstAttribute="top" secondItem="scroll" secondAttribute="top" id="stt"/>
+                        <constraint firstItem="stack" firstAttribute="leading" secondItem="scroll" secondAttribute="leading" constant="16" id="stl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstAttribute="trailing" secondItem="stack" secondAttribute="trailing" constant="16" id="str" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
+                        <constraint firstItem="stack" firstAttribute="top" secondItem="scroll" secondAttribute="top" constant="16" id="stt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="16"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
                         <constraint firstAttribute="bottom" secondItem="stack" secondAttribute="bottom" constant="24" id="stb" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                             <userDefinedRuntimeAttributes>
                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
@@ -292,7 +313,14 @@
                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                             </userDefinedRuntimeAttributes>
                         </constraint>
-                        <constraint firstItem="stack" firstAttribute="width" secondItem="scroll" secondAttribute="width" id="stw"/>
+                        <constraint firstItem="stack" firstAttribute="width" secondItem="scroll" secondAttribute="width" constant="-32" id="stw" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                    <real key="value" value="-32"/>
+                                </userDefinedRuntimeAttribute>
+                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
+                            </userDefinedRuntimeAttributes>
+                        </constraint>
                     </constraints>
                 </scrollView>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="save">
@@ -330,26 +358,26 @@
                 </constraint>
                 <constraint firstItem="title" firstAttribute="centerX" secondItem="root" secondAttribute="centerX" id="tcx"/>
                 <constraint firstItem="title" firstAttribute="centerY" secondItem="close-wrap" secondAttribute="centerY" id="tcy"/>
-                <constraint firstItem="scroll" firstAttribute="leading" secondItem="safe" secondAttribute="leading" constant="16" id="scl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="scroll" firstAttribute="leading" secondItem="safe" secondAttribute="leading" constant="0" id="scl" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="16"/>
+                            <real key="value" value="0"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="scroll" firstAttribute="trailing" secondItem="safe" secondAttribute="trailing" constant="-16" id="scr" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="scroll" firstAttribute="trailing" secondItem="safe" secondAttribute="trailing" constant="0" id="scr" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="-16"/>
+                            <real key="value" value="0"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="scroll" firstAttribute="top" secondItem="close-wrap" secondAttribute="bottom" constant="12" id="sct" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="scroll" firstAttribute="top" secondItem="close-wrap" secondAttribute="bottom" constant="-4" id="sct" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="12"/>
+                            <real key="value" value="-4"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>

@@ -49,6 +49,7 @@
                 <outlet property="dietLabel" destination="diet-title" id="o-dt"/>
                 <outlet property="dietStack" destination="diet-stack" id="o-ds"/>
                 <outlet property="datesCard" destination="dates-card" id="o-dc"/>
+                <outlet property="datesIconView" destination="dates-icon" id="o-dicon"/>
                 <outlet property="datesTitleLabel" destination="dates-title" id="o-dtt"/>
                 <outlet property="datesValueLabel" destination="dates-val" id="o-dv"/>
                 <outlet property="calendarContainer" destination="cal-box" id="o-cal"/>
@@ -821,18 +822,18 @@
                                     </subviews>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <constraints>
-                                        <constraint firstItem="dates-inner" firstAttribute="leading" secondItem="dates-card" secondAttribute="leading" constant="12" id="dal" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                        <constraint firstItem="dates-inner" firstAttribute="leading" secondItem="dates-card" secondAttribute="leading" constant="16" id="dal" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                                    <real key="value" value="12"/>
+                                                    <real key="value" value="16"/>
                                                 </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>
                                         </constraint>
-                                        <constraint firstAttribute="trailing" secondItem="dates-inner" secondAttribute="trailing" constant="12" id="dar" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                        <constraint firstAttribute="trailing" secondItem="dates-inner" secondAttribute="trailing" constant="16" id="dar" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                                             <userDefinedRuntimeAttributes>
                                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                                    <real key="value" value="12"/>
+                                                    <real key="value" value="16"/>
                                                 </userDefinedRuntimeAttribute>
                                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                                             </userDefinedRuntimeAttributes>

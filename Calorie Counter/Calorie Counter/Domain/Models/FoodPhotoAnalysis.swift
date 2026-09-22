@@ -22,16 +22,16 @@ struct FoodPhotoAnalysis: Equatable {
     var source: String? = "photo"
     var foodType: FoodType? = nil
 
+    /// Scored exactly like the product and recipe screens (per 100 g when the weight is known),
+    /// so the score on the result card is the one the user sees after opening the details.
     var nutritionFacts: FoodNutritionFacts {
-        NutritionFactsCalculator.facts(
-            calories: calories,
-            protein: protein,
-            carbs: carbs,
-            fats: fats,
-            fiber: fiber,
-            sugar: sugar,
-            sodium: sodium
-        )
+        ProductDetailsMath.draft(from: self, imageData: nil, mealType: mealType, date: Date()).nutritionFacts
+    }
+
+    /// The model found nothing edible: it answers with zero confidence and zero nutrition.
+    /// Water or black coffee also have no calories, but come back with a confident name.
+    var findsNoFood: Bool {
+        confidence < 0.2 && calories < 1 && protein + carbs + fats < 1
     }
 
     func toFoodEntry(date: Date = Date(), source: String = "photo") -> FoodEntry {
@@ -61,6 +61,7 @@ enum FoodPhotoAnalysisError: LocalizedError, Equatable {
     case emptyText
     case compressionFailed
     case invalidResponse
+    case noFood
     case analysisFailed(message: String)
     case transport(message: String)
 
@@ -74,6 +75,8 @@ enum FoodPhotoAnalysisError: LocalizedError, Equatable {
             return L10n.tr("photo.error.compression")
         case .invalidResponse:
             return L10n.tr("photo.error.invalidResponse")
+        case .noFood:
+            return L10n.tr("photo.error.noFood")
         case .analysisFailed(let message):
             return message
         case .transport(let message):

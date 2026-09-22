@@ -27,6 +27,24 @@ final class AdaptiveLayoutTests: XCTestCase {
         XCTAssertNil(scroll.layer.mask)
     }
 
+    func testContentThatFitsIsNeverFadedAndFadesOnceItOverflows() throws {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 402, height: 400))
+        let scroll = UIScrollView(frame: root.bounds)
+        root.addSubview(scroll)
+        scroll.contentSize = CGSize(width: 402, height: 380)
+        let binder = ScrollEdgeFadeBinder()
+        binder.refresh(in: root)
+        let mask = try XCTUnwrap(scroll.layer.mask as? CAGradientLayer)
+        let opaque = UIColor.black.cgColor
+        XCTAssertEqual(mask.colors as? [CGColor], [opaque, opaque, opaque, opaque],
+                       "Nothing is hidden past the edge, so the bottom cards must stay fully visible")
+
+        scroll.contentSize.height = 900
+        XCTAssertEqual((mask.colors as? [CGColor])?.first?.alpha, 0)
+        XCTAssertEqual((mask.colors as? [CGColor])?.last?.alpha, 0)
+        withExtendedLifetime(binder) {}
+    }
+
     func testListFadesExcludeTextEditorsCarouselsAndExistingMasks() {
         let root = UIView()
         let text = UITextView()

@@ -43,10 +43,12 @@ final class FoodSearchCategorySectionView: UIView {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         if section.items.isEmpty {
             let empty = EmptyScreenView()
+            // Offline a category the app does not ship with says why it is empty.
+            let offline = section.loadFailed && !NetworkMonitor.shared.isOnline
             empty.configure(
-                title: L10n.tr(section.loadFailed ? "search.catalogLoadFailed" : "search.emptyTitle"),
-                subtitle: nil,
-                actionTitle: section.loadFailed ? L10n.tr("search.retry") : nil,
+                title: L10n.tr(offline ? "offline.title" : section.loadFailed ? "search.catalogLoadFailed" : "search.emptyTitle"),
+                subtitle: offline ? L10n.tr("offline.subtitle") : nil,
+                actionTitle: section.loadFailed ? L10n.tr(offline ? "offline.retry" : "search.retry") : nil,
                 systemImage: "arrow.clockwise"
             )
             empty.setContentTopInset(24)

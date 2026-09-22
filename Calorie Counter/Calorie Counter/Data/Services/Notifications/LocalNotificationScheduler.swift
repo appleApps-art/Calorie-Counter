@@ -18,7 +18,10 @@ final class LocalNotificationScheduler: LocalNotificationScheduling {
     }
 
     func requestAuthorization() async throws -> Bool {
-        try await center.requestAuthorization(options: [.alert, .sound, .badge])
+        let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+        Analytics.tracker.track(.notificationPermissionAnswered(granted: granted))
+        Analytics.tracker.setUserProperties(["notifications_enabled": granted])
+        return granted
     }
 
     func authorizationStatus() async -> UNAuthorizationStatus {

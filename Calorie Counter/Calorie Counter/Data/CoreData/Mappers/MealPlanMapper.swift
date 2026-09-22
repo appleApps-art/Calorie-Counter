@@ -27,6 +27,10 @@ enum MealPlanMapper {
         var hasCompleteNutrition: Bool?
         var ingredients: [IngredientDTO]
         var steps: [String]
+        // Optional, so plans saved before these were kept still decode.
+        var fiber: Double?
+        var sugar: Double?
+        var sodium: Double?
     }
 
     private struct IngredientDTO: Codable {
@@ -113,7 +117,10 @@ enum MealPlanMapper {
             weightGrams: dto.weightGrams,
             volumeMilliliters: dto.volumeMilliliters,
             foodType: dto.foodType,
-            hasCompleteNutrition: dto.hasCompleteNutrition
+            hasCompleteNutrition: dto.hasCompleteNutrition,
+            fiber: dto.fiber,
+            sugar: dto.sugar,
+            sodium: dto.sodium
         )
     }
 
@@ -145,7 +152,10 @@ enum MealPlanMapper {
                     originalText: $0.originalText
                 )
             },
-            steps: recipe.steps
+            steps: recipe.steps,
+            fiber: recipe.fiber,
+            sugar: recipe.sugar,
+            sodium: recipe.sodium
         )
     }
 }

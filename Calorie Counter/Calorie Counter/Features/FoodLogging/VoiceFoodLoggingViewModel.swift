@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 enum VoiceLogPhase: Equatable {
     case idle
@@ -17,6 +17,10 @@ final class VoiceFoodLoggingViewModel {
     let canAnalyze = Observable(false)
     let analysis = Observable<FoodPhotoAnalysis?>(nil)
     let showsFullDetails = Observable(false)
+    /// A picture of the recognized dish; a spoken meal has no photo of its own. It is the same
+    /// picture the details screen shows for it.
+    let resultImage = Observable<UIImage?>(nil)
+    let isResultImageLoading = Observable(false)
 
     var onClose: (() -> Void)?
     var onViewDetails: ((ProductDetailsDraft) -> Void)?
@@ -34,23 +38,34 @@ final class VoiceFoodLoggingViewModel {
     private var hasHeardVoice = false
     private let silenceTimeout: TimeInterval = 1.2
     private let voicePowerThreshold: CGFloat = 0.16
+    private let imageLoader: RemoteImageLoader
+    private let foodImageURL: (String) -> URL?
+    private var imageTask: Task<Void, Never>?
 
     init(
         recorder: VoiceFoodAudioRecording,
         transcribeFoodVoiceUseCase: TranscribeFoodVoiceUseCase,
         analyzeTextFoodUseCase: AnalyzeTextFoodUseCase,
         mealType: MealType = .snacks,
-        date: Date = Date()
+        date: Date = Date(),
+        imageLoader: RemoteImageLoader = .shared,
+        foodImageURL: @escaping (String) -> URL? = { AIAssistantAPIConfiguration.production.foodImageURL(name: $0) }
     ) {
         self.recorder = recorder
         self.transcribeFoodVoiceUseCase = transcribeFoodVoiceUseCase
         self.analyzeTextFoodUseCase = analyzeTextFoodUseCase
         selectedMealType = mealType
         diaryDate = date
+        self.imageLoader = imageLoader
+        self.foodImageURL = foodImageURL
+        analysis.bind { [weak self] result in
+            self?.loadResultImage(for: result)
+        }
     }
 
     deinit {
         silenceTimer?.invalidate()
+        imageTask?.cancel()
     }
 
     var productSubtitleText: String {
@@ -79,7 +94,8 @@ final class VoiceFoodLoggingViewModel {
 
     var caloriesValueText: String {
         guard let result = analysis.value else { return "" }
-        return L10n.format("photo.result.kcalValue", Int(result.calories.rounded()))
+        // The tile is titled Calories, so the number stands alone and never truncates to "420кк…".
+        return String(Int(result.calories.rounded()))
     }
 
     var proteinValueText: String {
@@ -212,6 +228,7 @@ final class VoiceFoodLoggingViewModel {
                 )
                 guard !Task.isCancelled else { return }
                 result.source = "voice"
+                Analytics.tracker.track(.recognized("voice", confidence: result.confidence))
                 analysis.value = result
                 isAnalyzing.value = false
                 refreshCanAnalyze()
@@ -223,6 +240,7 @@ final class VoiceFoodLoggingViewModel {
                 transcriptText.value = text
                 statusText.value = error.localizedDescription
                 Analytics.tracker.track(.foodLogFailed(method: "voice"))
+                Analytics.tracker.track(.recognitionFailed("voice", error: error))
             }
         }
     }
@@ -230,12 +248,33 @@ final class VoiceFoodLoggingViewModel {
     func makeDraft() -> ProductDetailsDraft? {
         guard var result = analysis.value else { return nil }
         result.source = "voice"
-        return ProductDetailsMath.draft(
+        // The dish picture shown on the result goes on with it, to the entry and into the diary.
+        var draft = ProductDetailsMath.draft(
             from: result,
-            imageData: nil,
+            imageData: resultImage.value?.jpegData(compressionQuality: 0.9),
             mealType: result.mealType,
             date: diaryDate
         )
+        if draft.imageURL == nil {
+            draft.imageURL = foodImageURL(result.name)
+        }
+        return draft
+    }
+
+    private func loadResultImage(for result: FoodPhotoAnalysis?) {
+        imageTask?.cancel()
+        resultImage.value = nil
+        guard let result, let url = foodImageURL(result.name) else {
+            isResultImageLoading.value = false
+            return
+        }
+        isResultImageLoading.value = true
+        imageTask = Task { @MainActor [weak self, imageLoader] in
+            let image = await imageLoader.fetch(url)
+            guard let self, !Task.isCancelled, self.analysis.value?.name == result.name else { return }
+            self.resultImage.value = image
+            self.isResultImageLoading.value = false
+        }
     }
 
     private func startSilenceWatch() {

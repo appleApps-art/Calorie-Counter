@@ -27,6 +27,11 @@ struct MealPlan: Equatable, Identifiable {
 
     var mealCount: Int { recipes.count }
 
+    func matchesSearch(_ query: String) -> Bool {
+        let words = query.split(whereSeparator: \.isWhitespace)
+        return words.allSatisfy { title.localizedStandardContains($0) }
+    }
+
     var dayCount: Int {
         let layouts = resolvedLayouts()
         if !layouts.isEmpty { return layouts.count }

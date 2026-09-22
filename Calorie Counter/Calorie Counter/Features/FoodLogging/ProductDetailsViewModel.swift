@@ -43,17 +43,23 @@ final class ProductDetailsViewModel {
     private var detailsTaskID = UUID()
     private let diaryProvider: ((Date) throws -> DailyDiarySummary)?
     private let relatedRecipeLoader: ((String) async throws -> [Recipe])?
+    /// A picture of the food by its name, for products that come without one of their own
+    /// (many barcode products have no photo, or one that no longer loads).
+    private let fallbackImageURL: ((String) -> URL?)?
     private var recipeTask: Task<Void, Never>?
     private var recipeTaskID = UUID()
+    private var foundNoRelatedRecipes = false
 
     init(
         searchFoodProductsUseCase: SearchFoodProductsUseCase? = nil,
         diaryProvider: ((Date) throws -> DailyDiarySummary)? = nil,
-        relatedRecipeLoader: ((String) async throws -> [Recipe])? = nil
+        relatedRecipeLoader: ((String) async throws -> [Recipe])? = nil,
+        fallbackImageURL: ((String) -> URL?)? = nil
     ) {
         self.searchFoodProductsUseCase = searchFoodProductsUseCase
         self.diaryProvider = diaryProvider
         self.relatedRecipeLoader = relatedRecipeLoader
+        self.fallbackImageURL = fallbackImageURL
     }
 
     deinit { recipeTask?.cancel() }
@@ -135,9 +141,18 @@ final class ProductDetailsViewModel {
         relatedRecipe.value = nil
         relatedRecipeUnavailable.value = false
         relatedRecipeLoading.value = true
+        foundNoRelatedRecipes = false
+        wantToCookVisible.value = true
         let remaining = (try? diaryProvider?(draft.date))?.remainingCalories
         recipeTask = Task { @MainActor [weak self] in
-            let recipes = (try? await loader(draft.name)) ?? []
+            var failed = false
+            let recipes: [Recipe]
+            do {
+                recipes = try await loader(draft.name)
+            } catch {
+                recipes = []
+                failed = true
+            }
             guard !Task.isCancelled, let self, self.recipeTaskID == token else { return }
             // Prefer a serving that fits the remaining budget; never invent nutrition or a recipe.
             let fitting = recipes.filter { recipe in
@@ -147,6 +162,12 @@ final class ProductDetailsViewModel {
             self.relatedRecipe.value = fitting.first ?? recipes.first
             self.relatedRecipeLoading.value = false
             self.relatedRecipeUnavailable.value = self.relatedRecipe.value == nil
+            // Offering a retry only makes sense when the search failed; when nothing is cooked
+            // with this product, the row goes away instead of asking to try again.
+            self.foundNoRelatedRecipes = self.relatedRecipe.value == nil && !failed
+            if self.foundNoRelatedRecipes {
+                self.wantToCookVisible.value = false
+            }
         }
     }
 
@@ -290,7 +311,7 @@ final class ProductDetailsViewModel {
         tags.value = ProductDetailsMath.displayTags(for: draft)
         ingredients.value = []
         recipeSteps.value = []
-        wantToCookVisible.value = relatedRecipeLoader != nil
+        wantToCookVisible.value = relatedRecipeLoader != nil && !foundNoRelatedRecipes
         canAddSuggestion.value = showsAddToDiary.value && draft.suggestion != nil
         if let suggestion = draft.suggestion {
             suggestionVisible.value = true
@@ -350,16 +371,21 @@ final class ProductDetailsViewModel {
             heroImage.value = nil
             return
         }
-        if let data = draft.imageData, let image = UIImage(data: data) {
+        if let data = draft.imageData, let image = StoredPhoto.image(from: data, maxPixelSize: StoredPhoto.maxDimension) {
             heroImage.value = image
             return
         }
         heroImage.value = nil
-        guard let url = draft.imageURL else { return }
+        let fallback = fallbackImageURL?(draft.name)
+        guard let url = draft.imageURL ?? fallback else { return }
         Task { @MainActor [weak self] in
-            guard let image = await RemoteImageLoader.shared.fetch(url) else { return }
-            guard self?.draft.value?.imageURL == url else { return }
-            self?.heroImage.value = image
+            var image = await RemoteImageLoader.shared.fetch(url)
+            if image == nil, let fallback, fallback != url {
+                image = await RemoteImageLoader.shared.fetch(fallback)
+            }
+            guard let self, let image, self.draft.value?.imageURL == draft.imageURL,
+                  self.draft.value?.name == draft.name else { return }
+            self.heroImage.value = image
         }
     }
 

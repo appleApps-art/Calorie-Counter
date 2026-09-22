@@ -38,6 +38,15 @@ class BaseViewController: UIViewController {
         }
     }
 
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        let leftForGood = isBeingDismissed || isMovingFromParent
+            || navigationController?.isBeingDismissed == true
+        if leftForGood, let analyticsScreen {
+            Analytics.hub.journey.leave(analyticsScreen.rawValue)
+        }
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         compensateHiddenTabBarSafeArea()
@@ -135,12 +144,17 @@ private final class ScrollEdgeFadeBinding {
         CATransaction.setDisableActions(true)
         // bounds.origin changes during scrolling; the fade must stay at the viewport edge.
         gradient.frame = scrollView.bounds
-        let horizontalOnly = scrollView.contentSize.width > scrollView.bounds.width + 1
-            && scrollView.contentSize.height <= scrollView.bounds.height + 1
-        let edge = horizontalOnly ? 0 : min(CGFloat.adaptHeight(16), scrollView.bounds.height / 2)
+        let insets = scrollView.adjustedContentInset
+        let fitsVertically = scrollView.contentSize.height + insets.top + insets.bottom
+            <= scrollView.bounds.height + 1
+        let horizontalOnly = scrollView.contentSize.width > scrollView.bounds.width + 1 && fitsVertically
+        // Content that fits has nothing hidden past the edge; fading it would only eat into visible
+        // cards (the scan result's nutrient tiles dissolved at the bottom).
+        let noFade = horizontalOnly || fitsVertically
+        let edge = noFade ? 0 : min(CGFloat.adaptHeight(16), scrollView.bounds.height / 2)
         let fraction = Double(edge / scrollView.bounds.height)
         gradient.locations = [0, NSNumber(value: fraction), NSNumber(value: 1 - fraction), 1]
-        gradient.colors = horizontalOnly
+        gradient.colors = noFade
             ? [UIColor.black.cgColor, UIColor.black.cgColor, UIColor.black.cgColor, UIColor.black.cgColor]
             : [UIColor.clear.cgColor, UIColor.black.cgColor, UIColor.black.cgColor, UIColor.clear.cgColor]
         CATransaction.commit()

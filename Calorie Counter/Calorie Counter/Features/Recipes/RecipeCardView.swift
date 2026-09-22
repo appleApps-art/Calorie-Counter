@@ -12,6 +12,8 @@ final class RecipeCardView: UIView {
 
     private let cardShimmer = ShimmerView()
     private var isShowingSkeleton = false
+    private var coverTitle: String?
+    private var renderedCoverSize: CGSize = .zero
     private var lastIntrinsicHeight: CGFloat = 0
 
     override var intrinsicContentSize: CGSize {
@@ -37,7 +39,25 @@ final class RecipeCardView: UIView {
     }
 
     func configure(_ plan: MealPlan) {
-        configure(title: plan.title, imageURL: plan.imageURL, badgeText: nil)
+        configure(title: plan.title, imageURL: nil, badgeText: nil)
+        // A plan has no single dish to show, so its card carries its name instead.
+        coverTitle = plan.title
+        renderCoverIfNeeded()
+    }
+
+    private func renderCoverIfNeeded() {
+        guard let coverTitle else { return }
+        let size = imageView.bounds.size
+        guard size.width > 1, size.height > 1, size != renderedCoverSize else { return }
+        // The photo is laid out after the card, so this pass can still read the nib's placeholder
+        // frame; drawing the name into it once made the title look blown up and cut off.
+        guard size.width <= bounds.width, size.height <= bounds.height else {
+            DispatchQueue.main.async { [weak self] in self?.renderCoverIfNeeded() }
+            return
+        }
+        renderedCoverSize = size
+        imageView.contentMode = .scaleAspectFill
+        imageView.image = MealPlanCover.image(title: coverTitle, size: size, traits: traitCollection)
     }
 
     func showSkeleton() {
@@ -58,7 +78,9 @@ final class RecipeCardView: UIView {
         cardShimmer.start()
     }
 
-    private func configure(title: String, imageURL: URL?, badgeText: String?) {
+    private func configure(title: String, imageURL: URL?, badgeText: String?, fallbackURL: URL? = nil) {
+        coverTitle = nil
+        renderedCoverSize = .zero
         isShowingSkeleton = false
         cardShimmer.stop()
         isUserInteractionEnabled = true
@@ -82,7 +104,8 @@ final class RecipeCardView: UIView {
         RemoteImageLoader.shared.display(
             imageURL,
             in: imageView,
-            placeholder: UIImage(systemName: "fork.knife")
+            placeholder: UIImage(systemName: "fork.knife"),
+            fallbackURL: fallbackURL
         )
         kcalBadge.isHidden = badgeText?.isEmpty != false
         kcalLabel.text = badgeText
@@ -186,6 +209,7 @@ final class RecipeCardView: UIView {
         if isShowingSkeleton, UIView.inheritedAnimationDuration == 0 {
             applyCardShimmerChrome()
         }
+        renderCoverIfNeeded()
         guard imageView.image?.isSymbolImage != true else { return }
         imageView.contentMode = .scaleAspectFill
     }

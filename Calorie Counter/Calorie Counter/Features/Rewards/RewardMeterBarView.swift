@@ -27,7 +27,7 @@ final class RewardMeterBarView: UIView {
     }
 
     private func commonInit() {
-        backgroundColor = AppColor.gray6
+        backgroundColor = AppColor.fillPrimary
         clipsToBounds = true
         fillView.backgroundColor = AppColor.teal
         addSubview(fillView)

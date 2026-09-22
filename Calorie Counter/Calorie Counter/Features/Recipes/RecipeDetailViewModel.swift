@@ -36,6 +36,8 @@ final class RecipeDetailViewModel {
     let isSaved = Observable(false)
     let savedAlertVisible = Observable(false)
     let heroImage = Observable<UIImage?>(nil)
+    /// True while the photo is being fetched and nothing is on screen yet.
+    let isHeroImageLoading = Observable(false)
     let pendingConfirmText = Observable<String?>(nil)
     let isSharePreparing = Observable(false)
 
@@ -95,7 +97,7 @@ final class RecipeDetailViewModel {
         self.loggingContext = loggingContext
         self.startedAsCatalogFood = recipe.catalogFoodID != nil
         self.imageLoader = imageLoader
-        heroImage.value = loggingContext?.imageData.flatMap(UIImage.init(data:))
+        heroImage.value = loggingContext?.imageData.flatMap { StoredPhoto.image(from: $0, maxPixelSize: StoredPhoto.maxDimension) }
         publish()
         refreshSavedState()
     }
@@ -184,11 +186,13 @@ final class RecipeDetailViewModel {
             if isSaved.value {
                 try recipeRepository.deleteSaved(recipe)
                 isSaved.value = false
+                Analytics.tracker.track(.recipeSaved(saved: false))
             } else {
                 try recipeRepository.save(recipe)
                 adoptPersistedIdentity()
                 isSaved.value = true
                 savedAlertVisible.value = true
+                Analytics.tracker.track(.recipeSaved(saved: true))
             }
         } catch {
         }
@@ -306,9 +310,43 @@ final class RecipeDetailViewModel {
                 value: ProductDetailsMath.formatGrams(sample.carbs),
                 dailyValue: ProductDetailsMath.formatDailyValue(portionDailyValue.carbs)
             )
-        ]
+        ] + extraNutritionRows(draft: draft, dailyValue: portionDailyValue)
         ingredients.value = draft.ingredients
         steps.value = recipe.steps
+    }
+
+    /// Fiber, sugar and sodium, when the recipe's source reports them. A missing value is left
+    /// out rather than shown as 0 g, which would read as "none".
+    private func extraNutritionRows(
+        draft: ProductDetailsDraft,
+        dailyValue: DailyValuePercents
+    ) -> [ProductNutritionRow] {
+        var rows: [ProductNutritionRow] = []
+        let known = (fiber: recipe.fiber != nil || draft.fiber > 0,
+                     sugar: recipe.sugar != nil || draft.sugar > 0,
+                     sodium: recipe.sodium != nil || draft.sodium > 0)
+        if known.fiber {
+            rows.append(ProductNutritionRow(
+                title: L10n.tr("home.fiber"),
+                value: ProductDetailsMath.formatGrams(draft.fiber),
+                dailyValue: ProductDetailsMath.formatDailyValue(dailyValue.fiber)
+            ))
+        }
+        if known.sugar {
+            rows.append(ProductNutritionRow(
+                title: L10n.tr("home.sugar"),
+                value: ProductDetailsMath.formatGrams(draft.sugar),
+                dailyValue: ProductDetailsMath.formatDailyValue(dailyValue.sugar)
+            ))
+        }
+        if known.sodium {
+            rows.append(ProductNutritionRow(
+                title: L10n.tr("home.sodium"),
+                value: L10n.format("photo.result.mgValue", Int(draft.sodium.rounded())),
+                dailyValue: ProductDetailsMath.formatDailyValue(dailyValue.sodium)
+            ))
+        }
+        return rows
     }
 
     private func currentDraft() -> ProductDetailsDraft {
@@ -317,9 +355,11 @@ final class RecipeDetailViewModel {
         draft.mealType = loggingContext.mealType
         draft.date = loggingContext.date
         draft.logDates = loggingContext.logDates
-        let keepsOriginalContext = !startedAsCatalogFood && !replacedInitialRecipe
         if keepsOriginalContext {
             draft.imageData = loggingContext.imageData
+            // The saved entry must still read as the user's photo when it is opened from Home,
+            // or the dish would be swapped for a generated one there.
+            draft.source = loggingContext.source
             draft.fiber = loggingContext.fiber
             draft.sugar = loggingContext.sugar
             draft.sodium = loggingContext.sodium
@@ -372,7 +412,52 @@ final class RecipeDetailViewModel {
         onDetailsUnavailable?()
     }
 
+    /// A meal the user photographed stays that meal: the photo, name, weight and nutrition they saw
+    /// on the scan are what gets logged. A recipe generated from the dish name only fills in what the
+    /// scan cannot see, such as the cooking steps.
+    private var isUsersPhotographedMeal: Bool {
+        // A scanned dish without steps reaches this screen as a diary "product" id, so it is
+        // recognised by where it came from, not by the shape of its id.
+        guard let loggingContext, loggingContext.source == "photo",
+              loggingContext.imageData?.isEmpty == false else { return false }
+        let catalogID = loggingContext.catalogExternalId ?? ""
+        return catalogID.isEmpty || catalogID.hasPrefix("diary-")
+    }
+
+    private var keepsOriginalContext: Bool {
+        isUsersPhotographedMeal || (!startedAsCatalogFood && !replacedInitialRecipe)
+    }
+
+    static func completing(_ meal: Recipe, with details: Recipe) -> Recipe {
+        var completed = meal
+        if completed.steps.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+            completed.steps = details.steps
+        }
+        if completed.ingredients.allSatisfy({ $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+            completed.ingredients = details.ingredients
+        }
+        if completed.summary?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+            completed.summary = details.summary
+        }
+        if completed.readyInMinutes == nil { completed.readyInMinutes = details.readyInMinutes }
+        if completed.dishTypes.isEmpty { completed.dishTypes = details.dishTypes }
+        return completed
+    }
+
     private func applyDetailedRecipe(_ details: Recipe) {
+        if isUsersPhotographedMeal {
+            var completed = Self.completing(recipe, with: details)
+            // Now complete, the meal is a local recipe rather than a catalog item still being looked up.
+            if let local = completed.catalogFoodID, local.hasPrefix("diary-") {
+                completed.externalId = local
+            }
+            recipe = completed
+            didLoadFullDetails = true
+            detailsUnavailable.value = false
+            publish()
+            refreshSavedState()
+            return
+        }
         if recipe.externalId != details.externalId || recipe.origin != details.origin {
             replacedInitialRecipe = true
             heroImage.value = nil
@@ -392,17 +477,19 @@ final class RecipeDetailViewModel {
     }
 
     private func ensureHeroImage(forceReload: Bool = false) async {
-        let keepsOriginalContext = !startedAsCatalogFood && !replacedInitialRecipe
-        if keepsOriginalContext, let imageData = loggingContext?.imageData, let image = UIImage(data: imageData) {
+        if keepsOriginalContext, let imageData = loggingContext?.imageData,
+           let image = StoredPhoto.image(from: imageData, maxPixelSize: StoredPhoto.maxDimension) {
             heroImage.value = image
             return
         }
         if heroImage.value != nil && !forceReload { return }
         let current = recipe
         let fallback = AIAssistantAPIConfiguration.production.foodImageURL(name: current.title)
-        guard let image = await imageLoader.fetch(current.imageURL, fallbackURL: fallback) else { return }
+        if heroImage.value == nil { isHeroImageLoading.value = true }
+        let image = await imageLoader.fetch(current.imageURL, fallbackURL: fallback)
         guard recipe.id == current.id, recipe.title == current.title, recipe.imageURL == current.imageURL else { return }
-        heroImage.value = image
+        if let image { heroImage.value = image }
+        isHeroImageLoading.value = false
     }
 
     private static func grouped(_ value: Double) -> String {

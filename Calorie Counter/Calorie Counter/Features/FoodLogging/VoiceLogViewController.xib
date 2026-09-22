@@ -20,7 +20,7 @@
                 <outlet property="carbsValueLabel" destination="carb-v" id="vl-o-carb-v"/>
                 <outlet property="clearButton" destination="vl-clear" id="vl-o-clear"/>
                 <outlet property="cursorView" destination="vl-cursor" id="vl-o-cur"/>
-                <outlet property="decorationsView" destination="vl-deco" id="vl-o-deco"/>
+                <outlet property="backgroundImageView" destination="vl-deco" id="vl-o-deco"/>
                 <outlet property="detailsButton" destination="details" id="vl-o-details"/>
                 <outlet property="detailsLabel" destination="det-label" id="vl-o-det"/>
                 <outlet property="dimView" destination="dim" id="vl-o-dim"/>
@@ -59,9 +59,7 @@
             <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vl-deco" customClass="VoiceLogDecorationsView" customModule="Calorie_Counter" customModuleProvider="target">
-                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                </view>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" translatesAutoresizingMaskIntoConstraints="NO" image="voiceBackground" id="vl-deco"/>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vl-back-wrap">
                     <subviews>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vl-back"/>
@@ -928,6 +926,7 @@
         </view>
     </objects>
     <resources>
+        <image name="voiceBackground" width="402" height="874"/>
         <namedColor name="BityCard">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

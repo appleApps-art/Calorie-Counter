@@ -20,7 +20,9 @@ final class ReminderPreferencesStore: ReminderPreferencesStoring {
                 return .default
             }
             do {
-                return try JSONDecoder().decode(ReminderScheduleConfiguration.self, from: data)
+                return try JSONDecoder()
+                    .decode(ReminderScheduleConfiguration.self, from: data)
+                    .fillingMissingDefaults()
             } catch {
                 return .default
             }

@@ -66,8 +66,10 @@ final class TextFoodLoggingViewModel {
                     text: text,
                     mealType: mealType
                 )
+                Analytics.tracker.track(.recognized("text", confidence: result.confidence))
                 applyAnalysis(result)
             } catch {
+                Analytics.tracker.track(.recognitionFailed("text", error: error))
                 analysis = nil
                 canConfirmLog.value = false
                 showsResultCard.value = false

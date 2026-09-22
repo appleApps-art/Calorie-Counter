@@ -37,11 +37,22 @@ final class AddToPantrySheetViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .clear
+        view.backgroundColor = AppColor.sheetGlassTint
         [scanFoodCard, scanBarcodeCard, searchCard, voiceCard].forEach { $0.useLiveGlass = false }
         navTitleLabel.text = L10n.tr("pantry.addTitle")
         OnboardingStyle.lockFigmaFont(navTitleLabel, size: 17, weight: .semibold, color: AppColor.labelVibrantPrimary, kern: -0.43)
-        OnboardingStyle.styleGlassSymbolButton(closeButton, systemName: "xmark", foregroundColor: AppColor.iconSecondary)
+        var closeConfiguration = UIButton.Configuration.filled()
+        closeConfiguration.cornerStyle = .capsule
+        closeConfiguration.contentInsets = .zero
+        closeConfiguration.baseBackgroundColor = AppColor.fillSecondary
+        closeConfiguration.baseForegroundColor = AppColor.dynamic(
+            light: UIColor(white: 114 / 255, alpha: 1), dark: UIColor(red: 180 / 255, green: 180 / 255, blue: 184 / 255, alpha: 1)
+        )
+        closeConfiguration.image = UIImage(systemName: "xmark", withConfiguration:
+            UIImage.SymbolConfiguration(pointSize: 17, weight: .medium))
+        closeButton.configuration = closeConfiguration
+        closeButton.accessibilityLabel = L10n.tr("common.close")
+        OnboardingStyle.applyPressFeedback(closeButton)
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         configure(card: scanFoodCard, well: scanFoodWell, button: scanFoodButton, titleLabel: scanFoodTitleLabel, icon: scanFoodIcon, title: L10n.tr("pantry.add.fridgePhoto"), symbol: "camera", action: #selector(fridgeTapped))
         configure(card: scanBarcodeCard, well: scanBarcodeWell, button: scanBarcodeButton, titleLabel: scanBarcodeTitleLabel, icon: scanBarcodeIcon, title: L10n.tr("pantry.add.scanBarcode"), symbol: "barcode.viewfinder", action: #selector(barcodeTapped))
@@ -59,13 +70,15 @@ final class AddToPantrySheetViewController: BaseViewController {
         symbol: String,
         action: Selector
     ) {
-        well.backgroundColor = AppColor.labelsPrimary
+        well.backgroundColor = AppColor.dynamic(light: .black, dark: AppColor.fillVibrantTertiary)
         well.isUserInteractionEnabled = false
         titleLabel.text = title
         titleLabel.isUserInteractionEnabled = false
-        OnboardingStyle.lockFigmaFont(titleLabel, size: 15, weight: .regular, color: AppColor.labelsPrimary, kern: -0.23)
+        OnboardingStyle.lockFigmaFont(titleLabel, size: 15, weight: .regular, color: .black, kern: -0.23)
+        titleLabel.applyLineTruncation(lines: 2)
+        button.accessibilityLabel = title
         icon.image = UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular))
-        icon.tintColor = AppColor.onAccent
+        icon.tintColor = .white
         icon.contentMode = .scaleAspectFit
         icon.isUserInteractionEnabled = false
         button.configuration = nil
@@ -75,6 +88,8 @@ final class AddToPantrySheetViewController: BaseViewController {
         button.controlHaptic = .medium
         OnboardingStyle.applyPressFeedback(button)
         card.useLiveGlass = false
+        card.cardFillColor = .white
+        card.designShadowRadius = 8
     }
 
     @objc private func fridgeTapped() { finish(.scanFood) }

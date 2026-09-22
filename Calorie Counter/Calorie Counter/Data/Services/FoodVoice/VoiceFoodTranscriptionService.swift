@@ -87,7 +87,7 @@ final class VoiceFoodTranscriptionService: VoiceFoodTranscriptionServiceProtocol
 
         let text = decoded.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !text.isEmpty else {
-            throw VoiceFoodError.transcriptionFailed(message: decoded.error ?? "Empty transcription")
+            throw VoiceFoodError.transcriptionFailed(message: L10n.tr("voice.error.nothingHeard"))
         }
 
         return VoiceFoodTranscription(
@@ -128,13 +128,13 @@ final class VoiceFoodTranscriptionService: VoiceFoodTranscriptionServiceProtocol
 
         guard let analysis = decoded.analysis else {
             throw VoiceFoodError.transcriptionFailed(
-                message: decoded.error ?? "No food analysis returned"
+                message: L10n.tr("photo.error.analysisFailed")
             )
         }
 
         let transcription = (decoded.transcription ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !transcription.isEmpty else {
-            throw VoiceFoodError.transcriptionFailed(message: "Empty transcription")
+            throw VoiceFoodError.transcriptionFailed(message: L10n.tr("voice.error.nothingHeard"))
         }
 
         let resolvedMeal = MealType(rawValue: analysis.mealType ?? "") ?? mealType
@@ -184,6 +184,7 @@ final class VoiceFoodTranscriptionService: VoiceFoodTranscriptionServiceProtocol
     }
 
     private func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        try NetworkMonitor.shared.requireOnline()
         let data: Data
         let response: URLResponse
         do {

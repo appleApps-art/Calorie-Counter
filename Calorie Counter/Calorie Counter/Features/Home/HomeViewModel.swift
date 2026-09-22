@@ -71,6 +71,13 @@ final class HomeViewModel {
     }
 
     func select(date: Date) {
+        let calendar = Calendar.current
+        if !calendar.isDate(date, inSameDayAs: self.date) {
+            let days = calendar.dateComponents(
+                [.day], from: calendar.startOfDay(for: Date()), to: calendar.startOfDay(for: date)
+            ).day ?? 0
+            Analytics.tracker.track(.diaryDateChanged(daysFromToday: days))
+        }
         self.date = date
         reload()
     }
@@ -111,6 +118,7 @@ final class HomeViewModel {
 
     func removeLastWater() {
         guard let last = diary.value?.waterEntries.sorted(by: { $0.date < $1.date }).last else { return }
+        Analytics.tracker.track(.waterRemoved)
         deleteWater(id: last.id)
     }
 
@@ -130,12 +138,14 @@ final class HomeViewModel {
     func toggleEaten(id: UUID) {
         guard var entry = diary.value?.foodEntries.first(where: { $0.id == id }) else { return }
         entry.isEaten.toggle()
+        Analytics.tracker.track(.foodMarkedEaten(eaten: entry.isEaten, mealType: entry.mealType.rawValue))
         updateFood(entry)
     }
 
     func markAllEaten() {
         let uneaten = diary.value?.foodEntries.filter { !$0.isEaten } ?? []
         guard !uneaten.isEmpty else { return }
+        Analytics.tracker.track(.allFoodMarkedEaten(count: uneaten.count))
         do {
             for var entry in uneaten {
                 entry.isEaten = true
@@ -172,6 +182,7 @@ final class HomeViewModel {
 
     func scaleFood(id: UUID, grams: Double) {
         guard let entry = diary.value?.foodEntries.first(where: { $0.id == id }) else { return }
+        Analytics.tracker.track(.foodPortionChanged(mealType: entry.mealType.rawValue))
         updateFood(scaleFoodPortionUseCase.execute(entry: entry, grams: grams))
     }
 

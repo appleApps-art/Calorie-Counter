@@ -160,6 +160,7 @@
 "photo.error.emptyText" = "Опишіть, що ви з’їли";
 "photo.error.compression" = "Не вдалося підготувати фото для аналізу";
 "photo.error.invalidResponse" = "Некоректна відповідь аналізу їжі";
+"photo.error.noFood" = "На фото не видно їжі. Спробуйте інше фото";
 "photo.camera.hint" = "Помістіть їжу в рамку";
 "photo.camera.identifying" = "Розпізнавання...";
 "photo.camera.recognized" = "Страву розпізнано";
@@ -200,7 +201,7 @@
 "ai.intro.assistantMessage" = "Готово! Додано до щоденника сніданку: 340 ккал (9 г білків, 52 г вуглеводів, 10 г жирів).";
 "ai.intro.capabilitiesTitle" = "Основні можливості";
 "ai.intro.capability.chat.title" = "Запис їжі в чаті";
-"ai.intro.capability.chat.subtitle" = "Розкажіть асистенту, що ви з’їли — він запише макроси в щоденник.";
+"ai.intro.capability.chat.subtitle" = "Розкажіть асистенту, що ви з’їли, і він запише макроси в щоденник.";
 "ai.intro.capability.memory.title" = "Пам’ять сесії";
 "ai.intro.capability.memory.subtitle" = "AI пам’ятає історію. Скажіть «Той самий обід», щоб записати страви.";
 "ai.intro.capability.recipes.title" = "Рецепти під ціль";
@@ -241,6 +242,8 @@
 "ai.history.clearMessage" = "Усі розмови буде видалено.";
 "ai.welcomeShort" = "Вітаємо! Запитайте про харчування або запишіть прийом їжі.";
 "ai.recipeMode" = "Режим рецепта: попросіть замінити інгредієнт і підтвердіть пропозицію.";
+"ai.mealPlanMode" = "З поверненням! Що хочете змінити в цьому плані харчування?";
+"ai.mealPlanSwapNotFound" = "Не знайшов цю страву в плані. Який день і прийом їжі змінити?";
 "ai.replaceIngredientTitle" = "Замінити інгредієнт";
 "ai.placeholder" = "Запитайте щось або запишіть їжу...";
 "ai.sending" = "Надсилання...";
@@ -323,6 +326,7 @@
 "recipes.tab.all" = "Усі";
 "recipes.tab.saved" = "Збережені";
 "recipes.tab.mealPlans" = "Плани";
+"recipes.mealPlan.numberedTitle" = "План %d";
 "recipes.seeMore" = "Більше";
 "recipes.section.chosenForYou" = "Обране для вас сьогодні";
 "recipes.section.healthyBreakfast" = "Корисний сніданок";
@@ -348,7 +352,7 @@
 "recipes.create.customIngredients" = "Власні інгредієнти";
 "recipes.create.yourProducts" = "Ваші продукти (%d)";
 "recipes.create.products" = "Продукти (%d)";
-"recipes.create.pantryEmpty" = "Комора порожня — виберіть «Власні інгредієнти», щоб створювати рецепти.";
+"recipes.create.pantryEmpty" = "Комора порожня. Виберіть «Власні інгредієнти», щоб створювати рецепти.";
 "recipes.create.mealsToInclude" = "Прийоми їжі";
 "recipes.create.selectDates" = "Обрати дати";
 "recipes.create.recipeDetails" = "Деталі рецепта (необов’язково)";
@@ -356,6 +360,12 @@
 "recipes.create.detailsPlaceholder" = "Вкажіть додаткові побажання...";
 "recipes.create.loadingRecipe" = "Створюємо рецепт...";
 "recipes.create.loadingMealPlan" = "Створюємо план харчування...";
+"recipes.create.failedTitle" = "Не вдалося створити рецепт";
+"recipes.create.failedBody" = "Спробуйте змінити продукти або фільтри й створити ще раз.";
+"recipes.create.noIngredientsTitle" = "Додайте інгредієнти";
+"recipes.create.noIngredientsPantry" = "Щоб створити рецепт, оберіть хоча б один продукт зі своєї комори.";
+"recipes.create.noIngredientsEmptyPantry" = "Ваша комора порожня. Перейдіть на «Власні інгредієнти» й додайте продукти, з яких хочете готувати.";
+"recipes.create.noIngredientsCustom" = "Щоб створити рецепт, додайте хоча б один інгредієнт: введіть назву або продиктуйте її.";
 "recipes.mealPlanEmptyTitle" = "Ще нічого не створено";
 "recipes.mealPlanEmptySubtitle" = "Тут збираються ваші плани харчування.";
 "recipes.createMealPlan" = "Створити план";
@@ -372,6 +382,16 @@
 "recipes.mealPlan.delete" = "Видалити план харчування";
 "recipes.mealPlan.day" = "День %d";
 "recipes.mealPlan.swapped" = "Страву замінено, план оновлено";
+"recipes.mealPlan.swapTitle" = "Замінити страву";
+"recipes.mealPlan.addToDiaryTitle" = "Додати в щоденник";
+"recipes.mealPlan.addToDiaryConfirm" = "Додати план";
+"recipes.mealPlan.datesToday" = "Сьогодні, %@";
+"recipes.mealPlan.swapCurrent" = "Зараз у плані";
+"recipes.mealPlan.swapReplaceWith" = "Замінити на";
+"recipes.mealPlan.swapConfirm" = "Замінити";
+"recipes.mealPlan.swapUnavailable" = "Не знайшли, чим замінити цю страву";
+"recipes.mealPlan.deleteConfirmTitle" = "Видалити план?";
+"recipes.mealPlan.deleteConfirmBody" = "План і його страви буде видалено. Записи в щоденнику залишаться.";
 "recipes.filtersTitle" = "Фільтри";
 "recipes.filters.reset" = "Скинути";
 "recipes.filters.showResults" = "Показати результати";
@@ -380,7 +400,7 @@
 "recipes.filters.diet" = "Дієта";
 "recipes.filters.cookTime" = "Час приготування";
 "recipes.filters.calories" = "Калорії на порцію";
-"recipes.filters.caloriesValue" = "%d — %d ккал";
+"recipes.filters.caloriesValue" = "%d-%d ккал";
 "recipes.filters.difficulty" = "Складність";
 "recipes.filters.excluded" = "Виключені інгредієнти";
 "recipes.filters.addIngredients" = "Додати інгредієнти...";
@@ -423,12 +443,14 @@
 "pantry.selectedCount" = "Вибрано інгредієнтів: %d";
 "pantry.aiSuggestion" = "Рецепт від Bity AI";
 "pantry.cookWithIngredients" = "Готуйте зі своїх продуктів";
+"pantry.aiSuggestionLoading" = "Створюємо рецепт…";
 "pantry.useBy" = "До %@";
 "pantry.deleteTitle" = "Видалити %d позицій з комори?";
 "pantry.deleteMessage" = "Ці позиції буде остаточно видалено з комори.";
 "pantry.delete" = "Видалити";
 "pantry.cancel" = "Скасувати";
 "pantry.addTitle" = "Додати до комори";
+"pantry.saveFailed.title" = "Не вдалося додати до комори";
 "pantry.add.fridgePhoto" = "Фото холодильника";
 "pantry.add.scanBarcode" = "Сканувати штрихкод";
 "pantry.add.search" = "Пошук";
@@ -448,10 +470,10 @@
 "progress.weightChangeFormat" = "%+.1f кг";
 "progress.noWeight" = "Вагу ще не записано";
 "progress.photoEmpty" = "Фото прогресу порожнє";
-"progress.period.week" = "1W";
-"progress.period.month" = "1M";
-"progress.period.threeMonths" = "3M";
-"progress.period.sixMonths" = "6M";
+"progress.period.week" = "1Т";
+"progress.period.month" = "1М";
+"progress.period.threeMonths" = "3М";
+"progress.period.sixMonths" = "6М";
 "progress.caloriesTitle" = "Калорії та макроси за день";
 "progress.expenditureTitle" = "Витрата калорій";
 "progress.weightTitle" = "Динаміка ваги";
@@ -471,7 +493,7 @@
 "progress.insight.badge" = "Інсайт Bity AI";
 "progress.insight.proteinImproved" = "Споживання білка зросло на %d%% цього тижня.";
 "progress.insight.proteinDropped" = "Споживання білка знизилось на %d%% цього тижня.";
-"progress.insight.fiberBelow" = "Клітковина нижче цілі — додайте більше овочів.";
+"progress.insight.fiberBelow" = "Клітковина нижче цілі. Додайте більше овочів.";
 "progress.lock.title" = "Розблокуйте розширену аналітику";
 "progress.lock.subtitle" = "Вікенд-патерни, макроси та динаміка ваги.";
 "progress.lock.upgrade" = "Оновити до Premium";
@@ -639,11 +661,11 @@
 "onboarding.activity.sedentary.title" = "Сидячий";
 "onboarding.activity.sedentary.subtitle" = "Офісна робота, мінімум вправ чи ходьби.";
 "onboarding.activity.moderate.title" = "Помірний";
-"onboarding.activity.moderate.subtitle" = "Легка активна робота або тренування 1–3 дні на тиждень.";
+"onboarding.activity.moderate.subtitle" = "Легка активна робота або тренування 1-3 дні на тиждень.";
 "onboarding.activity.active.title" = "Активний";
-"onboarding.activity.active.subtitle" = "Фізично навантажений день або тренування 3–5 днів на тиждень.";
+"onboarding.activity.active.subtitle" = "Фізично навантажений день або тренування 3-5 днів на тиждень.";
 "onboarding.activity.athletic.title" = "Спортивний";
-"onboarding.activity.athletic.subtitle" = "Важка фізична праця чи інтенсивні тренування 6–7 днів на тиждень.";
+"onboarding.activity.athletic.subtitle" = "Важка фізична праця чи інтенсивні тренування 6-7 днів на тиждень.";
 
 "onboarding.sex.q.title" = "Оберіть свою стать";
 "onboarding.sex.q.subtitle" = "Біологічна стать впливає на базовий метаболізм і витрату калорій через м’язи, гормони та метаболізм.";
@@ -730,20 +752,26 @@
 "subscription.months" = "%d місяців";
 "subscription.years" = "%d років";
 
-"reminder.breakfast.title" = "Нагадування про сніданок";
-"reminder.breakfast.body" = "Запишіть сніданок, щоб триматись плану.";
-"reminder.lunch.title" = "Нагадування про обід";
-"reminder.lunch.body" = "Не забудьте записати обід.";
-"reminder.dinner.title" = "Нагадування про вечерю";
-"reminder.dinner.body" = "Запишіть вечерю, коли будете готові.";
+"reminder.breakfast.title" = "Що було на сніданок? 🍳";
+"reminder.breakfast.body" = "Запишіть сніданок за кілька секунд - фото, голосом чи пошуком.";
+"reminder.lunch.title" = "Час обіду 🥗";
+"reminder.lunch.body" = "Що сьогодні на обід? Запишіть страву, і Bity все порахує.";
+"reminder.dinner.title" = "Як пройшла вечеря? 🍽️";
+"reminder.dinner.body" = "Запишіть вечерю, щоб день у щоденнику був повним.";
 "reminder.water.title" = "Нагадування про воду";
 "reminder.water.body1" = "Час випити склянку води.";
-"reminder.water.body2" = "Перевірка гідратації — запишіть воду.";
+"reminder.water.body2" = "Перевірка гідратації: запишіть воду.";
 "reminder.water.body3" = "Продовжуйте серію з водою.";
-"reminder.weight.title" = "Запис ваги";
-"reminder.weight.body" = "Запишіть сьогоднішню вагу, коли зможете.";
+"reminder.weight.title" = "Щотижневе зважування ⚖️";
+"reminder.weight.body" = "Новий тиждень - запишіть вагу, щоб бачити, як рухаєтеся до цілі.";
 "reminder.streak.title" = "Збережіть серію";
 "reminder.streak.body" = "Сьогодні ви ще не записали жодної їжі.";
+"reminder.comeback.body3" = "Нічого страшного, що була пауза. Запишіть один прийом їжі, і ви знову в ритмі.";
+"reminder.comeback.title3" = "Почнімо з чистого аркуша ✨";
+"reminder.comeback.body2" = "Кілька записів на день, і план знову працює на вас.";
+"reminder.comeback.title2" = "Повертайтеся до цілі 💪";
+"reminder.comeback.body1" = "Загляньте на хвилинку і запишіть, що їли сьогодні.";
+"reminder.comeback.title1" = "Bity сумує за вами 🐶";
 
 "badge.firstMeal" = "Перша страва";
 "badge.mealTrackerMaster" = "Майстер щоденника";
@@ -780,6 +808,8 @@
 "rewards.daysProgress" = "%d/%d дн.";
 "rewards.weeks" = "%d тиж.";
 "rewards.weeksProgress" = "%d/%d тиж.";
+"rewards.tick.week" = "Т%d";
+"rewards.tick.day" = "Д%d";
 "rewards.dayStreakPill" = "СЕРІЯ %d ДНІ";
 "rewards.weeksActivePill" = "%d ТИЖНІ АКТИВНО";
 "rewards.dayStreakBadge" = "Значок серії %d дн.";
@@ -822,7 +852,7 @@
 "product.details.addInstead" = "Додати це замість";
 "product.details.scoreLink" = "Як рахується ця оцінка?";
 "product.details.scoreInfoTitle" = "Як рахується ця оцінка?";
-"product.details.scoreInfoBody" = "Bity оцінює їжу від 0 до 100 за щільністю білка, клітковиною, цукром, натрієм і калоріями. Оцінки: A 85–100, B 70–84, C 55–69, D 40–54, E 0–39. Денні норми: 2000 ккал, 50 г білка, 78 г жиру, 275 г вуглеводів, 28 г клітковини, 50 г цукру і 2300 мг натрію.";
+"product.details.scoreInfoBody" = "Bity оцінює їжу від 0 до 100 за щільністю білка, клітковиною, цукром, натрієм і калоріями. Оцінки: A 85-100, B 70-84, C 55-69, D 40-54, E 0-39. Денні норми: 2000 ккал, 50 г білка, 78 г жиру, 275 г вуглеводів, 28 г клітковини, 50 г цукру і 2300 мг натрію.";
 "product.details.wantToCook" = "Хочеш це приготувати?";
 "product.details.wantToCookSubtitle" = "Натисни, щоб побачити рецепт";
 "product.details.howToPrepare" = "Як приготувати";
@@ -965,3 +995,14 @@
 "settings.importedWeightValue" = "Імпортовано %@";
 
 "ai.logWaterQuantityQuestion" = "Записати %@ води?";
+
+"offline.title" = "Немає інтернету";
+"offline.subtitle" = "Ця частина працює через інтернет. Щойно зʼявиться звʼязок, усе завантажиться знову.";
+"offline.retry" = "Спробувати ще";
+"offline.message" = "Немає інтернету. Це працює лише онлайн, спробуйте, коли зʼявиться звʼязок.";
+"common.errorGeneric" = "Щось пішло не так. Спробуйте ще раз.";
+"photo.error.analysisFailed" = "Не вдалося розпізнати їжу. Спробуйте ще раз.";
+"voice.error.nothingHeard" = "Не вдалося розчути страву. Спробуйте ще раз.";
+"voice.error.notRecording" = "Запис не почався. Спробуйте ще раз.";
+"food.generic.ingredient" = "Інгредієнт";
+"food.generic.product" = "Продукт";

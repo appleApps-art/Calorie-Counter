@@ -27,10 +27,16 @@ enum PremiumGate {
                     didUnlock = true
                     onUnlocked()
                 },
-                onError: { _ in
+                onError: { error in
+                    Analytics.tracker.track(.errorShown(
+                        context: "paywall_\(placement.rawValue)",
+                        reason: error.isNoConnection ? "offline" : "unavailable"
+                    ))
                     let alert = UIAlertController(
                         title: nil,
-                        message: L10n.tr("subscription.paywallUnavailable"),
+                        message: error.isNoConnection
+                            ? L10n.tr("offline.message")
+                            : L10n.tr("subscription.paywallUnavailable"),
                         preferredStyle: .alert
                     )
                     alert.addAction(UIAlertAction(title: L10n.tr("product.entry.ok"), style: .default))

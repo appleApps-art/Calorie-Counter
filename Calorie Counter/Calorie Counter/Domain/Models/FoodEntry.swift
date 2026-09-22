@@ -77,7 +77,10 @@ struct FoodEntry: Identifiable, Equatable {
             weightGrams: portionGrams,
             volumeMilliliters: portionMilliliters,
             foodType: resolvedFoodType,
-            hasCompleteNutrition: hasCompleteNutrition
+            hasCompleteNutrition: hasCompleteNutrition,
+            fiber: fiber,
+            sugar: sugar,
+            sodium: sodium
         )
     }
 

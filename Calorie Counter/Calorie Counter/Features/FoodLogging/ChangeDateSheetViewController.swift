@@ -1,6 +1,8 @@
 import UIKit
 
 final class ChangeDateSheetViewController: BaseViewController {
+    override var analyticsScreen: AnalyticsScreen? { .changeDate }
+
     @IBOutlet private weak var closeButton: UIButton!
     @IBOutlet private weak var titleLabel: AdaptiveLabel!
     @IBOutlet private weak var calendarHost: UIView!
@@ -35,10 +37,7 @@ final class ChangeDateSheetViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.dynamic(
-            light: UIColor(white: 0.96, alpha: 0.35),
-            dark: UIColor.black.withAlphaComponent(0.6)
-        )
+        view.backgroundColor = AppColor.sheetGlassTint
         titleLabel.text = L10n.tr("product.entry.changeDateTitle")
         titleLabel.textAlignment = .center
         OnboardingStyle.lockFigmaFont(titleLabel, size: 17, weight: .semibold, color: AppColor.labelVibrantPrimary, kern: -0.43)
@@ -46,7 +45,7 @@ final class ChangeDateSheetViewController: BaseViewController {
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         OnboardingStyle.stylePrimaryButton(selectButton, title: L10n.tr("product.entry.selectDate"))
         selectButton.addTarget(self, action: #selector(selectTapped), for: .touchUpInside)
-        calendarHost.backgroundColor = AppColor.dynamic(light: .white, dark: UIColor(white: 44.0 / 255.0, alpha: 1))
+        calendarHost.backgroundColor = AppColor.backgroundsPrimary
         calendarHost.layer.cornerRadius = 13
         calendarHost.layer.cornerCurve = .continuous
         calendarHost.clipsToBounds = true

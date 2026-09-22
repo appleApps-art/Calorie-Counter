@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 @testable import Calorie_Counter
 
@@ -23,8 +24,8 @@ final class CreateMealPlanTests: XCTestCase {
         XCTAssertEqual(search.diet, "vegetarian")
         XCTAssertEqual(search.type, "breakfast")
         XCTAssertEqual(search.includeIngredients, "шпинат, авокадо, лосось")
-        XCTAssertTrue(search.query.contains("breakfast"))
-        XCTAssertTrue(search.query.contains("high protein"))
+        XCTAssertEqual(search.query, "high protein", "Only the user's own words; the rest are filters")
+        XCTAssertEqual(search.sort, "popularity")
         let window = MealPlanPacker.calorieWindow(
             meal: .breakfast,
             calorieGoal: UserGoals.default.calorieTarget,
@@ -137,7 +138,7 @@ final class CreateMealPlanTests: XCTestCase {
     func testDinnerMapsToMainCourseAndSnackMapsToSnack() {
         XCTAssertEqual(CreateMealPlanUseCase.dishType(from: .dinner), "main course")
         XCTAssertEqual(CreateMealPlanUseCase.dishType(from: .snacks), "snack")
-        XCTAssertNil(CreateMealPlanUseCase.dishType(from: .lunch))
+        XCTAssertEqual(CreateMealPlanUseCase.dishType(from: .lunch), "main course", "Not sauces and drinks")
         XCTAssertEqual(CreateMealPlanUseCase.cuisine(from: "recipes.filters.greek"), "Greek")
         XCTAssertEqual(CreateMealPlanUseCase.diet(from: "recipes.filters.vegan"), "vegan")
         XCTAssertNil(CreateMealPlanUseCase.diet(from: "recipes.filters.lean"))
@@ -176,8 +177,11 @@ final class CreateMealPlanTests: XCTestCase {
         let spoonacular = MealPlanFakeSpoonacular()
         spoonacular.recipesByDishType = [
             "breakfast": [mealPlanRecipe(title: "Oatmeal Bowl", calories: 640)],
-            "lunch": [mealPlanRecipe(title: "Chicken Salad", calories: 490)],
-            "main course": [mealPlanRecipe(title: "Baked Salmon", calories: 420)],
+            // Lunch and dinner are both main courses in the catalog; the day still gets two dishes.
+            "main course": [
+                mealPlanRecipe(title: "Chicken Salad", calories: 490),
+                mealPlanRecipe(title: "Baked Salmon", calories: 420)
+            ],
             "snack": [mealPlanRecipe(title: "Greek Yogurt", calories: 160)]
         ]
         let useCase = makeUseCase(spoonacular: spoonacular, mealPlans: FakeMealPlanRepository())
@@ -205,6 +209,129 @@ final class CreateMealPlanTests: XCTestCase {
         XCTAssertGreaterThan(slots[0].recipe.calories ?? 0, slots[1].recipe.calories ?? 0)
         XCTAssertGreaterThan(slots[1].recipe.calories ?? 0, slots[2].recipe.calories ?? 0)
         XCTAssertGreaterThan(slots[2].recipe.calories ?? 0, slots[3].recipe.calories ?? 0)
+    }
+
+    func testAWeekOfBreakfastsDoesNotRepeatWhileTheCatalogStillHasDishes() {
+        let breakfasts = (1...7).map { mealPlanRecipe(title: "Breakfast \($0)", calories: 600) }
+        // Five days of lunch and dinner need ten main courses; the catalog has exactly that many.
+        let mains = (1...10).map { mealPlanRecipe(title: "Main \($0)", calories: 500) }
+        let packed = MealPlanPacker.pack(
+            pools: [.breakfast: breakfasts, .lunch: mains, .dinner: mains],
+            dayCount: 5,
+            mealTypes: [.breakfast, .lunch, .dinner],
+            calorieGoal: 2000
+        )
+        let chosen = packed.recipes.map(\.title)
+        XCTAssertEqual(chosen.count, 15)
+        let morning = stride(from: 0, to: chosen.count, by: 3).map { chosen[$0] }
+        XCTAssertEqual(Set(morning).count, morning.count, "A different breakfast every morning")
+        let mainCourses = chosen.filter { $0.hasPrefix("Main") }
+        XCTAssertEqual(Set(mainCourses).count, mainCourses.count, "Lunch and dinner are never the same dish")
+    }
+
+    func testLeanAndWeightGainMoveTheCalorieWindowInsteadOfTheSearchWords() {
+        let window = (min: 400, max: 800)
+        let lean = CreateMealPlanUseCase.calorieWindow(window, dietKey: "recipes.filters.lean")
+        let gain = CreateMealPlanUseCase.calorieWindow(window, dietKey: "recipes.filters.weightGain")
+        XCTAssertLessThan(lean.max, window.max)
+        XCTAssertEqual(lean.min, window.min)
+        XCTAssertGreaterThan(gain.min, window.min)
+        XCTAssertGreaterThan(gain.max, window.max)
+        XCTAssertEqual(CreateMealPlanUseCase.calorieWindow(window, dietKey: "recipes.filters.balance").max, window.max)
+
+        let search = CreateMealPlanUseCase.spoonacularSearch(
+            meal: .lunch,
+            input: RecipeGenerationInput(
+                ingredients: [], mealTypes: ["lunch"], cuisine: nil, diet: "recipes.filters.lean",
+                maxReadyMinutes: nil, maxCalories: nil, details: "", startDate: Date(), endDate: Date()
+            ),
+            includeIngredients: false
+        )
+        XCTAssertEqual(search.query, "", "\"Lean\" is not a search word")
+        XCTAssertEqual(search.type, "main course")
+    }
+
+    func testThePlanCoverIsDrawnRatherThanBorrowedFromTheFirstDish() async throws {
+        let spoonacular = MealPlanFakeSpoonacular()
+        spoonacular.recipes = [mealPlanRecipe(title: "Oatmeal Bowl", calories: 500)]
+        let useCase = makeUseCase(spoonacular: spoonacular, mealPlans: FakeMealPlanRepository())
+        let created = try await useCase.execute(
+            RecipeGenerationInput(
+                ingredients: [], mealTypes: ["breakfast"], cuisine: nil, diet: nil,
+                maxReadyMinutes: nil, maxCalories: nil, details: "", startDate: Date(), endDate: Date()
+            )
+        )
+        let plan = try XCTUnwrap(created)
+        XCTAssertNil(plan.imageURL, "A plan carries no dish photo; its cover is drawn from its name")
+        let cover = MealPlanCover.image(
+            title: plan.title,
+            size: CGSize(width: 240, height: 140),
+            traits: UITraitCollection(userInterfaceStyle: .light)
+        )
+        XCTAssertNotNil(cover)
+    }
+
+    func testEveryPlanGetsACoverOfItsOwn() throws {
+        let size = CGSize(width: 240, height: 140)
+        let traits = UITraitCollection(userInterfaceStyle: .light)
+        let titles = (1...6).map { CreateMealPlanUseCase.planTitle(number: $0) }
+        let variants = titles.map(MealPlanCover.variantIndex(for:))
+        XCTAssertEqual(Set(variants).count, titles.count, "Six plans in a row never repeat a colour")
+
+        let first = try XCTUnwrap(MealPlanCover.image(title: titles[0], size: size, traits: traits))
+        let second = try XCTUnwrap(MealPlanCover.image(title: titles[1], size: size, traits: traits))
+        XCTAssertNotEqual(first.pngData(), second.pngData(), "Two plans do not look like the same card")
+
+        XCTAssertEqual(
+            MealPlanCover.variantIndex(for: "Тижневе меню"),
+            MealPlanCover.variantIndex(for: "Тижневе меню"),
+            "A name keeps its colour between launches"
+        )
+    }
+
+    func testPlansAreNumberedInsteadOfBorrowingADishName() async throws {
+        let spoonacular = MealPlanFakeSpoonacular()
+        spoonacular.recipes = [mealPlanRecipe(title: "Oatmeal Bowl", calories: 500)]
+        let mealPlans = FakeMealPlanRepository()
+        let useCase = makeUseCase(spoonacular: spoonacular, mealPlans: mealPlans)
+        let input = RecipeGenerationInput(
+            ingredients: [], mealTypes: ["breakfast"], cuisine: nil, diet: nil,
+            maxReadyMinutes: nil, maxCalories: nil, details: "", startDate: Date(), endDate: Date()
+        )
+
+        let firstRun = try await useCase.execute(input)
+        let first = try XCTUnwrap(firstRun)
+        XCTAssertEqual(first.title, CreateMealPlanUseCase.planTitle(number: 1))
+        XCTAssertNotEqual(first.title, "Oatmeal Bowl")
+
+        let secondRun = try await useCase.execute(input)
+        let second = try XCTUnwrap(secondRun)
+        XCTAssertEqual(second.title, CreateMealPlanUseCase.planTitle(number: 2))
+        XCTAssertNotEqual(second.title, first.title, "Two plans are never called the same")
+    }
+
+    func testANumberIsFreedUpWhenItsPlanIsDeleted() async throws {
+        let spoonacular = MealPlanFakeSpoonacular()
+        spoonacular.recipes = [mealPlanRecipe(title: "Oatmeal Bowl", calories: 500)]
+        let mealPlans = FakeMealPlanRepository()
+        let useCase = makeUseCase(spoonacular: spoonacular, mealPlans: mealPlans)
+        let input = RecipeGenerationInput(
+            ingredients: [], mealTypes: ["breakfast"], cuisine: nil, diet: nil,
+            maxReadyMinutes: nil, maxCalories: nil, details: "", startDate: Date(), endDate: Date()
+        )
+
+        let firstRun = try await useCase.execute(input)
+        let first = try XCTUnwrap(firstRun)
+        XCTAssertEqual(first.title, CreateMealPlanUseCase.planTitle(number: 1))
+        try mealPlans.delete(id: first.id)
+
+        let againRun = try await useCase.execute(input)
+        let again = try XCTUnwrap(againRun)
+        XCTAssertEqual(again.title, CreateMealPlanUseCase.planTitle(number: 1), "The freed number is used again")
+
+        let thirdRun = try await useCase.execute(input)
+        let third = try XCTUnwrap(thirdRun)
+        XCTAssertEqual(third.title, CreateMealPlanUseCase.planTitle(number: 2), "Two plans are never called the same")
     }
 
     func testCreateMealPlanRetriesWithoutIngredientsWhenFirstSearchIsEmpty() async throws {
@@ -325,8 +452,9 @@ private func mealPlanRecipe(title: String, calories: Double) -> Recipe {
     )
 }
 
-private final class FakeMealPlanRepository: MealPlanRepositoryProtocol {
+final class FakeMealPlanRepository: MealPlanRepositoryProtocol {
     var saved: [MealPlan] = []
+    private(set) var deleted: [UUID] = []
 
     func fetchAll() throws -> [MealPlan] { saved }
 
@@ -336,17 +464,18 @@ private final class FakeMealPlanRepository: MealPlanRepositoryProtocol {
     }
 
     func delete(id: UUID) throws {
+        deleted.append(id)
         saved.removeAll { $0.id == id }
     }
 }
 
-private final class FakePantryRepository: PantryRepositoryProtocol {
+final class FakePantryRepository: PantryRepositoryProtocol {
     func fetchAll() throws -> [PantryItem] { [] }
     func save(_ item: PantryItem) throws {}
     func delete(ids: [UUID]) throws {}
 }
 
-private final class MealPlanFakeSpoonacular: SpoonacularServiceProtocol {
+final class MealPlanFakeSpoonacular: SpoonacularServiceProtocol {
     var recipes: [Recipe] = []
     var recipesWhenNoIngredients: [Recipe] = []
     var recipesByDishType: [String: [Recipe]] = [:]
@@ -426,7 +555,7 @@ private final class MealPlanFakeSpoonacular: SpoonacularServiceProtocol {
     }
 }
 
-private final class MealPlanFakeAISearch: AIFoodSearching {
+final class MealPlanFakeAISearch: AIFoodSearching {
     func searchFoods(query: String) async throws -> [FoodProduct] { [] }
     func searchRecipes(query: String) async throws -> [Recipe] { [] }
     func fetchDefaultCatalog() async throws -> [String: [FoodProduct]] { [:] }
@@ -442,7 +571,7 @@ private final class MealPlanFakeAISearch: AIFoodSearching {
     ) async throws -> FoodProduct? { nil }
 }
 
-private final class MealPlanFakeVoiceRecorder: VoiceFoodAudioRecording {
+final class MealPlanFakeVoiceRecorder: VoiceFoodAudioRecording {
     var isRecording = false
     var onPartialTranscript: ((String) -> Void)?
     var onUtteranceFinal: (() -> Void)?
@@ -453,7 +582,7 @@ private final class MealPlanFakeVoiceRecorder: VoiceFoodAudioRecording {
     func normalizedPower() -> CGFloat { 0 }
 }
 
-private final class MealPlanFakeVoiceTranscription: VoiceFoodTranscriptionServiceProtocol {
+final class MealPlanFakeVoiceTranscription: VoiceFoodTranscriptionServiceProtocol {
     func transcribe(audioData: Data, mimeType: String) async throws -> VoiceFoodTranscription {
         VoiceFoodTranscription(text: "", language: nil, model: nil)
     }

@@ -58,10 +58,10 @@
                     <rect key="frame" x="16" y="66" width="338" height="4"/>
                     <color key="backgroundColor" name="BityGray6"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="4" id="mh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                        <constraint firstAttribute="height" constant="6" id="mh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                             <userDefinedRuntimeAttributes>
                                 <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                    <real key="value" value="4"/>
+                                    <real key="value" value="6"/>
                                 </userDefinedRuntimeAttribute>
                                 <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                             </userDefinedRuntimeAttributes>
@@ -90,10 +90,10 @@
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="gift" firstAttribute="top" secondItem="card" secondAttribute="top" constant="22" id="gt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="gift" firstAttribute="top" secondItem="card" secondAttribute="top" constant="32" id="gt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="22"/>
+                            <real key="value" value="32"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>
@@ -140,10 +140,10 @@
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="meter" firstAttribute="top" secondItem="gift" secondAttribute="bottom" constant="24" id="mt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="meter" firstAttribute="top" secondItem="gift" secondAttribute="bottom" constant="27" id="mt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="24"/>
+                            <real key="value" value="27"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>
@@ -164,10 +164,10 @@
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="ticks" firstAttribute="top" secondItem="meter" secondAttribute="bottom" constant="8" id="kt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="ticks" firstAttribute="top" secondItem="meter" secondAttribute="bottom" constant="18" id="kt" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="8"/>
+                            <real key="value" value="18"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>

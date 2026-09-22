@@ -13,6 +13,7 @@ final class MealPlanPreviewViewModel {
     let selectedDayIndex = Observable(0)
     let selectedDay = Observable<MealPlanDay?>(nil)
     let swappedAlertVisible = Observable(false)
+    let swappedAlertTitle = Observable(L10n.tr("recipes.mealPlan.swapped"))
     let addedAlertVisible = Observable(false)
     let heroImage = Observable<UIImage?>(nil)
     let swappingRecipeIndex = Observable<Int?>(nil)
@@ -22,22 +23,34 @@ final class MealPlanPreviewViewModel {
     var onEditWithBity: ((MealPlan) -> Void)?
     var onDeleted: (() -> Void)?
     var onOpenRecipe: ((Recipe) -> Void)?
+    var onConfirmDelete: (() -> Void)?
+    var onSwapOptions: ((MealPlanSlot, [Recipe]) -> Void)?
+    var onPickDiaryDates: ((MealPlan) -> Void)?
 
     private var plan: MealPlan
+    /// A plan opened straight after it was made logs its day right away; one opened from the list
+    /// asks which days it should cover first, as the design shows.
+    private let isFreshlyCreated: Bool
     private let mealPlanRepository: MealPlanRepositoryProtocol
     private let searchRecipesUseCase: SearchRecipesUseCase
     private let fetchDailyDiaryUseCase: FetchDailyDiaryUseCase
     private let logFoodUseCase: LogFoodUseCase
     private var calorieGoal = UserGoals.default.calorieTarget
 
+    private let foodImageURL: (String) -> URL?
+
     init(
         plan: MealPlan,
         mealPlanRepository: MealPlanRepositoryProtocol,
         searchRecipesUseCase: SearchRecipesUseCase,
         fetchDailyDiaryUseCase: FetchDailyDiaryUseCase,
-        logFoodUseCase: LogFoodUseCase
+        logFoodUseCase: LogFoodUseCase,
+        isFreshlyCreated: Bool = false,
+        foodImageURL: @escaping (String) -> URL? = { AIAssistantAPIConfiguration.production.foodImageURL(name: $0) }
     ) {
         self.plan = plan
+        self.isFreshlyCreated = isFreshlyCreated
+        self.foodImageURL = foodImageURL
         self.mealPlanRepository = mealPlanRepository
         self.searchRecipesUseCase = searchRecipesUseCase
         self.fetchDailyDiaryUseCase = fetchDailyDiaryUseCase
@@ -48,7 +61,6 @@ final class MealPlanPreviewViewModel {
     func viewDidLoad() {
         calorieGoal = (try? fetchDailyDiaryUseCase.execute())?.goals.calorieTarget ?? UserGoals.default.calorieTarget
         publish()
-        loadHeroImage()
     }
 
     func backTapped() {
@@ -57,6 +69,24 @@ final class MealPlanPreviewViewModel {
 
     func shareTapped() {
         onShare?(shareText(), heroImage.value)
+    }
+
+    /// The whole plan, day by day, so what arrives is the cooking rather than a headline.
+    func shareText() -> String {
+        var lines = [plan.title, plan.subtitle, calorieShareBodyText.value].filter { !$0.isEmpty }
+        plan.days().forEach { day in
+            lines.append("")
+            lines.append(L10n.format("recipes.mealPlan.day", day.index + 1))
+            day.slots.forEach { slot in
+                let calories = slot.recipe.calories.map { L10n.format("photo.result.kcalValue", Int($0.rounded())) }
+                lines.append(
+                    [slot.mealType.localizedTitle, slot.recipe.title, calories]
+                        .compactMap { $0 }
+                        .joined(separator: " · ")
+                )
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     func selectDay(_ index: Int) {
@@ -70,30 +100,62 @@ final class MealPlanPreviewViewModel {
         guard swappingRecipeIndex.value == nil else { return }
         swappingRecipeIndex.value = slot.recipeIndex
         Task { @MainActor in
-            let query = [slot.mealType.rawValue, slot.recipe.title]
-                .filter { !$0.isEmpty }
-                .joined(separator: " ")
-            let results = (try? await searchRecipesUseCase.generateRecipes(
-                query: query,
-                filters: .empty,
-                number: 12
-            )) ?? []
-            let replacement = results.first { candidate in
-                candidate.title.caseInsensitiveCompare(slot.recipe.title) != .orderedSame
-                    && candidate.id != slot.recipe.id
-                    && candidate.externalId != slot.recipe.externalId
-            }
-            if let replacement {
-                var next = replacement
-                next.id = UUID()
-                plan.replacingRecipe(at: slot.recipeIndex, with: next)
-                try? mealPlanRepository.save(plan)
-                publish()
-                loadHeroImage()
-                swappedAlertVisible.value = true
-            }
+            let taken = Set(plan.recipes.map(MealPlanPacker.recipeKey))
+            let options = await searchRecipesUseCase.mealPlanReplacements(
+                meal: slot.mealType,
+                calories: slot.recipe.calories,
+                excluding: taken
+            )
             swappingRecipeIndex.value = nil
+            guard !options.isEmpty else {
+                // Silence used to look like the arrow was broken.
+                swappedAlertTitle.value = L10n.tr("recipes.mealPlan.swapUnavailable")
+                swappedAlertVisible.value = true
+                return
+            }
+            // The design lets the user choose the replacement rather than taking the first one.
+            onSwapOptions?(slot, options)
         }
+    }
+
+    func applySwap(_ slot: MealPlanSlot, with recipe: Recipe) {
+        var next = recipe
+        next.id = UUID()
+        plan.replacingRecipe(at: slot.recipeIndex, with: next)
+        try? mealPlanRepository.save(plan)
+        publish()
+        swappedAlertTitle.value = L10n.tr("recipes.mealPlan.swapped")
+        swappedAlertVisible.value = true
+    }
+
+    /// Bity's answer to "swap the porridge": find the slot it means and put its dish there.
+    @discardableResult
+    func applySwapProposal(_ proposal: MealPlanSwapProposal) -> Bool {
+        guard let slot = slot(matching: proposal) else { return false }
+        applySwap(slot, with: MealPlanSwapProposalMapper.recipe(
+            from: proposal,
+            replacing: slot.recipe,
+            imageURL: foodImageURL(proposal.replacementTitle)
+        ))
+        return true
+    }
+
+    private func slot(matching proposal: MealPlanSwapProposal) -> MealPlanSlot? {
+        let days = plan.days()
+        var candidates = days.flatMap(\.slots)
+        if let number = proposal.dayNumber, let day = days.first(where: { $0.index + 1 == number }) {
+            candidates = day.slots
+        }
+        if let title = proposal.currentTitle?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty,
+           let match = candidates.first(where: { $0.recipe.title.localizedCaseInsensitiveContains(title) })
+            ?? candidates.first(where: { title.localizedCaseInsensitiveContains($0.recipe.title) }) {
+            return match
+        }
+        if let mealType = proposal.mealType, let match = candidates.first(where: { $0.mealType == mealType }) {
+            return match
+        }
+        // Without a day or a name there is nothing to point at, so the plan is left alone.
+        return proposal.dayNumber != nil ? candidates.first : nil
     }
 
     func recipeTapped(_ slot: MealPlanSlot) {
@@ -101,16 +163,33 @@ final class MealPlanPreviewViewModel {
     }
 
     func addToDiaryTapped() {
+        guard isFreshlyCreated else {
+            onPickDiaryDates?(plan)
+            return
+        }
         let slots = selectedDay.value?.slots ?? []
         guard !slots.isEmpty else { return }
-        do {
-            try slots.forEach { slot in
-                var draft = ProductDetailsMath.draft(from: slot.recipe, mealType: slot.mealType)
-                draft.servings = 1
-                _ = try logFoodUseCase.execute(draft.toFoodEntry())
-            }
-            addedAlertVisible.value = true
-        } catch {
+        log(slots, on: Date())
+        addedAlertVisible.value = true
+    }
+
+    /// Each day of the plan lands on the matching chosen date.
+    func addPlan(on dates: [Date]) {
+        let days = plan.days()
+        let ordered = dates.sorted()
+        guard !days.isEmpty, !ordered.isEmpty else { return }
+        days.enumerated().forEach { index, day in
+            guard index < ordered.count else { return }
+            log(day.slots, on: ordered[index])
+        }
+        addedAlertVisible.value = true
+    }
+
+    private func log(_ slots: [MealPlanSlot], on date: Date) {
+        slots.forEach { slot in
+            var draft = ProductDetailsMath.draft(from: slot.recipe, mealType: slot.mealType, date: date)
+            draft.servings = 1
+            _ = try? logFoodUseCase.execute(draft.toFoodEntry())
         }
     }
 
@@ -119,6 +198,10 @@ final class MealPlanPreviewViewModel {
     }
 
     func deleteTapped() {
+        onConfirmDelete?()
+    }
+
+    func deleteConfirmed() {
         try? mealPlanRepository.delete(id: plan.id)
         onDeleted?()
     }
@@ -129,6 +212,8 @@ final class MealPlanPreviewViewModel {
 
     func dismissAddedAlert() {
         addedAlertVisible.value = false
+        // The day is in the diary; there is nothing left to do on this screen.
+        onBack?()
     }
 
     func addedAlertTitle() -> String {
@@ -171,22 +256,9 @@ final class MealPlanPreviewViewModel {
         return totals.reduce(0, +) / Double(totals.count)
     }
 
-    private func loadHeroImage() {
-        guard let url = plan.imageURL else {
-            heroImage.value = nil
-            return
-        }
-        Task { @MainActor [weak self] in
-            guard let image = await RemoteImageLoader.shared.fetch(url) else { return }
-            guard self?.plan.imageURL == url else { return }
-            self?.heroImage.value = image
-        }
-    }
-
-    private func shareText() -> String {
-        [plan.title, plan.subtitle, calorieShareBodyText.value]
-            .filter { !$0.isEmpty }
-            .joined(separator: "\n")
+    /// The cover carries the plan's name; every plan would otherwise show the same photo.
+    func renderCover(size: CGSize, traits: UITraitCollection) {
+        heroImage.value = MealPlanCover.image(title: plan.title, size: size, traits: traits)
     }
 
     private static func grouped(_ value: Double) -> String {

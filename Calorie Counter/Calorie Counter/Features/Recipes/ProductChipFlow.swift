@@ -97,11 +97,12 @@ enum ProductChipFlow {
         button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
         button.tintColor = color
         button.backgroundColor = .black
+        // The cross keeps the same distance from the edge as the text does on the other side.
         button.contentEdgeInsets = UIEdgeInsets(
             top: .adaptHeight(7),
             left: .adaptWidth(12),
             bottom: .adaptHeight(7),
-            right: .adaptWidth(8)
+            right: .adaptWidth(12)
         )
         button.layer.cornerCurve = .continuous
         button.clipsToBounds = true
@@ -111,6 +112,7 @@ enum ProductChipFlow {
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         button.setContentHuggingPriority(.required, for: .vertical)
         button.setContentCompressionResistancePriority(.required, for: .vertical)
+        button.heightAnchor.constraint(equalToConstant: .adaptHeight(34)).isActive = true
         button.addAction(UIAction { _ in action() }, for: .touchUpInside)
         return button
     }

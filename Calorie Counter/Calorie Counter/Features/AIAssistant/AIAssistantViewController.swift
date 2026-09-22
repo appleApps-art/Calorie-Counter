@@ -178,6 +178,8 @@ final class AIAssistantViewController: BaseViewController, UITableViewDataSource
             return .adaptHeight(220)
         case .loggedMeal:
             return .adaptHeight(280)
+        case .mealPlan:
+            return .adaptHeight(220)
         case .typing:
             return .adaptHeight(52)
         case .user, .assistant, .system:
@@ -622,7 +624,7 @@ final class AIAssistantViewController: BaseViewController, UITableViewDataSource
             switch item.kind {
             case .typing, .user:
                 continue
-            case .assistant, .recipe, .swap, .system, .loggedMeal:
+            case .assistant, .recipe, .swap, .system, .loggedMeal, .mealPlan:
                 break
             }
             let prior = previous[item.id]
@@ -681,6 +683,10 @@ final class AIAssistantViewController: BaseViewController, UITableViewDataSource
                 self?.viewModel.seeMoreSwapOptions()
             }
             return wrapAssistant(view)
+        case .mealPlan(let plan):
+            let view = AIChatMealPlanCardView()
+            view.configure(plan)
+            return view
         case .loggedMeal(let entryID, let proposal):
             let view = AIChatLoggedMealCardView()
             view.configure(proposal: proposal, canUndo: entryID != nil)

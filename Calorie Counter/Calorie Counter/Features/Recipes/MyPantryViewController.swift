@@ -28,6 +28,7 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
     private let footerGradientView = UIView()
     private let footerFadeGradient = CAGradientLayer()
     private let viewModel: MyPantryViewModel
+    private let suggestionLoader = UIActivityIndicatorView(style: .medium)
 
     init(viewModel: MyPantryViewModel) {
         self.viewModel = viewModel
@@ -64,7 +65,16 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
         suggestionImageView.layer.cornerRadius = .adaptWidth(12)
         suggestionImageView.backgroundColor = AppColor.fillVibrantTertiary
         suggestionChevron.image = OnboardingStyle.symbol("chevron.right", pointSize: 17, weight: .medium)
+        suggestionChevron.contentMode = .center
         suggestionChevron.tintColor = AppColor.iconSecondary
+        suggestionLoader.translatesAutoresizingMaskIntoConstraints = false
+        suggestionLoader.hidesWhenStopped = true
+        suggestionLoader.color = AppColor.iconSecondary
+        suggestionImageView.superview?.insertSubview(suggestionLoader, aboveSubview: suggestionImageView)
+        NSLayoutConstraint.activate([
+            suggestionLoader.centerXAnchor.constraint(equalTo: suggestionImageView.centerXAnchor),
+            suggestionLoader.centerYAnchor.constraint(equalTo: suggestionImageView.centerYAnchor)
+        ])
         suggestionCard.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(suggestionTapped)))
         styleCard(suggestionCard)
         styleCard(listCard)
@@ -112,18 +122,11 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
             self?.tableView.reloadData()
             self?.view.setNeedsLayout()
         }
-        viewModel.suggestion.bind { [weak self] recipe in
-            self?.suggestionSection.isHidden = recipe == nil
-            self?.suggestionRecipeLabel.text = recipe?.title
-            OnboardingStyle.lockFigmaFont(
-                self?.suggestionRecipeLabel,
-                size: 15,
-                weight: .semibold,
-                color: AppColor.labelVibrantPrimary,
-                kern: -0.23
-            )
-            RemoteImageLoader.shared.display(recipe?.imageURL, in: self?.suggestionImageView ?? UIImageView(), placeholder: nil)
-            self?.view.setNeedsLayout()
+        viewModel.suggestion.bind { [weak self] _ in
+            self?.renderSuggestion()
+        }
+        viewModel.isSuggestionLoading.bind { [weak self] _ in
+            self?.renderSuggestion()
         }
         viewModel.isSelecting.bind { [weak self] _ in
             self?.refreshChrome()
@@ -144,6 +147,34 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
     @objc private func selectTapped() { viewModel.selectModeTapped() }
     @objc private func selectAllTapped() { viewModel.selectAllTapped() }
     @objc private func suggestionTapped() { viewModel.suggestionTapped() }
+
+    private func renderSuggestion() {
+        let recipe = viewModel.suggestion.value
+        let isLoading = viewModel.isSuggestionLoading.value && recipe == nil
+        let hidesSection = recipe == nil && !isLoading
+        if suggestionSection.isHidden != hidesSection {
+            UIView.performWithoutAnimation {
+                suggestionSection.isHidden = hidesSection
+            }
+        }
+        suggestionCard.isUserInteractionEnabled = recipe != nil
+        suggestionRecipeLabel.text = isLoading ? L10n.tr("pantry.aiSuggestionLoading") : recipe?.title
+        OnboardingStyle.lockFigmaFont(
+            suggestionRecipeLabel,
+            size: 15,
+            weight: .semibold,
+            color: AppColor.labelVibrantPrimary,
+            kern: -0.23
+        )
+        if isLoading {
+            RemoteImageLoader.shared.display(nil, in: suggestionImageView, placeholder: nil)
+            suggestionLoader.startAnimating()
+        } else {
+            suggestionLoader.stopAnimating()
+            RemoteImageLoader.shared.display(recipe?.imageURL, in: suggestionImageView, placeholder: nil)
+        }
+        view.setNeedsLayout()
+    }
     @objc private func deleteSelectedTapped() { viewModel.deleteSelectedTapped() }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -416,7 +447,7 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
             ]
         ))
         let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .center
+        paragraph.alignment = .natural
         text.addAttribute(
             .paragraphStyle,
             value: paragraph,
@@ -424,7 +455,7 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
         )
         label.attributedText = text
         label.adaptFontSize = false
-        label.textAlignment = .center
+        label.textAlignment = .natural
     }
 
     private func updateListCardHeight() {
@@ -434,7 +465,15 @@ final class MyPantryViewController: BaseViewController, UITableViewDataSource, U
         guard count > 0 else { return }
         let bottomInset: CGFloat = .adaptHeight(16)
         let maxY = view.safeAreaLayoutGuide.layoutFrame.maxY - bottomInset
-        let minY = listCard.convert(listCard.bounds.origin, to: view).y
+        var minY = contentStack.convert(contentStack.bounds.origin, to: view).y
+        if !suggestionSection.isHidden {
+            let fitting = suggestionSection.systemLayoutSizeFitting(
+                CGSize(width: contentStack.bounds.width, height: UIView.layoutFittingCompressedSize.height),
+                withHorizontalFittingPriority: .required,
+                verticalFittingPriority: .fittingSizeLevel
+            )
+            minY += fitting.height + contentStack.spacing
+        }
         let available = max(rowHeight, maxY - minY)
         let next = min(count * rowHeight, available)
         if abs(listCardHeightConstraint.constant - next) > 0.5 {

@@ -25,7 +25,7 @@ enum PantryItemMapper {
         object.unit = item.unit
         object.useBy = item.useBy
         object.imageURLString = item.imageURL?.absoluteString
-        object.imageData = item.imageData
+        object.imageData = StoredPhoto.compacted(item.imageData)
         object.createdAt = item.createdAt
         object.updatedAt = item.updatedAt
     }

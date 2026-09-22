@@ -160,6 +160,7 @@
 "photo.error.emptyText" = "Describe what you ate";
 "photo.error.compression" = "Failed to prepare photo for analysis";
 "photo.error.invalidResponse" = "Invalid food analysis response";
+"photo.error.noFood" = "No food found in the photo. Try another one";
 "photo.camera.hint" = "Place food inside the frame";
 "photo.camera.identifying" = "Identifying...";
 "photo.camera.recognized" = "Meal Recognized";
@@ -200,7 +201,7 @@
 "ai.intro.assistantMessage" = "Got it! Added to your Breakfast Diary: 340 kcal (9g Protein, 52g Carbs, 10g Fat).";
 "ai.intro.capabilitiesTitle" = "Core Capabilities";
 "ai.intro.capability.chat.title" = "Natural Chat Logging";
-"ai.intro.capability.chat.subtitle" = "Tell the assistant what you ate — it logs macros into your Food Diary.";
+"ai.intro.capability.chat.subtitle" = "Tell the assistant what you ate and it logs macros into your Food Diary.";
 "ai.intro.capability.memory.title" = "Persistent Session Memory";
 "ai.intro.capability.memory.subtitle" = "AI remembers your history. Say 'Same lunch' to log items.";
 "ai.intro.capability.recipes.title" = "Goal-Based Meal Recipes";
@@ -241,6 +242,8 @@
 "ai.history.clearMessage" = "All conversations will be deleted.";
 "ai.welcomeShort" = "Welcome! Ask about nutrition or log a meal.";
 "ai.recipeMode" = "Recipe mode: ask to replace an ingredient, then confirm the proposal.";
+"ai.mealPlanMode" = "Welcome back! What would you like to change in this meal plan?";
+"ai.mealPlanSwapNotFound" = "I could not find that dish in the plan. Which day and meal should I change?";
 "ai.replaceIngredientTitle" = "Replace ingredient";
 "ai.placeholder" = "Ask anything or log a meal...";
 "ai.sending" = "Sending...";
@@ -323,6 +326,7 @@
 "recipes.tab.all" = "All";
 "recipes.tab.saved" = "Saved Recipes";
 "recipes.tab.mealPlans" = "Meal Plans";
+"recipes.mealPlan.numberedTitle" = "Plan %d";
 "recipes.seeMore" = "See more";
 "recipes.section.chosenForYou" = "Chosen for You Today";
 "recipes.section.healthyBreakfast" = "Healthy Breakfast";
@@ -348,7 +352,7 @@
 "recipes.create.customIngredients" = "Custom Ingredients";
 "recipes.create.yourProducts" = "Your Products (%d)";
 "recipes.create.products" = "Products (%d)";
-"recipes.create.pantryEmpty" = "Your Pantry is empty — select Custom Ingredients to create recipes.";
+"recipes.create.pantryEmpty" = "Your Pantry is empty. Select Custom Ingredients to create recipes.";
 "recipes.create.mealsToInclude" = "Meals to Include";
 "recipes.create.selectDates" = "Select Dates";
 "recipes.create.recipeDetails" = "Recipe details (optional)";
@@ -356,6 +360,12 @@
 "recipes.create.detailsPlaceholder" = "Type any additional preferences...";
 "recipes.create.loadingRecipe" = "Creating your recipe...";
 "recipes.create.loadingMealPlan" = "Creating your meal plan...";
+"recipes.create.failedTitle" = "Couldn't create a recipe";
+"recipes.create.failedBody" = "Try changing the products or filters and create again.";
+"recipes.create.noIngredientsTitle" = "Add ingredients";
+"recipes.create.noIngredientsPantry" = "To create a recipe, select at least one product from your pantry.";
+"recipes.create.noIngredientsEmptyPantry" = "Your pantry is empty. Switch to Custom Ingredients and add the products you want to cook with.";
+"recipes.create.noIngredientsCustom" = "To create a recipe, add at least one ingredient: type its name or dictate it.";
 "recipes.mealPlanEmptyTitle" = "Nothing Created Yet";
 "recipes.mealPlanEmptySubtitle" = "Your created meal plans are collected here.";
 "recipes.createMealPlan" = "Create Meal Plan";
@@ -372,6 +382,16 @@
 "recipes.mealPlan.delete" = "Delete Meal Plan";
 "recipes.mealPlan.day" = "Day %d";
 "recipes.mealPlan.swapped" = "Meal swapped and plan updated";
+"recipes.mealPlan.swapTitle" = "Swap Meal";
+"recipes.mealPlan.addToDiaryTitle" = "Add to Food Diary";
+"recipes.mealPlan.addToDiaryConfirm" = "Add Meal Plan";
+"recipes.mealPlan.datesToday" = "Today, %@";
+"recipes.mealPlan.swapCurrent" = "Current Meal";
+"recipes.mealPlan.swapReplaceWith" = "Replace with";
+"recipes.mealPlan.swapConfirm" = "Use This Swap";
+"recipes.mealPlan.swapUnavailable" = "No replacement found for this meal";
+"recipes.mealPlan.deleteConfirmTitle" = "Delete this plan?";
+"recipes.mealPlan.deleteConfirmBody" = "The plan and its meals will be removed. Diary entries stay as they are.";
 "recipes.filtersTitle" = "Filters";
 "recipes.filters.reset" = "Reset";
 "recipes.filters.showResults" = "Show Results";
@@ -380,7 +400,7 @@
 "recipes.filters.diet" = "Diet";
 "recipes.filters.cookTime" = "Cook Time";
 "recipes.filters.calories" = "Calories per Serving";
-"recipes.filters.caloriesValue" = "%d — %d kcal";
+"recipes.filters.caloriesValue" = "%d-%d kcal";
 "recipes.filters.difficulty" = "Difficulty";
 "recipes.filters.excluded" = "Excluded Ingredients";
 "recipes.filters.addIngredients" = "Add ingredients...";
@@ -423,12 +443,14 @@
 "pantry.selectedCount" = "%d ingredients selected";
 "pantry.aiSuggestion" = "Bity AI Recipe Suggestion";
 "pantry.cookWithIngredients" = "Cook with your ingredients";
+"pantry.aiSuggestionLoading" = "Creating your recipe…";
 "pantry.useBy" = "Use by %@";
 "pantry.deleteTitle" = "Delete %d items from Your Pantry?";
 "pantry.deleteMessage" = "These items will be permanently removed from Your Pantry.";
 "pantry.delete" = "Delete";
 "pantry.cancel" = "Cancel";
 "pantry.addTitle" = "Add to My Pantry";
+"pantry.saveFailed.title" = "Could not add to the pantry";
 "pantry.add.fridgePhoto" = "Fridge photo";
 "pantry.add.scanBarcode" = "Scan Barcode";
 "pantry.add.search" = "Search";
@@ -471,7 +493,7 @@
 "progress.insight.badge" = "Bity AI Insight";
 "progress.insight.proteinImproved" = "Your protein intake improved %d%% this week.";
 "progress.insight.proteinDropped" = "Your protein intake dropped %d%% this week.";
-"progress.insight.fiberBelow" = "Fiber intake is below target — try adding more vegetables.";
+"progress.insight.fiberBelow" = "Fiber intake is below target. Try adding more vegetables.";
 "progress.lock.title" = "Unlock advanced analytics";
 "progress.lock.subtitle" = "Weekend patterns, macro breakdowns and weight trends.";
 "progress.lock.upgrade" = "Upgrade to Premium";
@@ -639,11 +661,11 @@
 "onboarding.activity.sedentary.title" = "Sedentary";
 "onboarding.activity.sedentary.subtitle" = "Desk job, minimal exercise or daily walking.";
 "onboarding.activity.moderate.title" = "Moderate";
-"onboarding.activity.moderate.subtitle" = "Light active work or light workouts 1–3 days a week.";
+"onboarding.activity.moderate.subtitle" = "Light active work or light workouts 1-3 days a week.";
 "onboarding.activity.active.title" = "Active";
-"onboarding.activity.active.subtitle" = "Physically demanding daily routine or workouts 3–5 days a week.";
+"onboarding.activity.active.subtitle" = "Physically demanding daily routine or workouts 3-5 days a week.";
 "onboarding.activity.athletic.title" = "Athletic";
-"onboarding.activity.athletic.subtitle" = "Heavy physical labor or intense workouts 6–7 days a week.";
+"onboarding.activity.athletic.subtitle" = "Heavy physical labor or intense workouts 6-7 days a week.";
 
 "onboarding.sex.q.title" = "Choose your sex";
 "onboarding.sex.q.subtitle" = "Biological sex affects your BMR and calorie burn due to muscle mass, hormones, and metabolism.";
@@ -730,20 +752,26 @@
 "subscription.months" = "%d months";
 "subscription.years" = "%d years";
 
-"reminder.breakfast.title" = "Breakfast reminder";
-"reminder.breakfast.body" = "Log your breakfast to stay on track.";
-"reminder.lunch.title" = "Lunch reminder";
-"reminder.lunch.body" = "Don't forget to log lunch.";
-"reminder.dinner.title" = "Dinner reminder";
-"reminder.dinner.body" = "Log dinner when you're ready.";
+"reminder.breakfast.title" = "What was for breakfast? 🍳";
+"reminder.breakfast.body" = "Log it in seconds - photo, voice or search.";
+"reminder.lunch.title" = "Lunch time 🥗";
+"reminder.lunch.body" = "What's for lunch today? Log it and Bity will do the math.";
+"reminder.dinner.title" = "How was dinner? 🍽️";
+"reminder.dinner.body" = "Log dinner so today's diary is complete.";
 "reminder.water.title" = "Water reminder";
 "reminder.water.body1" = "Time for a glass of water.";
-"reminder.water.body2" = "Hydration check — log some water.";
+"reminder.water.body2" = "Hydration check: log some water.";
 "reminder.water.body3" = "Keep your water streak going.";
-"reminder.weight.title" = "Weight check-in";
-"reminder.weight.body" = "Log today's weight when you can.";
+"reminder.weight.title" = "Weekly weigh-in ⚖️";
+"reminder.weight.body" = "New week - log your weight to see how you're moving toward your goal.";
 "reminder.streak.title" = "Keep your streak";
 "reminder.streak.body" = "You haven't logged any food today yet.";
+"reminder.comeback.body3" = "A break is fine. Log one meal and you're back in the rhythm.";
+"reminder.comeback.title3" = "Fresh start ✨";
+"reminder.comeback.body2" = "A few entries a day and your plan works for you again.";
+"reminder.comeback.title2" = "Back to your goal 💪";
+"reminder.comeback.body1" = "Pop in for a minute and log what you ate today.";
+"reminder.comeback.title1" = "Bity misses you 🐶";
 
 "badge.firstMeal" = "First Meal";
 "badge.mealTrackerMaster" = "Meal Tracker Master";
@@ -780,6 +808,8 @@
 "rewards.daysProgress" = "%d/%d Days";
 "rewards.weeks" = "%d Weeks";
 "rewards.weeksProgress" = "%d/%d Weeks";
+"rewards.tick.week" = "W%d";
+"rewards.tick.day" = "D%d";
 "rewards.dayStreakPill" = "%d-DAY STREAK";
 "rewards.weeksActivePill" = "%d WEEKS ACTIVE";
 "rewards.dayStreakBadge" = "%d-Day Streak Badge";
@@ -822,7 +852,7 @@
 "product.details.addInstead" = "Add This Instead";
 "product.details.scoreLink" = "How is this score calculated?";
 "product.details.scoreInfoTitle" = "How is this score calculated?";
-"product.details.scoreInfoBody" = "Bity rates each food from 0 to 100 using protein density, fiber, sugar, sodium, and calories. Grades: A 85–100, B 70–84, C 55–69, D 40–54, E 0–39. Daily values use 2000 kcal, 50g protein, 78g fat, 275g carbs, 28g fiber, 50g sugar, and 2300mg sodium.";
+"product.details.scoreInfoBody" = "Bity rates each food from 0 to 100 using protein density, fiber, sugar, sodium, and calories. Grades: A 85-100, B 70-84, C 55-69, D 40-54, E 0-39. Daily values use 2000 kcal, 50g protein, 78g fat, 275g carbs, 28g fiber, 50g sugar, and 2300mg sodium.";
 "product.details.wantToCook" = "Want to Cook This?";
 "product.details.wantToCookSubtitle" = "Tap to see the full recipe";
 "product.details.howToPrepare" = "How to prepare";
@@ -965,3 +995,14 @@
 "settings.importedWeightValue" = "Imported %@";
 
 "ai.logWaterQuantityQuestion" = "Log %@ water?";
+
+"offline.title" = "No internet";
+"offline.subtitle" = "This part works over the internet. It will load again as soon as you are back online.";
+"offline.retry" = "Try again";
+"offline.message" = "No internet connection. This works online only, try again once you are connected.";
+"common.errorGeneric" = "Something went wrong. Please try again.";
+"photo.error.analysisFailed" = "Could not analyze this food. Please try again.";
+"voice.error.nothingHeard" = "Couldn't hear any food. Please try again.";
+"voice.error.notRecording" = "Recording hasn't started. Please try again.";
+"food.generic.ingredient" = "Ingredient";
+"food.generic.product" = "Product";

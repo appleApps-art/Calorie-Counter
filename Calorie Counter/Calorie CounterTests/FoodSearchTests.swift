@@ -503,6 +503,60 @@ final class FoodSearchTests: XCTestCase {
         XCTAssertNotNil(result[0].imageURL)
     }
 
+    func testAttachProductPhotosIgnoresADifferentProductThatSharesAWord() async {
+        let spoonacular = FakeSpoonacular()
+        spoonacular.ingredients = [
+            FoodProduct(
+                id: UUID(),
+                externalId: "9000",
+                name: "Виноградний сік",
+                brand: nil,
+                kind: .ingredient,
+                imageURL: URL(string: "https://img.spoonacular.com/ingredients_100x100/grape-juice.jpg"),
+                calories: 60,
+                protein: 0,
+                carbs: 15,
+                fats: 0,
+                amount: 100,
+                unit: "g",
+                source: .spoonacular
+            )
+        ]
+        let result = await makeUseCase(spoonacular: spoonacular).attachProductPhotos(
+            to: [makePantryItem(name: "Яблучний сік")]
+        )
+        XCTAssertNil(result[0].imageURL)
+        XCTAssertEqual(result[0].name, "Яблучний сік")
+    }
+
+    func testAttachProductPhotosMatchesTheSameProductInAnotherWordOrder() async {
+        let spoonacular = FakeSpoonacular()
+        spoonacular.ingredients = [
+            FoodProduct(
+                id: UUID(),
+                externalId: "9001",
+                name: "Сік яблучний",
+                brand: nil,
+                kind: .ingredient,
+                imageURL: URL(string: "https://img.spoonacular.com/ingredients_100x100/apple-juice.jpg"),
+                calories: 46,
+                protein: 0,
+                carbs: 11,
+                fats: 0,
+                amount: 100,
+                unit: "g",
+                source: .spoonacular
+            )
+        ]
+        let result = await makeUseCase(spoonacular: spoonacular).attachProductPhotos(
+            to: [makePantryItem(name: "Яблучний сік")]
+        )
+        XCTAssertEqual(
+            result[0].imageURL,
+            URL(string: "https://img.spoonacular.com/ingredients_250x250/apple-juice.jpg")
+        )
+    }
+
     func testDecodeDetailsPayloadMapsFullNutrition() throws {
         let decoded = try JSONDecoder().decode(AIFoodDetailsResponse.self, from: Data(Self.detailsFixture.utf8))
         let product = AIFoodSearchService.mapFood(decoded.item!)
@@ -1372,7 +1426,10 @@ final class FoodSearchTests: XCTestCase {
         product.foodType = .dish
         var meal = harness.foodEntry(name: "Бульйон", mealType: .lunch, date: Date(timeIntervalSince1970: 20))
         meal.catalogKind = .recipe
-        meal.imageData = UIImage(named: "BityAIAvatar")?.pngData()
+        meal.imageData = UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).pngData { context in
+            UIColor.systemTeal.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
+        }
         var older = harness.foodEntry(name: "Бульйон", mealType: .lunch, date: Date(timeIntervalSince1970: 10))
         older.catalogKind = .recipe
         try harness.food.save(product)
@@ -1875,6 +1932,32 @@ final class FoodSearchTests: XCTestCase {
                 XCTAssertTrue(nav.pushed.last is ProductDetailsViewController)
             }
         }
+    }
+
+    func testAProductAddedToThePantryStaysOnTheProductScreenAndSaves() throws {
+        let nav = FoodSearchNavigationSpy()
+        nav.modalPresentationStyle = .fullScreen
+        let coordinator = FoodLoggingCoordinator(
+            navigationController: nav,
+            container: DIContainer(coreDataStack: CoreDataStack(inMemory: true))
+        )
+        // A pantry hit can classify as a dish; routing it to the recipe page left the button dead,
+        // because that page waits for full recipe details a pantry product never has.
+        let product = Self.product(id: "633754", name: "Рататуй", kind: .recipe, source: .spoonacular)
+        let draft = ProductDetailsMath.draft(from: product, imageData: nil, mealType: .snacks, date: Date())
+        var added: ProductDetailsDraft?
+        coordinator.openProductDetails(
+            draft,
+            addButtonTitle: "Додати до комори",
+            routesDishesToRecipe: false,
+            onAdd: { added = $0 }
+        )
+
+        let details = try XCTUnwrap(nav.pushed.last as? ProductDetailsViewController)
+        let model: ProductDetailsViewModel = try reflectedViewModel(details)
+        XCTAssertEqual(model.addButtonTitle.value, "Додати до комори")
+        model.addToDiaryTapped()
+        XCTAssertEqual(added?.name, product.name, "The button hands the product over to the pantry")
     }
 
     func testMoreRowSelectionRoutesPreparedMealsAndProductsCorrectly() throws {

@@ -158,6 +158,8 @@ final class NotificationsInboxViewModel {
             return "scalemass"
         case ReminderKind.dailyStreak.rawValue:
             return "flame.fill"
+        case ReminderKind.comeback.rawValue:
+            return "hand.wave.fill"
         default:
             return "bell.fill"
         }

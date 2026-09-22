@@ -24,6 +24,7 @@ final class MealPlanPreviewViewController: BaseViewController {
     @IBOutlet private weak var deleteButton: UIButton!
 
     private let swappedAlert = StatusAlertOverlay()
+    private var renderedCoverSize: CGSize = .zero
     private let addedAlert = StatusAlertOverlay()
     private let footerBlurContainer = UIView()
     private let footerBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
@@ -45,7 +46,7 @@ final class MealPlanPreviewViewController: BaseViewController {
         super.viewDidLoad()
         configureChrome()
         swappedAlert.attach(to: view)
-        swappedAlert.configure(title: L10n.tr("recipes.mealPlan.swapped"))
+        swappedAlert.configure(title: viewModel.swappedAlertTitle.value)
         swappedAlert.onOK = { [weak self] in
             self?.viewModel.dismissSwappedAlert()
         }
@@ -63,12 +64,22 @@ final class MealPlanPreviewViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        renderCoverIfNeeded()
         layoutFooterChrome()
         updateScrollInsets()
         layoutHeaderScrim()
     }
 
     override func bindViewModel() {
+        viewModel.onConfirmDelete = { [weak self] in
+            self?.confirmDelete()
+        }
+        viewModel.onSwapOptions = { [weak self] slot, options in
+            self?.presentSwapOptions(slot, options: options)
+        }
+        viewModel.onPickDiaryDates = { [weak self] plan in
+            self?.presentDiaryDates(plan)
+        }
         viewModel.nameText.bind { [weak self] value in
             self?.nameLabel.text = value
         }
@@ -106,7 +117,11 @@ final class MealPlanPreviewViewController: BaseViewController {
             self?.photoImageView.layer.masksToBounds = true
         }
         viewModel.swappedAlertVisible.bind { [weak self] visible in
-            self?.swappedAlert.setVisible(visible)
+            guard let self else { return }
+            if visible {
+                self.swappedAlert.configure(title: self.viewModel.swappedAlertTitle.value)
+            }
+            self.swappedAlert.setVisible(visible)
         }
         viewModel.addedAlertVisible.bind { [weak self] visible in
             guard let self else { return }
@@ -363,4 +378,55 @@ final class MealPlanPreviewViewController: BaseViewController {
     @objc private func addTapped() { viewModel.addToDiaryTapped() }
     @objc private func editTapped() { viewModel.editWithBityTapped() }
     @objc private func deleteTapped() { viewModel.deleteTapped() }
+
+    private func presentSwapOptions(_ slot: MealPlanSlot, options: [Recipe]) {
+        let sheet = SwapMealSheetViewController(slot: slot, options: options)
+        sheet.modalPresentationStyle = .pageSheet
+        sheet.sheetPresentationController?.applyFigmaInspectorDetent(560)
+        sheet.onClose = { [weak sheet] in
+            sheet?.dismiss(animated: true)
+        }
+        sheet.onConfirm = { [weak self, weak sheet] recipe in
+            sheet?.dismiss(animated: true) {
+                self?.viewModel.applySwap(slot, with: recipe)
+            }
+        }
+        present(sheet, animated: true)
+    }
+
+    private func presentDiaryDates(_ plan: MealPlan) {
+        let sheet = AddPlanToDiarySheetViewController(plan: plan)
+        sheet.modalPresentationStyle = .pageSheet
+        sheet.sheetPresentationController?.applyFigmaInspectorDetent(660)
+        sheet.onClose = { [weak sheet] in
+            sheet?.dismiss(animated: true)
+        }
+        sheet.onAdd = { [weak self, weak sheet] dates in
+            sheet?.dismiss(animated: true) {
+                self?.viewModel.addPlan(on: dates)
+            }
+        }
+        present(sheet, animated: true)
+    }
+
+    /// Deleting a plan cannot be undone, so it is asked for first.
+    private func confirmDelete() {
+        let alert = UIAlertController(
+            title: L10n.tr("recipes.mealPlan.deleteConfirmTitle"),
+            message: L10n.tr("recipes.mealPlan.deleteConfirmBody"),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.tr("pantry.delete"), style: .destructive) { [weak self] _ in
+            self?.viewModel.deleteConfirmed()
+        })
+        present(alert, animated: true)
+    }
+
+    private func renderCoverIfNeeded() {
+        let size = photoImageView.bounds.size
+        guard size.width > 1, size.height > 1, size != renderedCoverSize else { return }
+        renderedCoverSize = size
+        viewModel.renderCover(size: size, traits: traitCollection)
+    }
 }

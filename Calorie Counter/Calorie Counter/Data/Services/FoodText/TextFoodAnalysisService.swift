@@ -39,6 +39,7 @@ final class TextFoodAnalysisService: TextFoodAnalysisServiceProtocol {
         guard !trimmed.isEmpty else {
             throw FoodPhotoAnalysisError.emptyText
         }
+        try NetworkMonitor.shared.requireOnline()
 
         guard var components = URLComponents(url: configuration.baseURL, resolvingAgainstBaseURL: false) else {
             throw FoodPhotoAnalysisError.invalidResponse
@@ -97,7 +98,7 @@ final class TextFoodAnalysisService: TextFoodAnalysisServiceProtocol {
 
         guard let analysis = decoded.analysis else {
             throw FoodPhotoAnalysisError.analysisFailed(
-                message: decoded.error ?? "No food analysis returned"
+                message: L10n.tr("photo.error.analysisFailed")
             )
         }
 

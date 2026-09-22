@@ -27,11 +27,19 @@ final class WantToCookRowView: UIView {
         accessibilityHint = subtitleLabel.text
         isUserInteractionEnabled = !loading
         if loading || recipe?.imageURL != nil { spinner.startAnimating() } else { spinner.stopAnimating() }
-        RemoteImageLoader.shared.display(recipe?.imageURL, in: iconImageView, placeholder: nil) { [weak self] _ in
+        // Until a recipe with its photo is found, the row keeps its book icon instead of a blank.
+        RemoteImageLoader.shared.display(recipe?.imageURL, in: iconImageView, placeholder: Self.placeholderIcon) { [weak self] _ in
             self?.spinner.stopAnimating()
         }
         if loading { spinner.startAnimating() }
         chevronButton.isHidden = loading
+    }
+
+    private static var placeholderIcon: UIImage? {
+        OnboardingStyle.symbol("book", pointSize: 22)?.withTintColor(
+            AppColor.iconSecondary,
+            renderingMode: .alwaysOriginal
+        )
     }
 
     private func commonInit() {
@@ -56,10 +64,7 @@ final class WantToCookRowView: UIView {
             weight: .medium,
             color: AppColor.iconSecondary
         )
-        iconImageView.image = OnboardingStyle.symbol("book", pointSize: 22)?.withTintColor(
-            AppColor.iconSecondary,
-            renderingMode: .alwaysOriginal
-        )
+        iconImageView.image = Self.placeholderIcon
         iconImageView.tintColor = AppColor.iconSecondary
         iconImageView.contentMode = .scaleAspectFill
         iconImageView.clipsToBounds = true

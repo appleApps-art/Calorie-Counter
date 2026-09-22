@@ -83,24 +83,26 @@ final class RecipeSectionsService: RecipeSectionsFetching {
             request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         }
 
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
-        }
+        return try await OfflineFallback.data(for: request) {
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await session.data(for: request)
+            } catch {
+                throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
+            }
 
-        guard let http = response as? HTTPURLResponse else {
-            throw FoodPhotoAnalysisError.invalidResponse
+            guard let http = response as? HTTPURLResponse else {
+                throw FoodPhotoAnalysisError.invalidResponse
+            }
+            if !(200...299).contains(http.statusCode) {
+                let message = (try? decoder.decode(RecipeSectionsResponse.self, from: data))?.error
+                throw FoodPhotoAnalysisError.analysisFailed(
+                    message: message ?? "HTTP \(http.statusCode)"
+                )
+            }
+            return data
         }
-        if !(200...299).contains(http.statusCode) {
-            let message = (try? decoder.decode(RecipeSectionsResponse.self, from: data))?.error
-            throw FoodPhotoAnalysisError.analysisFailed(
-                message: message ?? "HTTP \(http.statusCode)"
-            )
-        }
-        return data
     }
 
     static func decodeSections(

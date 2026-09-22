@@ -21,6 +21,7 @@ final class AIAssistantService: AIAssistantServiceProtocol {
     }
 
     func chat(_ request: AIAssistantChatRequest) async throws -> AIAssistantChatResponse {
+        try NetworkMonitor.shared.requireOnline()
         guard let url = URL(string: "/v1/chat", relativeTo: configuration.baseURL)?.absoluteURL else {
             throw AIAssistantServiceError.invalidURL
         }

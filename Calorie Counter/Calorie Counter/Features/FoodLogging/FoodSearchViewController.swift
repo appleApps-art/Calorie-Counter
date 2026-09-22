@@ -18,6 +18,7 @@ final class FoodSearchViewController: BaseViewController, UITextFieldDelegate {
     @IBOutlet private weak var aiSection: UIView!
     @IBOutlet private weak var resultsSection: UIView!
     @IBOutlet private weak var emptySection: EmptyScreenView!
+    private var showsOfflineEmpty = false
     @IBOutlet private weak var browseSection: UIView!
     @IBOutlet private weak var browseStackView: UIStackView!
     @IBOutlet private weak var scopeContainer: UIView!
@@ -248,15 +249,21 @@ final class FoodSearchViewController: BaseViewController, UITextFieldDelegate {
         resultsCard.applyCardShadow = true
         resultsCard.showsHairlineBorder = false
         resultsCard.showsDropShadow = true
-        emptySection.configure(
-            title: L10n.tr("search.emptyTitle"),
-            subtitle: L10n.tr("search.emptySubtitle"),
-            actionTitle: L10n.tr("search.askBity")
-        )
+        configureNothingFound()
         emptySection.onAction = { [weak self] in
-            self?.view.endEditing(true)
-            self?.viewModel.askBityTapped()
+            guard let self else { return }
+            self.view.endEditing(true)
+            // Offline there is no one to ask; the button searches again instead.
+            if self.showsOfflineEmpty {
+                Analytics.tracker.track(.retryTapped(context: "food_search"))
+                self.viewModel.searchTapped()
+            } else {
+                self.viewModel.askBityTapped()
+            }
         }
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(networkChanged), name: NetworkMonitor.didChange, object: nil
+        )
         aiSection.isHidden = true
         resultsSection.isHidden = true
         emptySection.isHidden = true
@@ -307,6 +314,22 @@ final class FoodSearchViewController: BaseViewController, UITextFieldDelegate {
         }
     }
 
+    @objc private func networkChanged() {
+        if NetworkMonitor.shared.isOnline {
+            if showsOfflineEmpty { viewModel.searchTapped() }
+            viewModel.retryFailedBrowse()
+        }
+        applyPhase()
+    }
+
+    private func configureNothingFound() {
+        emptySection.configure(
+            title: L10n.tr("search.emptyTitle"),
+            subtitle: L10n.tr("search.emptySubtitle"),
+            actionTitle: L10n.tr("search.askBity")
+        )
+    }
+
     private func applyPhase() {
         let phase = viewModel.phase.value
         let isResults = phase == .results
@@ -317,6 +340,18 @@ final class FoodSearchViewController: BaseViewController, UITextFieldDelegate {
             isShowingBrowseSkeletons = false
             browseSection.isHidden = true
             emptySection.isHidden = !isEmpty
+            // Offline the search still looks through the catalog and foods already seen; only when
+            // that finds nothing does the screen say the rest needs the internet.
+            let offlineEmpty = isEmpty && !NetworkMonitor.shared.isOnline
+            if offlineEmpty != showsOfflineEmpty {
+                showsOfflineEmpty = offlineEmpty
+                if offlineEmpty {
+                    Analytics.tracker.track(.offlineStateShown(context: "food_search"))
+                    emptySection.configureOffline()
+                } else {
+                    configureNothingFound()
+                }
+            }
             aiSection.isHidden = !isResults || isEmpty || viewModel.suggestedItems.value.isEmpty
             if showsSearchSkeletons {
                 showSearchSkeletonsIfNeeded()

@@ -935,6 +935,139 @@ final class AIAssistantChatTests: XCTestCase {
         XCTAssertEqual(try persist.loadConversation(id: ChatConversation.legacyID).count, 3)
     }
 
+    // MARK: - Meal plans
+
+    func testBityCarriesEveryMealPlanAndTheOpenOneInFull() throws {
+        let plans = FakeMealPlanRepository()
+        let open = mealPlan(title: "План 1", dishes: ["Вівсянка", "Паста"])
+        try plans.save(open)
+        try plans.save(mealPlan(title: "План 2", dishes: ["Сирники", "Суп"]))
+        let harness = TestHarness()
+        let builder = BuildAIAssistantUserContextUseCase(
+            fetchDailyDiaryUseCase: FetchDailyDiaryUseCase(
+                foodEntryRepository: harness.food,
+                waterEntryRepository: harness.water,
+                userGoalsRepository: harness.goals,
+                workoutEntryRepository: harness.workout
+            ),
+            userProfileRepository: harness.profile,
+            userPreferenceRepository: harness.preferences,
+            fetchMealPlansUseCase: FetchMealPlansUseCase(mealPlanRepository: plans)
+        )
+
+        let anywhere = try builder.execute()
+        XCTAssertEqual(
+            Set(anywhere.mealPlans?.map(\.title) ?? []),
+            ["План 1", "План 2"],
+            "Bity knows the plans on any screen"
+        )
+        XCTAssertEqual(
+            anywhere.mealPlans?.first(where: { $0.title == "План 2" })?.days?.first?.meals.map(\.title),
+            ["Сирники", "Суп"],
+            "And what is inside them, not only their names"
+        )
+        XCTAssertNil(anywhere.mealPlan)
+
+        let editing = try builder.execute(mealPlan: open)
+        XCTAssertEqual(editing.mealPlan?.title, "План 1")
+        let day = try XCTUnwrap(editing.mealPlan?.days?.first)
+        XCTAssertEqual(day.number, 1)
+        XCTAssertEqual(day.meals.map(\.title), ["Вівсянка", "Паста"])
+        XCTAssertEqual(day.meals.first?.mealType, MealType.breakfast.rawValue)
+        XCTAssertEqual(editing.mealPlans?.first(where: { $0.title == "План 1" })?.days?.count, 1)
+    }
+
+    func testAPlanChatOpensWithTheGreetingAndThePlanCard() {
+        let harness = TestHarness()
+        let plan = mealPlan(title: "План 1", dishes: ["Вівсянка", "Паста"])
+        let viewModel = makeViewModel(harness: harness, persist: nil, mealPlan: plan)
+
+        guard case .assistant(let greeting) = viewModel.messages.value.first?.kind else {
+            return XCTFail("The plan chat greets the user first")
+        }
+        XCTAssertEqual(greeting, L10n.tr("ai.mealPlanMode"))
+        guard case .mealPlan(let shown) = viewModel.messages.value.last?.kind else {
+            return XCTFail("The plan itself is shown as a card")
+        }
+        XCTAssertEqual(shown.title, plan.title)
+        XCTAssertTrue(viewModel.inputText.value.isEmpty, "The plan name is not typed into the field")
+    }
+
+    func testAPlanSwapToolCallReachesThePlanScreen() throws {
+        let parsed = ParseAIAssistantActionsUseCase().execute(toolCalls: try toolCalls([
+            ["id": "plan-1", "name": "propose_meal_plan_swap", "arguments": [
+                "dayNumber": 2,
+                "mealType": "lunch",
+                "currentTitle": "Паста",
+                "replacement": [
+                    "title": "Салат з тунцем",
+                    "calories": 420,
+                    "ingredients": ["тунець", "салат"]
+                ]
+            ]]
+        ]))
+
+        guard case .swapMealPlanMeal(let proposal) = parsed.first else {
+            return XCTFail("A plan edit must parse into its own action")
+        }
+        XCTAssertEqual(proposal.dayNumber, 2)
+        XCTAssertEqual(proposal.mealType, .lunch)
+        XCTAssertEqual(proposal.currentTitle, "Паста")
+        XCTAssertEqual(proposal.replacementTitle, "Салат з тунцем")
+        XCTAssertEqual(proposal.calories, 420)
+        XCTAssertEqual(proposal.ingredients, ["тунець", "салат"])
+    }
+
+    func testAPlanSwapThatMatchesNothingAnswersInsteadOfGoingQuiet() async throws {
+        let harness = TestHarness()
+        let service = StubAIAssistantService(response: try decodedResponse(toolCalls: [
+            ["id": "plan-1", "name": "propose_meal_plan_swap", "arguments": [
+                "currentTitle": "Борщ",
+                "replacement": ["title": "Омлет"]
+            ]]
+        ]))
+        let viewModel = makeViewModel(
+            harness: harness,
+            persist: nil,
+            service: service,
+            mealPlan: mealPlan(title: "План 1", dishes: ["Вівсянка", "Паста"])
+        )
+        viewModel.onMealPlanSwapProposed = { _ in false }
+
+        viewModel.updateInput("заміни борщ")
+        viewModel.sendTapped()
+        await waitUntil { !viewModel.isSending.value }
+
+        guard case .assistant(let text) = viewModel.messages.value.last?.kind else {
+            return XCTFail("A swap the plan cannot take must still get an answer")
+        }
+        XCTAssertEqual(text, L10n.tr("ai.mealPlanSwapNotFound"))
+    }
+
+    private func mealPlan(title: String, dishes: [String]) -> MealPlan {
+        MealPlan(
+            id: UUID(),
+            title: title,
+            weeks: 1,
+            imageURL: nil,
+            recipes: dishes.map {
+                Recipe(id: UUID(), externalId: nil, title: $0, summary: nil, imageURL: nil,
+                       readyInMinutes: 15, servings: 1, calories: 400, protein: 20, carbs: 40, fats: 10,
+                       ingredients: [], steps: [])
+            },
+            createdAt: Date(),
+            dayLayouts: [dishes.count],
+            mealTypeKeys: ["breakfast", "lunch"]
+        )
+    }
+
+    private func toolCalls(_ raw: [[String: Any]]) throws -> [AIAssistantToolCall] {
+        try JSONDecoder().decode(
+            [AIAssistantToolCall].self,
+            from: JSONSerialization.data(withJSONObject: raw)
+        )
+    }
+
     private func decodedResponse(
         content: String? = nil,
         toolCalls: [[String: Any]] = []
@@ -997,7 +1130,8 @@ final class AIAssistantChatTests: XCTestCase {
         harness: TestHarness,
         persist: PersistChatHistoryUseCase?,
         service: AIAssistantServiceProtocol? = nil,
-        confirm: ConfirmAIAssistantActionUseCase? = nil
+        confirm: ConfirmAIAssistantActionUseCase? = nil,
+        mealPlan: MealPlan? = nil
     ) -> AIAssistantViewModel {
         AIAssistantViewModel(
             aiAssistantService: service ?? StubAIAssistantService(),
@@ -1007,6 +1141,7 @@ final class AIAssistantChatTests: XCTestCase {
                 userGoalsRepository: harness.goals,
                 workoutEntryRepository: harness.workout
             ),
+            mealPlanContext: mealPlan,
             confirmAIAssistantActionUseCase: confirm,
             persistChatHistoryUseCase: persist
         )

@@ -73,6 +73,11 @@ final class EmptyScreenView: UIView {
         if !buttonTitle.isEmpty {
             if let systemImage, !systemImage.isEmpty {
                 OnboardingStyle.stylePrimaryButton(actionButton, title: buttonTitle, systemImage: systemImage)
+                actionButton.configuration?.image = UIImage(
+                    systemName: systemImage,
+                    withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+                )
+                actionButton.configuration?.imagePadding = 2
             } else {
                 OnboardingStyle.stylePrimaryButton(actionButton, title: buttonTitle)
             }
@@ -231,5 +236,20 @@ final class EmptyScreenView: UIView {
         configureMessageLabel(subtitleLabel, wraps: true)
         illustrationView.image = UIImage(named: "EmptyScreen")
         actionButton.addTarget(self, action: #selector(actionTapped), for: .touchUpInside)
+    }
+}
+
+extension EmptyScreenView {
+    /// The state a backend-only screen shows when there is no connection and nothing kept to show.
+    /// Screens that route the action themselves pass no closure and keep their own `onAction`.
+    func configureOffline(illustrationName: String = "EmptyScreen", onRetry: (() -> Void)? = nil) {
+        configure(
+            title: L10n.tr("offline.title"),
+            subtitle: L10n.tr("offline.subtitle"),
+            actionTitle: L10n.tr("offline.retry"),
+            systemImage: "arrow.clockwise",
+            illustrationName: illustrationName
+        )
+        if let onRetry { onAction = onRetry }
     }
 }

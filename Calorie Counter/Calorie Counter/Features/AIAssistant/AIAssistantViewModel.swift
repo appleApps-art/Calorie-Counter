@@ -37,6 +37,7 @@ struct AIChatItem: Equatable {
         case recipe(MealSuggestionOption, mealType: MealType)
         case swap(FoodSwapProposal)
         case loggedMeal(entryID: UUID?, proposal: FoodLogProposal)
+        case mealPlan(MealPlan)
         case system(String)
         case typing
     }
@@ -63,6 +64,8 @@ final class AIAssistantViewModel {
     let selectedCategory = Observable<AIChatCategory?>(nil)
 
     var onRecipeIngredientSwapProposed: ((RecipeIngredientSwapProposal) -> Void)?
+    /// Returns true when the plan screen actually applied the swap.
+    var onMealPlanSwapProposed: ((MealPlanSwapProposal) -> Bool)?
     private(set) var currentConversationID = UUID()
 
     private let aiAssistantService: AIAssistantServiceProtocol
@@ -74,6 +77,7 @@ final class AIAssistantViewModel {
     private let searchFoodProductsUseCase: SearchFoodProductsUseCase?
     private let dictation: VoiceConfirmDictation?
     private let recipeContext: Recipe?
+    private let mealPlanContext: MealPlan?
     private var history: [AIAssistantChatHistoryItem] = []
     private var pendingWaterProposal: WaterLogProposal?
     private var pendingImage: (base64: String, mimeType: String)?
@@ -85,6 +89,7 @@ final class AIAssistantViewModel {
         fetchDailyDiaryUseCase: FetchDailyDiaryUseCase,
         logWaterUseCase: LogWaterUseCase? = nil,
         recipeContext: Recipe? = nil,
+        mealPlanContext: MealPlan? = nil,
         initialInput: String? = nil,
         buildAIAssistantUserContextUseCase: BuildAIAssistantUserContextUseCase? = nil,
         parseAIAssistantActionsUseCase: ParseAIAssistantActionsUseCase = ParseAIAssistantActionsUseCase(),
@@ -111,6 +116,7 @@ final class AIAssistantViewModel {
             self.dictation = nil
         }
         self.recipeContext = recipeContext
+        self.mealPlanContext = mealPlanContext
         if let buildAIAssistantUserContextUseCase {
             self.buildAIAssistantUserContextUseCase = buildAIAssistantUserContextUseCase
         } else {
@@ -123,6 +129,12 @@ final class AIAssistantViewModel {
         if recipeContext != nil {
             titleText.value = L10n.tr("ai.replaceIngredientTitle")
             messages.value = [.init(kind: .assistant(L10n.tr("ai.recipeMode")))]
+        } else if let mealPlanContext {
+            // The plan itself opens the conversation, the way the design shows it.
+            messages.value = [
+                .init(kind: .assistant(L10n.tr("ai.mealPlanMode"))),
+                .init(kind: .mealPlan(mealPlanContext))
+            ]
         } else {
             messages.value = [.init(kind: .assistant(L10n.tr("ai.chat.welcome")))]
         }
@@ -185,6 +197,7 @@ final class AIAssistantViewModel {
         }
         do {
             let entry = try confirmAIAssistantActionUseCase.executeMealSuggestion(option, mealType: mealType)
+            Analytics.tracker.track(.aiActionApplied(kind: "meal_suggestion", success: true))
             removePendingMealSuggestion(option, mealType: mealType)
             selectedCategory.value = .nutrition
             let loggedItem = AIChatItem(kind: .loggedMeal(
@@ -195,6 +208,7 @@ final class AIAssistantViewModel {
             recordCardActionInHistory(loggedItem)
             statusText.value = L10n.tr("ai.saved")
         } catch {
+            Analytics.tracker.track(.aiActionApplied(kind: "meal_suggestion", success: false))
             reportSaveFailure(error.localizedDescription)
         }
     }
@@ -206,9 +220,11 @@ final class AIAssistantViewModel {
         }
         do {
             guard let entry = try confirmAIAssistantActionUseCase.execute(.swapFood(proposal)) else {
+                Analytics.tracker.track(.aiActionApplied(kind: "swap_food", success: false))
                 reportSaveFailure(L10n.tr("ai.confirmUnavailable"))
                 return
             }
+            Analytics.tracker.track(.aiActionApplied(kind: "swap_food", success: true))
             removePendingSwap(proposal)
             let logged = proposal.asFoodLogProposal(mealType: entry.mealType)
             let loggedItem = AIChatItem(kind: .loggedMeal(entryID: entry.id, proposal: logged))
@@ -335,7 +351,14 @@ final class AIAssistantViewModel {
         pendingImage = nil
         typingItemID = nil
         if showsWelcome {
-            messages.value = [.init(kind: .assistant(L10n.tr(recipeContext == nil ? "ai.chat.welcome" : "ai.recipeMode")))]
+            if let mealPlanContext {
+                messages.value = [
+                    .init(kind: .assistant(L10n.tr("ai.mealPlanMode"))),
+                    .init(kind: .mealPlan(mealPlanContext))
+                ]
+            } else {
+                messages.value = [.init(kind: .assistant(L10n.tr(recipeContext == nil ? "ai.chat.welcome" : "ai.recipeMode")))]
+            }
         }
     }
 
@@ -358,7 +381,10 @@ final class AIAssistantViewModel {
 
         Task { @MainActor in
             do {
-                let context = try buildAIAssistantUserContextUseCase.execute(recipe: recipeContext)
+                let context = try buildAIAssistantUserContextUseCase.execute(
+                    recipe: recipeContext,
+                    mealPlan: mealPlanContext
+                )
                 let response = try await aiAssistantService.chat(
                     AIAssistantChatRequest(
                         message: outbound,
@@ -407,7 +433,11 @@ final class AIAssistantViewModel {
                     source: recipeContext == nil ? "chat" : "recipe"
                 ))
             } catch {
-                let errorItem = AIChatItem(kind: .system(L10n.format("ai.errorPrefix", error.localizedDescription)))
+                Analytics.tracker.track(.errorShown(context: "ai_chat", reason: error.isNoConnection ? "offline" : "failed"))
+                let errorText = error.isNoConnection
+                    ? L10n.tr("offline.message")
+                    : L10n.format("ai.errorPrefix", error.localizedDescription)
+                let errorItem = AIChatItem(kind: .system(errorText))
                 replaceTyping(with: [errorItem])
                 persistTurn(incoming: Array(messages.value.suffix(1)), conversationID: conversationID)
                 statusText.value = L10n.tr("ai.failed")
@@ -456,6 +486,13 @@ final class AIAssistantViewModel {
             case .swapRecipeIngredient(let proposal):
                 onRecipeIngredientSwapProposed?(proposal)
                 statusText.value = L10n.tr("ai.confirmSwapStatus")
+            case .swapMealPlanMeal(let proposal):
+                if onMealPlanSwapProposed?(proposal) == true {
+                    statusText.value = L10n.tr("ai.confirmSwapStatus")
+                } else {
+                    // Saying nothing here is what makes a chat feel broken.
+                    items.append(.init(kind: .assistant(L10n.tr("ai.mealPlanSwapNotFound"))))
+                }
             case .logWater(let proposal):
                 pendingWaterProposal = proposal
                 let amount = Int(proposal.amountMilliliters.rounded())
@@ -474,9 +511,11 @@ final class AIAssistantViewModel {
                 return nil
             }
             let entry = try confirmAIAssistantActionUseCase.execute(action)
+            Analytics.tracker.track(.aiActionApplied(kind: action.analyticsKind, success: true))
             statusText.value = L10n.tr("ai.saved")
             return entry
         } catch {
+            Analytics.tracker.track(.aiActionApplied(kind: action.analyticsKind, success: false))
             reportSaveFailure(error.localizedDescription, appendsMessage: appendsFailureMessage)
             return nil
         }

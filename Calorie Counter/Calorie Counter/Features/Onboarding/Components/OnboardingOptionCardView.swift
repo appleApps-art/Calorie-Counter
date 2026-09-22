@@ -56,12 +56,23 @@ final class OnboardingOptionCardView: UIControl {
         subviews.first?.isUserInteractionEnabled = false
         subviews.first?.clipsToBounds = false
         cardView.useLiveGlass = false
+        // On black a black card cannot be seen: the design lifts it to the elevated grey.
+        cardView.cardFillColor = AppColor.backgroundsPrimaryElevated
         if let textStack = titleLabel.superview as? UIStackView {
             textStack.alignment = .fill
             NSLayoutConstraint.activate([
                 textStack.topAnchor.constraint(greaterThanOrEqualTo: cardView.topAnchor, constant: 16),
                 textStack.bottomAnchor.constraint(lessThanOrEqualTo: cardView.bottomAnchor, constant: -16)
             ])
+            // Without these the card is free to grow, and the flow's spare space landed inside the
+            // first option instead of below the list.
+            [
+                textStack.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 16),
+                textStack.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -16)
+            ].forEach {
+                $0.priority = .init(999)
+                $0.isActive = true
+            }
         }
         checkImageView.image = OnboardingStyle.symbol("checkmark", pointSize: 20)
         checkImageView.tintColor = AppColor.teal

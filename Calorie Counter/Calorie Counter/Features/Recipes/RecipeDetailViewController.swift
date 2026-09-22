@@ -1,4 +1,3 @@
-import Lottie
 import UIKit
 
 final class RecipeDetailViewController: BaseViewController {
@@ -35,7 +34,7 @@ final class RecipeDetailViewController: BaseViewController {
     @IBOutlet private weak var instructionsSection: UIView!
     @IBOutlet private weak var stepsStackView: UIStackView!
     @IBOutlet private weak var sectionLoaderHost: UIView!
-    @IBOutlet private weak var sectionLoaderView: LottieAnimationView!
+    @IBOutlet private weak var sectionLoaderView: UIActivityIndicatorView!
     @IBOutlet private weak var footerView: UIView!
     @IBOutlet private weak var addButton: UIButton!
     @IBOutlet private weak var saveButton: UIButton!
@@ -43,6 +42,9 @@ final class RecipeDetailViewController: BaseViewController {
     private let savedAlert = StatusAlertOverlay()
     private let shareOverlay = CustomLoadingOverlayView()
     private let tabFillView = UIView()
+    private let chipsFade = ChipsEdgeFadeDelegate()
+    private var didPinChipsStack = false
+    private let photoLoader = UIActivityIndicatorView(style: .medium)
     private let tabIndicatorView = UIView()
     private let footerBlurContainer = UIView()
     private let footerBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
@@ -51,6 +53,7 @@ final class RecipeDetailViewController: BaseViewController {
     private let footerFadeGradient = CAGradientLayer()
     private let viewModel: RecipeDetailViewModel
     private let detailsFailureStack = UIStackView()
+    private let detailsFailureLabel = UILabel()
 
     init(viewModel: RecipeDetailViewModel) {
         self.viewModel = viewModel
@@ -74,6 +77,7 @@ final class RecipeDetailViewController: BaseViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        if let scroll = chipsScrollView { OnboardingStyle.applyChatChipsEdgeFade(to: scroll) }
         layoutTabChrome()
         layoutFooterChrome()
         updateScrollInsets()
@@ -86,10 +90,16 @@ final class RecipeDetailViewController: BaseViewController {
 
     override func bindViewModel() {
         viewModel.onDetailsUnavailable = { [weak self] in
-            guard let self, self.presentedViewController == nil else { return }
+            Analytics.tracker.track(.errorShown(
+                context: "recipe_details",
+                reason: NetworkMonitor.shared.isOnline ? "unavailable" : "offline"
+            ))
+            // Offline the section itself says so and retries on reconnect; an alert would only nag.
+            guard let self, self.presentedViewController == nil, NetworkMonitor.shared.isOnline else { return }
             let alert = UIAlertController(title: L10n.tr("recipes.details.unavailableTitle"),
                                           message: L10n.tr("recipes.details.unavailableBody"), preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: L10n.tr("recipes.details.retry"), style: .default) { [weak self] _ in
+                Analytics.tracker.track(.retryTapped(context: "recipe_details"))
                 self?.viewModel.retryDetails()
             })
             alert.addAction(UIAlertAction(title: L10n.tr("common.close"), style: .cancel))
@@ -146,6 +156,10 @@ final class RecipeDetailViewController: BaseViewController {
             self?.photoImageView.contentMode = .scaleAspectFill
             self?.photoImageView.clipsToBounds = true
             self?.photoImageView.layer.masksToBounds = true
+            self?.refreshPhotoLoader()
+        }
+        viewModel.isHeroImageLoading.bind { [weak self] _ in
+            self?.refreshPhotoLoader()
         }
         viewModel.isDetailsLoading.bind { [weak self] _ in
             self?.updateTabContent()
@@ -173,7 +187,7 @@ final class RecipeDetailViewController: BaseViewController {
 
     private func configureChrome() {
         view.backgroundColor = AppColor.dynamic(light: AppColor.gray6, dark: .black)
-        backgroundImageView.alpha = 0.18
+        backgroundImageView.alpha = 1
         backgroundImageView.image = UIImage(named: "appBackground")
         backgroundImageView.contentMode = .scaleAspectFill
         backgroundImageView.clipsToBounds = true
@@ -209,7 +223,8 @@ final class RecipeDetailViewController: BaseViewController {
         [heroCard, scoreCard, calorieShareCard].forEach { card in
             card?.useLiveGlass = false
             card?.applyCardShadow = true
-            card?.cardFillColor = AppColor.backgroundsPrimaryElevated
+            // Solid black in dark mode, as in the design; the background artwork shows around them.
+            card?.cardFillColor = AppColor.backgroundsPrimary
         }
         configureTabTrack()
         configureFooter()
@@ -265,6 +280,7 @@ final class RecipeDetailViewController: BaseViewController {
         chipsStack.axis = .horizontal
         chipsStack.alignment = .center
         chipsStack.spacing = .adaptWidth(6)
+        configureChipsCarousel()
         styleListCard(nutritionStackView)
         styleListCard(ingredientsStackView)
         styleListCard(stepsStackView)
@@ -286,7 +302,8 @@ final class RecipeDetailViewController: BaseViewController {
     }
 
     private func refreshBackgroundAppearance() {
-        backgroundImageView.isHidden = traitCollection.userInterfaceStyle == .dark
+        // appBackground ships a light and a dark artwork, so the screen keeps it in both themes.
+        backgroundImageView.isHidden = false
     }
 
     private func configureTabTrack() {
@@ -329,6 +346,9 @@ final class RecipeDetailViewController: BaseViewController {
         }
         tabTrack.isHidden = false
         tabTrack.isUserInteractionEnabled = true
+        tabTrack.onLayoutSubviews = { [weak self] in
+            self?.layoutTabChrome()
+        }
     }
 
     private func configureSectionLoader() {
@@ -338,10 +358,8 @@ final class RecipeDetailViewController: BaseViewController {
         sectionLoaderView.isUserInteractionEnabled = false
         sectionLoaderView.backgroundColor = .clear
         sectionLoaderView.isOpaque = false
-        sectionLoaderView.contentMode = .scaleAspectFit
-        sectionLoaderView.loopMode = .loop
-        sectionLoaderView.backgroundBehavior = .pauseAndRestore
-        sectionLoaderView.animation = LottieAnimation.named("CustomLoadingTransparent")
+        sectionLoaderView.hidesWhenStopped = false
+        sectionLoaderView.color = AppColor.labelsSecondary
     }
 
     private func configureFooter() {
@@ -404,6 +422,8 @@ final class RecipeDetailViewController: BaseViewController {
             tabFillView.addSubview(tabIndicatorView)
         }
         let selected = selectedTabButton()
+        // The buttons live in a stack inside the track; place them before measuring the pill.
+        selected.superview?.layoutIfNeeded()
         let raw = selected.convert(selected.bounds, to: tabFillView)
         let frame = raw.intersection(tabFillView.bounds)
         guard frame.width > 4, frame.height > 4, frame.height <= tabFillView.bounds.height + 1 else {
@@ -467,23 +487,31 @@ final class RecipeDetailViewController: BaseViewController {
         sectionLoaderHost.isHidden = ready
         sectionLoaderView.isHidden = !showLoader
         detailsFailureStack.isHidden = !failed
+        detailsFailureLabel.text = NetworkMonitor.shared.isOnline
+            ? L10n.tr("recipes.details.unavailableBody")
+            : L10n.tr("offline.message")
         addButton.isEnabled = !viewModel.isDetailsLoading.value
         saveButton.isEnabled = !viewModel.isDetailsLoading.value
         shareButton.isEnabled = !viewModel.isDetailsLoading.value
         if showLoader {
-            if sectionLoaderView.isAnimationPlaying == false {
-                sectionLoaderView.play()
-            }
+            sectionLoaderView.startAnimating()
         } else {
-            sectionLoaderView.stop()
+            sectionLoaderView.stopAnimating()
         }
         tabTrack.setNeedsLayout()
         view.setNeedsLayout()
     }
 
+    @objc private func networkChanged() {
+        if NetworkMonitor.shared.isOnline, viewModel.detailsUnavailable.value {
+            viewModel.retryDetails()
+        }
+        updateTabContent()
+    }
+
     private func configureDetailsFailure() {
         sectionLoaderHost.isUserInteractionEnabled = true
-        let message = UILabel()
+        let message = detailsFailureLabel
         message.text = L10n.tr("recipes.details.unavailableBody")
         message.textColor = AppColor.labelsSecondary
         message.font = .preferredFont(forTextStyle: .body)
@@ -494,7 +522,10 @@ final class RecipeDetailViewController: BaseViewController {
         retry.setTitle(L10n.tr("recipes.details.retry"), for: .normal)
         retry.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         retry.tintColor = AppColor.dynamic(light: AppColor.tabSelected, dark: AppColor.teal)
-        retry.addAction(UIAction { [weak self] _ in self?.viewModel.retryDetails() }, for: .touchUpInside)
+        retry.addAction(UIAction { [weak self] _ in
+            Analytics.tracker.track(.retryTapped(context: "recipe_details"))
+            self?.viewModel.retryDetails()
+        }, for: .touchUpInside)
         retry.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
         detailsFailureStack.axis = .vertical
         detailsFailureStack.alignment = .fill
@@ -503,6 +534,9 @@ final class RecipeDetailViewController: BaseViewController {
         detailsFailureStack.addArrangedSubview(retry)
         detailsFailureStack.translatesAutoresizingMaskIntoConstraints = false
         sectionLoaderHost.addSubview(detailsFailureStack)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(networkChanged), name: NetworkMonitor.didChange, object: nil
+        )
         NSLayoutConstraint.activate([
             detailsFailureStack.leadingAnchor.constraint(equalTo: sectionLoaderHost.leadingAnchor, constant: 20),
             detailsFailureStack.trailingAnchor.constraint(equalTo: sectionLoaderHost.trailingAnchor, constant: -20),
@@ -541,14 +575,51 @@ final class RecipeDetailViewController: BaseViewController {
         button.titleLabel?.textAlignment = .center
     }
 
+    /// Time, calories and the AI badge do not always fit one line; the row scrolls sideways
+    /// instead of squeezing a chip into two lines.
+    private func configureChipsCarousel() {
+        guard let scroll = chipsScrollView, !didPinChipsStack else { return }
+        didPinChipsStack = true
+        OnboardingStyle.configureChatChipsCarousel(scroll)
+        let inset = CGFloat.adaptWidth(16)
+        scroll.contentInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
+        scroll.contentOffset = CGPoint(x: -inset, y: 0)
+        scroll.delegate = chipsFade
+    }
+
+    private var chipsScrollView: UIScrollView? { chipsStack.superview as? UIScrollView }
+
+    /// A generated recipe's photo can take a few seconds; the empty frame shows it is on its way.
+    private func refreshPhotoLoader() {
+        if photoLoader.superview !== photoImageView {
+            photoLoader.translatesAutoresizingMaskIntoConstraints = false
+            photoLoader.hidesWhenStopped = true
+            photoLoader.color = AppColor.labelsSecondary
+            photoImageView.addSubview(photoLoader)
+            NSLayoutConstraint.activate([
+                photoLoader.centerXAnchor.constraint(equalTo: photoImageView.centerXAnchor),
+                photoLoader.centerYAnchor.constraint(equalTo: photoImageView.centerYAnchor)
+            ])
+        }
+        if viewModel.isHeroImageLoading.value && photoImageView.image == nil {
+            photoLoader.startAnimating()
+        } else {
+            photoLoader.stopAnimating()
+        }
+    }
+
     private func renderChips(_ chips: [RecipeMetaChip]) {
         chipsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         chipsStack.isHidden = chips.isEmpty
+        chipsScrollView?.isHidden = chips.isEmpty
         chips.forEach { chip in
             let button = UIButton(type: .system)
             var config = UIButton.Configuration.filled()
             config.cornerStyle = .capsule
-            config.baseBackgroundColor = .black
+            // Black chips on the white card; on the black card in dark mode they need a lighter fill.
+            config.baseBackgroundColor = UIColor { traits in
+                traits.userInterfaceStyle == .dark ? AppColor.gray6.resolvedColor(with: traits) : .black
+            }
             config.baseForegroundColor = .white
             config.image = UIImage(
                 systemName: chip.symbol,
@@ -562,9 +633,16 @@ final class RecipeDetailViewController: BaseViewController {
                 next.font = .systemFont(ofSize: 15, weight: .regular)
                 return next
             }
+            config.titleLineBreakMode = .byClipping
             button.configuration = config
             button.isUserInteractionEnabled = false
+            button.setContentCompressionResistancePriority(.required, for: .horizontal)
+            button.setContentHuggingPriority(.required, for: .horizontal)
             chipsStack.addArrangedSubview(button)
+        }
+        if let scroll = chipsScrollView {
+            scroll.layoutIfNeeded()
+            OnboardingStyle.applyChatChipsEdgeFade(to: scroll)
         }
     }
 
@@ -608,7 +686,7 @@ final class RecipeDetailViewController: BaseViewController {
     }
 
     private func styleListCard(_ stack: UIStackView) {
-        stack.backgroundColor = AppColor.backgroundsPrimaryElevated
+        stack.backgroundColor = AppColor.backgroundsPrimary
         stack.layer.cornerRadius = .adaptWidth(24)
         stack.layer.cornerCurve = .continuous
         stack.clipsToBounds = true
@@ -651,5 +729,12 @@ final class RecipeDetailViewController: BaseViewController {
         )
         saveButton.configuration?.imagePadding = 8
         saveButton.configuration?.imagePlacement = .leading
+    }
+}
+
+/// Keeps the chip row's edge fade pinned to the visible area while it scrolls.
+private final class ChipsEdgeFadeDelegate: NSObject, UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        OnboardingStyle.applyChatChipsEdgeFade(to: scrollView)
     }
 }

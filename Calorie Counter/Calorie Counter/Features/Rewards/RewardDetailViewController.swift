@@ -14,6 +14,8 @@ final class RewardDetailViewController: BaseViewController {
     var onDismissed: (() -> Void)?
     var onViewed: (() -> Void)?
 
+    static let confettiBursts = 3
+
     private let progress: BadgeProgress
     private let playsCelebration: Bool
     private var didNotifyDismiss = false
@@ -34,6 +36,11 @@ final class RewardDetailViewController: BaseViewController {
         if playsCelebration {
             confettiView.isHidden = false
             confettiView.playsOnce = false
+            // Three bursts celebrate the badge; an endless loop turns into noise behind the card.
+            confettiView.loopLimit = Self.confettiBursts
+            confettiView.onFinished = { [weak confettiView] in
+                UIView.animate(withDuration: 0.3) { confettiView?.alpha = 0 }
+            }
             confettiView.loadGIF(named: "RewardConfetti")
         } else {
             confettiView.isHidden = true
@@ -48,7 +55,24 @@ final class RewardDetailViewController: BaseViewController {
             pillView.heightAnchor.constraint(greaterThanOrEqualTo: pillLabel.heightAnchor, constant: 24),
             shareButton.topAnchor.constraint(greaterThanOrEqualTo: progressCardView.bottomAnchor, constant: 24)
         ])
+        keepBottomBlockTogether()
         FlowScrollLayout.install(in: view)
+    }
+
+    /// In the design the title, the reward card and the buttons sit together at the bottom;
+    /// spare height goes above the title instead of stretching the card.
+    private func keepBottomBlockTogether() {
+        guard let titleTop = view.constraints.first(where: {
+            $0.firstItem === titleLabel && $0.firstAttribute == .top && $0.secondItem === pillView
+        }) else { return }
+        titleTop.isActive = false
+        // Below the scroll content's preferred height (249), so extra room never makes it scroll.
+        let preferred = titleLabel.topAnchor.constraint(equalTo: pillView.bottomAnchor, constant: titleTop.constant)
+        preferred.priority = .init(240)
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(greaterThanOrEqualTo: pillView.bottomAnchor, constant: titleTop.constant),
+            preferred
+        ])
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -128,6 +152,7 @@ final class RewardDetailViewController: BaseViewController {
     }
 
     @objc private func shareTapped() {
+        Analytics.tracker.track(.badgeShared(badge: progress.badge.rawValue))
         let image = UIImage(named: progress.badge.imageName)
         let items: [Any] = [progress.badge.title, progress.pillTitle, image].compactMap { $0 }
         let activity = UIActivityViewController(activityItems: items, applicationActivities: nil)

@@ -139,12 +139,41 @@ enum OnboardingStyle {
         scrollView.clipsToBounds = true
     }
 
+    static func makeKeyboardDoneBar(width: CGFloat, target: Any?, action: Selector) -> UIView {
+        let bar = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 44))
+        bar.backgroundColor = .clear
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.backgroundColor = AppColor.teal
+        button.tintColor = AppColor.onAccent
+        button.layer.cornerRadius = 16
+        button.layer.cornerCurve = .continuous
+        button.setImage(
+            UIImage(systemName: "checkmark", withConfiguration: UIImage.SymbolConfiguration(pointSize: 13, weight: .semibold)),
+            for: .normal
+        )
+        button.accessibilityLabel = L10n.tr("common.done")
+        button.addTarget(target, action: action, for: .touchUpInside)
+        applyPressFeedback(button)
+        bar.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 32),
+            button.heightAnchor.constraint(equalToConstant: 32),
+            button.trailingAnchor.constraint(equalTo: bar.trailingAnchor, constant: -16),
+            button.centerYAnchor.constraint(equalTo: bar.centerYAnchor)
+        ])
+        return bar
+    }
+
     static func applyChatChipsEdgeFade(to scrollView: UIScrollView) {
         let size = scrollView.bounds.size
         guard size.width > 0, size.height > 0 else {
             scrollView.layer.mask = nil
             return
         }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
         let fade: CAGradientLayer
         if let existing = scrollView.layer.mask as? CAGradientLayer {
             fade = existing
@@ -319,6 +348,11 @@ enum OnboardingStyle {
 
     static func styleTertiaryButton(_ button: UIButton, title: String) {
         prepareForGlass(button)
+        // A title the nib set for a state beats the configuration's, which is how the English
+        // "Edit with Bity" from the xib kept showing over the localized one. The state title is
+        // set to the same string, so both agree.
+        button.setAttributedTitle(nil, for: .normal)
+        button.setTitle(title, for: .normal)
         var config = UIButton.Configuration.filled()
         config.cornerStyle = .capsule
         config.buttonSize = .large
@@ -498,6 +532,9 @@ enum OnboardingStyle {
     }
 
     private static func prepareForGlass(_ button: UIButton) {
+        // An image set for a state wins over the configuration's, so a symbol left by an earlier
+        // style (the voice log's confirm checkmark) would stay on top of the new one.
+        button.setImage(nil, for: .normal)
         button.backgroundColor = .clear
         button.clipsToBounds = false
         button.layer.masksToBounds = false

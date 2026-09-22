@@ -10,6 +10,9 @@ enum AIPhotoPhase: Equatable {
 
 final class FoodPhotoAnalysisViewModel {
     let statusText = Observable(L10n.tr("photo.status"))
+    /// Why the shutter press or the picked photo gave no result. The camera goes back to idle,
+    /// where the hint bar is hidden, so without this the user only sees the photo vanish.
+    let errorText = Observable("")
     let resultTitleText = Observable("")
     let resultDetailsText = Observable("")
     let confidenceText = Observable("")
@@ -36,6 +39,9 @@ final class FoodPhotoAnalysisViewModel {
     private let diaryDate: Date
     private var note: String?
     private var recognizedTask: Task<Void, Never>?
+    private var captureWatchdog: Task<Void, Never>?
+    /// How long a shutter press may wait for the camera before the screen gives the shutter back.
+    var captureTimeoutNanoseconds: UInt64 = 10_000_000_000
 
     init(
         analyzeFoodPhotoUseCase: AnalyzeFoodPhotoUseCase,
@@ -77,7 +83,8 @@ final class FoodPhotoAnalysisViewModel {
 
     var caloriesValueText: String {
         guard let result = analysis.value else { return "" }
-        return L10n.format("photo.result.kcalValue", Int(result.calories.rounded()))
+        // The tile is titled Calories, so the number stands alone and never truncates to "380кк…".
+        return String(Int(result.calories.rounded()))
     }
 
     var proteinValueText: String {
@@ -125,6 +132,7 @@ final class FoodPhotoAnalysisViewModel {
 
     func dismissResultTapped() {
         recognizedTask?.cancel()
+        captureWatchdog?.cancel()
         showsFullDetails.value = false
         capturedImage.value = nil
         analysis.value = nil
@@ -163,10 +171,25 @@ final class FoodPhotoAnalysisViewModel {
         capturedImage.value = nil
         statusText.value = L10n.tr("photo.analyzing")
         phase.value = .identifying
+        // If the camera never hands the photo back, the screen would stay "identifying" and ignore
+        // every later shutter press until the app is restarted.
+        captureWatchdog?.cancel()
+        captureWatchdog = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: self?.captureTimeoutNanoseconds ?? 0)
+            guard let self, !Task.isCancelled,
+                  self.phase.value == .identifying, !self.isAnalyzing.value else { return }
+            self.fail(with: FoodPhotoCaptureError.cameraUnavailable.localizedDescription)
+        }
     }
 
     func captureFailed(_ error: Error) {
-        fail(with: error.localizedDescription)
+        captureWatchdog?.cancel()
+        // Setup problems while the camera merely opens stay quiet; the gallery still works then.
+        let userWasWaiting = phase.value == .identifying
+        if userWasWaiting {
+            Analytics.tracker.track(.errorShown(context: "photo_camera", reason: "capture_failed"))
+        }
+        fail(with: error.localizedDescription, announce: userWasWaiting)
     }
 
     func analyze(imageData: Data) {
@@ -184,6 +207,7 @@ final class FoodPhotoAnalysisViewModel {
     }
 
     private func startAnalysis(imageData: Data) {
+        captureWatchdog?.cancel()
         guard !isAnalyzing.value else { return }
         recognizedTask?.cancel()
         isAnalyzing.value = true
@@ -212,9 +236,13 @@ final class FoodPhotoAnalysisViewModel {
                         items = await searchFoodProductsUseCase.attachProductPhotos(to: items)
                     }
                     isAnalyzing.value = false
+                    Analytics.tracker.track(.recognized("fridge", confidence: result.confidence))
                     onFridgeItemsReady?(items)
                     return
                 }
+                // A result card for a leaf or a wall would offer to log 0 kcal with a "good" health score.
+                if result.findsNoFood { throw FoodPhotoAnalysisError.noFood }
+                Analytics.tracker.track(.recognized("photo", confidence: result.confidence))
                 analysis.value = result
                 resultTitleText.value = result.name
                 resultDetailsText.value = details(for: result)
@@ -226,6 +254,7 @@ final class FoodPhotoAnalysisViewModel {
                 phase.value = .recognized
                 scheduleResultPresentation()
             } catch {
+                Analytics.tracker.track(.recognitionFailed(inventoryMode ? "fridge" : "photo", error: error))
                 fail(with: error.localizedDescription)
             }
             isAnalyzing.value = false
@@ -241,12 +270,13 @@ final class FoodPhotoAnalysisViewModel {
         }
     }
 
-    private func fail(with message: String) {
+    private func fail(with message: String, announce: Bool = true) {
         analysis.value = nil
         capturedImage.value = nil
         canConfirmLog.value = false
         statusText.value = message
         phase.value = .idle
+        if announce { errorText.value = message }
         Analytics.tracker.track(.foodLogFailed(method: "photo"))
     }
 

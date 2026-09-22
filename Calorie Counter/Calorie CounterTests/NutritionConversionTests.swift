@@ -112,7 +112,9 @@ final class NutritionConversionTests: XCTestCase {
                 foodEntryRepository: harness.food, waterEntryRepository: harness.water,
                 userGoalsRepository: harness.goals, workoutEntryRepository: harness.workout
             ),
-            logFoodUseCase: LogFoodUseCase(foodEntryRepository: harness.food)
+            logFoodUseCase: LogFoodUseCase(foodEntryRepository: harness.food),
+            // A plan opened from the list asks for days first; this is the screen right after it was made.
+            isFreshlyCreated: true
         )
         viewModel.addToDiaryTapped()
         let entry = try XCTUnwrap(harness.food.fetchEntries(for: Date()).first)

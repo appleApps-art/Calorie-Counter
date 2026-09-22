@@ -251,13 +251,19 @@
                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <constraints>
                                 <constraint firstItem="sug-title" firstAttribute="top" secondItem="suggest-section" secondAttribute="top" id="stt"/>
-                                <constraint firstItem="sug-title" firstAttribute="centerX" secondItem="suggest-section" secondAttribute="centerX" id="stc"/>
-                                <constraint firstItem="sug-title" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="suggest-section" secondAttribute="leading" constant="2" id="stl"/>
+                                <constraint firstItem="sug-title" firstAttribute="leading" secondItem="suggest-section" secondAttribute="leading" constant="2" id="stl"/>
                                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="sug-title" secondAttribute="trailing" constant="2" id="str"/>
                                 <constraint firstItem="suggest" firstAttribute="top" secondItem="sug-title" secondAttribute="bottom" id="sgt"/>
                                 <constraint firstItem="suggest" firstAttribute="leading" secondItem="suggest-section" secondAttribute="leading" id="sgl"/>
                                 <constraint firstAttribute="trailing" secondItem="suggest" secondAttribute="trailing" id="sgr"/>
-                                <constraint firstAttribute="bottom" secondItem="suggest" secondAttribute="bottom" id="sgb"/>
+                                <constraint firstAttribute="bottom" secondItem="suggest" secondAttribute="bottom" constant="16" id="sgb" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                                    <userDefinedRuntimeAttributes>
+                                        <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
+                                            <real key="value" value="16"/>
+                                        </userDefinedRuntimeAttribute>
+                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
+                                    </userDefinedRuntimeAttributes>
+                                </constraint>
                             </constraints>
                         </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="list-card" customClass="AdaptiveView" customModule="Calorie_Counter" customModuleProvider="target">

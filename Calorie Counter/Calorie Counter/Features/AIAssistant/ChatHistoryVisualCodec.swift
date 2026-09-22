@@ -25,7 +25,8 @@ enum ChatHistoryVisualCodec {
             return encode("swap", proposal)
         case .loggedMeal(let entryID, let proposal):
             return encode("loggedMeal", LoggedMealPayload(entryID: entryID, proposal: proposal))
-        case .typing:
+        case .typing, .mealPlan:
+            // The plan card is context, not conversation: it travels in USER_CONTEXT_JSON.
             return nil
         }
     }
@@ -105,7 +106,8 @@ enum ChatHistoryVisualCodec {
         case "loggedMeal":
             raw = decode(LoggedMealPayload.self, from: content)?.proposal.name ?? ""
         default:
-            raw = content
+            // History rows show one plain line; the reply's Markdown stays in the chat itself.
+            raw = ChatMarkdownRenderer.plainText(content)
         }
         return collapsedListText(raw)
     }

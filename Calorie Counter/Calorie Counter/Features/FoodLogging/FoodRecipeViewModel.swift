@@ -83,7 +83,7 @@ final class FoodRecipeViewModel {
             heroImage.value = nil
             return
         }
-        if let data = draft.imageData, let image = UIImage(data: data) {
+        if let data = draft.imageData, let image = StoredPhoto.image(from: data, maxPixelSize: StoredPhoto.maxDimension) {
             heroImage.value = image
             return
         }

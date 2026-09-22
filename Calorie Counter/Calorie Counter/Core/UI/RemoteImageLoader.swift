@@ -53,7 +53,7 @@ final class RemoteImageLoader {
     ) {
         let token = UUID()
         objc_setAssociatedObject(imageView, &remoteImageTokenKey, token, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        if let data, let image = UIImage(data: data) {
+        if let data, let image = StoredPhoto.image(from: data, maxPixelSize: pixelWidth(for: imageView)) {
             applyFilledImage(image, to: imageView)
             if let url {
                 cache.setObject(image, forKey: url as NSURL, cost: cacheCost(image))
@@ -137,7 +137,8 @@ final class RemoteImageLoader {
             if let image {
                 self.store(image, for: requestURL)
                 self.recentFailures.removeValue(forKey: key)
-            } else {
+            } else if NetworkMonitor.shared.isOnline {
+                // A miss while offline is not the image's fault; it loads as soon as the connection returns.
                 if self.recentFailures.count >= 100 { self.recentFailures.removeAll() }
                 self.recentFailures[key] = Date()
             }
@@ -179,6 +180,12 @@ final class RemoteImageLoader {
                    Date().timeIntervalSince(storedAt) < lifetime,
                    let image = await decodedImage(cached.data, pixelWidth: pixelWidth) {
                     return image
+                }
+                // Offline an image seen before is shown however old it is, and nothing is retried.
+                guard NetworkMonitor.shared.isOnline else {
+                    guard let cached = session.configuration.urlCache?.cachedResponse(for: request),
+                          (cached.response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+                    return await decodedImage(cached.data, pixelWidth: pixelWidth)
                 }
                 (data, response) = try await session.data(for: request)
                 if let http = response as? HTTPURLResponse,

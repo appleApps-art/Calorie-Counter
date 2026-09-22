@@ -159,6 +159,7 @@ final class QuickLogSheetViewController: BaseViewController {
     }
 
     private func finish(_ action: HomeQuickLogAction) {
+        Analytics.tracker.track(.quickLogOptionSelected(option: String(describing: action)))
         dismiss(animated: true) { [onSelect] in
             onSelect(action)
         }

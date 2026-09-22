@@ -57,7 +57,10 @@ enum SavedRecipeMapper {
             weightGrams: object.weightGrams?.doubleValue,
             volumeMilliliters: object.volumeMilliliters?.doubleValue,
             foodType: FoodType(rawValue: object.foodType ?? ""),
-            hasCompleteNutrition: object.hasCompleteNutrition?.boolValue
+            hasCompleteNutrition: object.hasCompleteNutrition?.boolValue,
+            fiber: object.fiber?.doubleValue,
+            sugar: object.sugar?.doubleValue,
+            sodium: object.sodium?.doubleValue
         )
     }
 
@@ -79,6 +82,9 @@ enum SavedRecipeMapper {
         object.hasCompleteNutrition = recipe.hasCompleteNutrition.map { NSNumber(value: $0) }
         object.weightGrams = recipe.weightGrams.map { NSNumber(value: $0) }
         object.volumeMilliliters = recipe.volumeMilliliters.map { NSNumber(value: $0) }
+        object.fiber = recipe.fiber.map { NSNumber(value: $0) }
+        object.sugar = recipe.sugar.map { NSNumber(value: $0) }
+        object.sodium = recipe.sodium.map { NSNumber(value: $0) }
         object.updatedAt = Date()
 
         let ingredientDTOs = recipe.ingredients.map {

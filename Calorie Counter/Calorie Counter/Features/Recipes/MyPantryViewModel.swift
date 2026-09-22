@@ -3,6 +3,7 @@ import Foundation
 final class MyPantryViewModel {
     let items = Observable<[PantryItem]>([])
     let suggestion = Observable<Recipe?>(nil)
+    let isSuggestionLoading = Observable(false)
     let isSelecting = Observable(false)
     let selectedIDs = Observable<Set<UUID>>([])
     let showsDeleteAlert = Observable(false)
@@ -18,18 +19,20 @@ final class MyPantryViewModel {
     private let fetchPantryItemsUseCase: FetchPantryItemsUseCase
     private let savePantryItemUseCase: SavePantryItemUseCase
     private let deletePantryItemsUseCase: DeletePantryItemsUseCase
-    private let searchRecipesUseCase: SearchRecipesUseCase
+    private let suggestPantryRecipeUseCase: SuggestPantryRecipeUseCase
+    private var suggestionPlan: PantryRecipeSuggestionPlan?
+    private var suggestionTask: Task<Void, Never>?
 
     init(
         fetchPantryItemsUseCase: FetchPantryItemsUseCase,
         savePantryItemUseCase: SavePantryItemUseCase,
         deletePantryItemsUseCase: DeletePantryItemsUseCase,
-        searchRecipesUseCase: SearchRecipesUseCase
+        suggestPantryRecipeUseCase: SuggestPantryRecipeUseCase
     ) {
         self.fetchPantryItemsUseCase = fetchPantryItemsUseCase
         self.savePantryItemUseCase = savePantryItemUseCase
         self.deletePantryItemsUseCase = deletePantryItemsUseCase
-        self.searchRecipesUseCase = searchRecipesUseCase
+        self.suggestPantryRecipeUseCase = suggestPantryRecipeUseCase
     }
 
     var navTitle: String {
@@ -116,6 +119,7 @@ final class MyPantryViewModel {
     func confirmDelete() {
         let ids = Array(selectedIDs.value)
         try? deletePantryItemsUseCase.execute(ids: ids)
+        Analytics.tracker.track(.pantryItemsDeleted(count: ids.count))
         showsDeleteAlert.value = false
         isSelecting.value = false
         selectedIDs.value = []
@@ -139,14 +143,22 @@ final class MyPantryViewModel {
     }
 
     private func loadSuggestion() {
-        let names = items.value.prefix(6).map(\.name)
-        guard !names.isEmpty else {
+        let plan = suggestPantryRecipeUseCase.plan(for: items.value)
+        guard plan != suggestionPlan else { return }
+        suggestionPlan = plan
+        suggestionTask?.cancel()
+        guard let plan else {
+            isSuggestionLoading.value = false
             suggestion.value = nil
             return
         }
-        Task { @MainActor in
-            let recipes = (try? await searchRecipesUseCase.execute(query: names.joined(separator: " "))) ?? []
-            suggestion.value = recipes.first
+        isSuggestionLoading.value = true
+        suggestion.value = nil
+        suggestionTask = Task { @MainActor in
+            let recipe = await suggestPantryRecipeUseCase.execute(plan)
+            guard !Task.isCancelled, suggestionPlan == plan else { return }
+            suggestion.value = recipe
+            isSuggestionLoading.value = false
         }
     }
 }

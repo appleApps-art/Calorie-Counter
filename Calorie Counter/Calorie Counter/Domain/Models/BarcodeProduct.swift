@@ -24,6 +24,13 @@ struct BarcodeProduct: Equatable, Identifiable {
     var source: BarcodeProductSource
     var servingGrams: Double? = nil
     var servingMilliliters: Double? = nil
+    var fiberPer100g: Double? = nil
+    var sugarPer100g: Double? = nil
+    /// Milligrams, like the rest of the app (Open Food Facts reports grams).
+    var sodiumPer100g: Double? = nil
+    var fiberPerServing: Double? = nil
+    var sugarPerServing: Double? = nil
+    var sodiumPerServing: Double? = nil
 
     func toFoodProduct(preferServing: Bool = false) -> FoodProduct {
         let hasPer100g = caloriesPer100g != nil || proteinPer100g != nil || carbsPer100g != nil || fatsPer100g != nil
@@ -42,6 +49,9 @@ struct BarcodeProduct: Equatable, Identifiable {
             protein: useServing ? proteinPerServing : proteinPer100g,
             carbs: useServing ? carbsPerServing : carbsPer100g,
             fats: useServing ? fatsPerServing : fatsPer100g,
+            fiber: useServing ? fiberPerServing : fiberPer100g,
+            sugar: useServing ? sugarPerServing : sugarPer100g,
+            sodium: useServing ? sodiumPerServing : sodiumPer100g,
             amount: useServing ? servingAmount : 100,
             unit: useServing ? servingUnit : "g",
             source: source == .openFoodFacts ? .openFoodFacts : .spoonacular,

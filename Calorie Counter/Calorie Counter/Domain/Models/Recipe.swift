@@ -29,6 +29,12 @@ struct Recipe: Equatable, Identifiable {
 
     var foodType: FoodType? = .dish
     var hasCompleteNutrition: Bool? = nil
+    var dishTypes: [String] = []
+    /// Per serving, like the macros. Nil when the source did not say, which is not the same as none.
+    var fiber: Double? = nil
+    var sugar: Double? = nil
+    /// Milligrams.
+    var sodium: Double? = nil
 
     // Persist the namespace in externalId, including when a prepared ingredient is saved as a recipe.
     var ingredientCatalogID: String? {
@@ -65,5 +71,12 @@ struct Recipe: Equatable, Identifiable {
 
     var isSearchableRecipe: Bool {
         hasPhoto
+    }
+
+    func matchesSearch(_ query: String) -> Bool {
+        let words = query.split(whereSeparator: \.isWhitespace)
+        guard !words.isEmpty else { return true }
+        let text = ([title] + ingredients.flatMap { [$0.name, $0.originalText ?? ""] }).joined(separator: " ")
+        return words.allSatisfy { text.localizedStandardContains($0) }
     }
 }

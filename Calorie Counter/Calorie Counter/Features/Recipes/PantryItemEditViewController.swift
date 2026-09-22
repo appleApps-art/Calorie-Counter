@@ -42,11 +42,18 @@ final class PantryItemEditViewController: BaseViewController, UICalendarSelectio
             color: AppColor.labelVibrantPrimary,
             kern: -0.43
         )
-        OnboardingStyle.styleGlassSymbolButton(
-            closeButton,
-            systemName: "xmark",
-            foregroundColor: AppColor.iconSecondary
+        var closeConfiguration = UIButton.Configuration.filled()
+        closeConfiguration.cornerStyle = .capsule
+        closeConfiguration.contentInsets = .zero
+        closeConfiguration.baseBackgroundColor = AppColor.fillSecondary
+        closeConfiguration.baseForegroundColor = AppColor.dynamic(
+            light: UIColor(white: 114 / 255, alpha: 1), dark: UIColor(red: 180 / 255, green: 180 / 255, blue: 184 / 255, alpha: 1)
         )
+        closeConfiguration.image = UIImage(systemName: "xmark", withConfiguration:
+            UIImage.SymbolConfiguration(pointSize: 17, weight: .medium))
+        closeButton.configuration = closeConfiguration
+        closeButton.accessibilityLabel = L10n.tr("common.close")
+        OnboardingStyle.applyPressFeedback(closeButton)
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         configureFoodCard()
         configureQuantityInput()
@@ -217,6 +224,17 @@ final class PantryItemEditViewController: BaseViewController, UICalendarSelectio
             calendarView.bottomAnchor.constraint(equalTo: pickerHost.bottomAnchor, constant: -.adaptHeight(8))
         ])
 
+        if let height = calendarHost.constraints.first(where: { $0.firstAttribute == .height && $0.secondItem == nil }) {
+            let headerHeight = CGFloat.adaptHeight(66) + 1 / UIScreen.main.scale
+            let pickerInsets = CGFloat.adaptHeight(3) + CGFloat.adaptHeight(8)
+            let fittingHeight = headerHeight + pickerInsets + ceil(calendarView.intrinsicContentSize.height)
+            if let adaptive = height as? AdaptiveConstraint {
+                adaptive.adaptToHeight = false
+                adaptive.designConstant = fittingHeight
+            } else {
+                height.constant = fittingHeight
+            }
+        }
         let selection = UICalendarSelectionSingleDate(delegate: self)
         calendarView.selectionBehavior = selection
         let start = Calendar.current.date(byAdding: .year, value: -2, to: Date()) ?? Date.distantPast
@@ -355,14 +373,8 @@ final class PantryItemEditViewController: BaseViewController, UICalendarSelectio
         quantityField.reloadInputViews()
     }
 
-    private func makeQuantityKeyboardDoneBar() -> UIToolbar {
-        let bar = UIToolbar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44))
-        bar.items = [
-            UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-            UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissKeyboard))
-        ]
-        bar.sizeToFit()
-        return bar
+    private func makeQuantityKeyboardDoneBar() -> UIView {
+        OnboardingStyle.makeKeyboardDoneBar(width: view.bounds.width, target: self, action: #selector(dismissKeyboard))
     }
 
     private func installKeyboardDismissPan() {

@@ -358,8 +358,8 @@ final class ProgressViewController: BaseViewController {
         photosStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for preview in previews.prefix(3) {
             let image: UIImage?
-            if let path = preview.photo.fileURL?.path {
-                image = UIImage(contentsOfFile: path)
+            if let url = preview.photo.fileURL {
+                image = StoredPhoto.image(contentsOf: url, maxPixelSize: StoredPhoto.pixelSize(forPoints: 120))
             } else {
                 image = nil
             }

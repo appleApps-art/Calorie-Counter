@@ -3,6 +3,9 @@ import UIKit
 
 final class GIFImageView: UIImageView {
     var playsOnce = false
+    /// How many times a looping GIF plays before it stops on its last frame and reports
+    /// `onFinished`; nil repeats until it is stopped.
+    var loopLimit: Int?
     var onFinished: (() -> Void)?
     var onReachedEnd: (() -> Void)?
     private(set) var duration: TimeInterval = 0
@@ -12,6 +15,7 @@ final class GIFImageView: UIImageView {
     private var frameCount = 0
     private var animationID = 0
     private var didFinish = false
+    private var completedLoops = 0
     private var frozenImage: UIImage?
 
     deinit {
@@ -53,8 +57,9 @@ final class GIFImageView: UIImageView {
         let id = animationID
         didFinish = false
         frozenImage = nil
+        completedLoops = 0
         let lastIndex = frameCount - 1
-        let playOnce = playsOnce
+        let loops = playsOnce ? 1 : loopLimit.map { max($0, 1) }
 
         let status = CGAnimateImageDataWithBlock(gifData as CFData, nil) { [weak self] index, cgImage, stop in
             guard let self else {
@@ -66,21 +71,20 @@ final class GIFImageView: UIImageView {
                 self.holdFrozenFrame()
                 return
             }
-            if playOnce, index == 0, let frozenImage = self.frozenImage {
+            if loops != nil, index == 0, let frozenImage = self.frozenImage {
                 self.freeze(frozenImage, stop: stop)
                 return
             }
-            if playOnce {
-                if index >= lastIndex {
+            if let loops, index >= lastIndex {
+                self.completedLoops += 1
+                if self.completedLoops >= loops {
                     let durable = Self.copyImage(cgImage)
                     self.freeze(durable, stop: stop)
                     return
                 }
-                self.image = UIImage(cgImage: cgImage)
-                return
             }
             self.image = UIImage(cgImage: cgImage)
-            if index >= lastIndex {
+            if index >= lastIndex, loops != 1 {
                 self.notifyReachedEnd()
             }
         }

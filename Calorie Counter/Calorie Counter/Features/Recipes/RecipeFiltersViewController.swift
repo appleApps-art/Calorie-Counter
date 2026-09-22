@@ -21,10 +21,10 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
     @IBOutlet private weak var excludedSearchField: AdaptiveView!
     @IBOutlet private weak var excludedField: UITextField!
     @IBOutlet private weak var excludedMicButton: UIButton!
-    @IBOutlet private weak var suggestionsCard: AdaptiveView!
-    @IBOutlet private weak var suggestionsStack: UIStackView!
     @IBOutlet private weak var excludedChipsStack: UIStackView!
     @IBOutlet private weak var showButton: UIButton!
+    @IBOutlet private weak var showBottomConstraint: NSLayoutConstraint!
+    @IBOutlet private weak var scrollView: UIScrollView!
 
     private let viewModel: RecipeFiltersViewModel
     private let destructiveColor = AppColor.dynamic(
@@ -36,6 +36,7 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
     private var chipCarousels: [UIScrollView] = []
     private var dietCarousels: [UIScrollView] = []
     private var pulseWaves: [UIView] = []
+    private var isExcludedScrollScheduled = false
 
     init(viewModel: RecipeFiltersViewModel) {
         self.viewModel = viewModel
@@ -48,6 +49,7 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
     }
 
     override var analyticsScreen: AnalyticsScreen? { .recipeFilters }
+    override var keyboardDismissExcludedViews: [UIView] { [excludedMicButton].compactMap { $0 } }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -82,11 +84,11 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
         caloriesSlider.addTarget(self, action: #selector(sliderEnded), for: [.touchUpInside, .touchUpOutside])
         configureChipScrolls()
         configureExcludedSearch()
+        setupKeyboardAvoidance()
         OnboardingStyle.stylePrimaryButton(showButton, title: L10n.tr("recipes.filters.showResults"))
         showButton.addTarget(self, action: #selector(showTapped), for: .touchUpInside)
         isConfigured = true
         render(viewModel.filters.value)
-        renderSuggestions()
     }
 
     override func bindViewModel() {
@@ -98,14 +100,12 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
             if self.excludedField.text != text {
                 self.excludedField.text = text
             }
-            self.renderSuggestions()
         }
         viewModel.isRecording.bind { [weak self] _ in
             self?.styleTrailingButton()
         }
         viewModel.canConfirmExcluded.bind { [weak self] _ in
             self?.styleTrailingButton()
-            self?.renderSuggestions()
         }
     }
 
@@ -182,12 +182,6 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
         excludedSearchField.subviews.compactMap { $0 as? UIImageView }.first?.tintColor = AppColor.iconSecondary
         styleTrailingButton()
         excludedMicButton.addTarget(self, action: #selector(trailingActionTapped), for: .touchUpInside)
-        suggestionsCard.useLiveGlass = false
-        suggestionsCard.applyCardShadow = true
-        suggestionsCard.cardFillColor = AppColor.backgroundsPrimary
-        suggestionsStack.layer.cornerCurve = .continuous
-        suggestionsStack.layer.cornerRadius = .adaptWidth(24)
-        suggestionsStack.clipsToBounds = true
     }
 
     private func styleTrailingButton() {
@@ -345,7 +339,6 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
             self?.viewModel.selectDifficulty(key)
         }
         renderExcludedChips(filters.excludedIngredients)
-        renderSuggestions()
         view.layoutIfNeeded()
         applyChipFades()
     }
@@ -379,21 +372,45 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
         excludedChipsStack.addArrangedSubview(row)
     }
 
-    private func renderSuggestions() {
-        guard isConfigured else { return }
-        suggestionsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        let titles = viewModel.suggestionTitles
-        suggestionsCard.isHidden = titles.isEmpty
-        titles.enumerated().forEach { index, name in
-            suggestionsStack.addArrangedSubview(
-                makeSuggestionRow(
-                    title: name,
-                    showsSeparator: index < titles.count - 1
-                ) { [weak self] in
-                    self?.viewModel.addExcluded(name)
-                }
-            )
+    private func setupKeyboardAvoidance() {
+        view.keyboardLayoutGuide.usesBottomSafeArea = true
+        showBottomConstraint.isActive = false
+        showButton.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -8).isActive = true
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardFrameChanged),
+            name: UIResponder.keyboardDidShowNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardFrameChanged),
+            name: UIResponder.keyboardDidChangeFrameNotification,
+            object: nil
+        )
+    }
+
+    @objc private func keyboardFrameChanged() {
+        guard excludedField.isFirstResponder else { return }
+        scheduleExcludedSectionScroll()
+    }
+
+    private func scheduleExcludedSectionScroll() {
+        guard !isExcludedScrollScheduled else { return }
+        isExcludedScrollScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.isExcludedScrollScheduled = false
+            guard self.excludedField.isFirstResponder else { return }
+            self.scrollExcludedSectionVisible()
         }
+    }
+
+    private func scrollExcludedSectionVisible() {
+        view.layoutIfNeeded()
+        let rect = excludedSearchField.convert(excludedSearchField.bounds, to: scrollView)
+        let padding = CGFloat.adaptHeight(16)
+        scrollView.scrollRectToVisible(rect.insetBy(dx: 0, dy: -padding), animated: true)
     }
 
     private func fill(
@@ -473,63 +490,6 @@ final class RecipeFiltersViewController: BaseViewController, UITextFieldDelegate
         row.spacing = .adaptWidth(8)
         row.alignment = .fill
         row.distribution = .fill
-        return row
-    }
-
-    private func makeSuggestionRow(
-        title: String,
-        showsSeparator: Bool,
-        action: @escaping () -> Void
-    ) -> UIView {
-        let row = UIView()
-        row.translatesAutoresizingMaskIntoConstraints = false
-        let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        var config = UIButton.Configuration.plain()
-        config.title = title
-        config.image = UIImage(systemName: "plus")
-        config.imagePlacement = .trailing
-        config.imagePadding = .adaptWidth(16)
-        config.baseForegroundColor = AppColor.labelsPrimary
-        config.contentInsets = NSDirectionalEdgeInsets(
-            top: 0,
-            leading: .adaptWidth(16),
-            bottom: 0,
-            trailing: .adaptWidth(16)
-        )
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var attributes = incoming
-            attributes.font = .systemFont(ofSize: .adaptFont(17), weight: .regular)
-            attributes.kern = -0.43
-            attributes.foregroundColor = AppColor.labelsPrimary
-            return attributes
-        }
-        config.imageColorTransformer = UIConfigurationColorTransformer { _ in
-            AppColor.labelsSecondary
-        }
-        button.configuration = config
-        button.contentHorizontalAlignment = .fill
-        button.addAction(UIAction { _ in action() }, for: .touchUpInside)
-        row.addSubview(button)
-        NSLayoutConstraint.activate([
-            row.heightAnchor.constraint(equalToConstant: .adaptHeight(40)),
-            button.leadingAnchor.constraint(equalTo: row.leadingAnchor),
-            button.trailingAnchor.constraint(equalTo: row.trailingAnchor),
-            button.topAnchor.constraint(equalTo: row.topAnchor),
-            button.bottomAnchor.constraint(equalTo: row.bottomAnchor)
-        ])
-        if showsSeparator {
-            let line = UIView()
-            line.translatesAutoresizingMaskIntoConstraints = false
-            line.backgroundColor = AppColor.hairline
-            row.addSubview(line)
-            NSLayoutConstraint.activate([
-                line.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
-                line.leadingAnchor.constraint(equalTo: row.leadingAnchor),
-                line.trailingAnchor.constraint(equalTo: row.trailingAnchor),
-                line.bottomAnchor.constraint(equalTo: row.bottomAnchor)
-            ])
-        }
         return row
     }
 

@@ -195,9 +195,9 @@ final class FridgePhotoResultViewController: BaseViewController, UITableViewData
         selectBar.isHidden = !selecting
         deleteButton.isEnabled = !viewModel.selectedIDs.value.isEmpty
         deleteButton.alpha = viewModel.selectedIDs.value.isEmpty ? 0.4 : 1
-        let inset = selecting ? CGFloat.adaptHeight(84) : CGFloat.adaptHeight(82)
-        tableView.contentInset.bottom = inset
-        tableView.verticalScrollIndicatorInsets.bottom = inset
+        tableView.contentInset.bottom = 0
+        tableView.verticalScrollIndicatorInsets.bottom = 0
+        view.setNeedsLayout()
     }
 
     private func configureFooter() {
@@ -303,8 +303,7 @@ final class FridgePhotoResultViewController: BaseViewController, UITableViewData
         let count = CGFloat(viewModel.items.value.count)
         listCard.isHidden = count == 0
         guard count > 0 else { return }
-        let footer = CGFloat.adaptHeight(82)
-        let maxY = view.bounds.height - footer
+        let maxY = footerHost.convert(footerHost.bounds.origin, to: view).y - .adaptHeight(24)
         let minY = listCard.convert(listCard.bounds.origin, to: view).y
         let available = max(rowHeight, maxY - minY)
         let next = min(count * rowHeight, available)

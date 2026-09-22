@@ -18,13 +18,13 @@ enum OpenFoodFactsServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid Open Food Facts URL"
+            return L10n.tr("common.errorGeneric")
         case .invalidResponse:
-            return "Invalid Open Food Facts response"
+            return L10n.tr("common.errorGeneric")
         case .notFound:
-            return "Product not found"
+            return L10n.tr("barcode.error.notFound")
         case .decodingFailed:
-            return "Failed to decode Open Food Facts response"
+            return L10n.tr("common.errorGeneric")
         case .transport(let underlying):
             return underlying.localizedDescription
         }
@@ -43,10 +43,24 @@ struct OpenFoodFactsProductResponse: Decodable {
     let product: OpenFoodFactsProduct?
 }
 
+/// Open Food Facts keeps a name per language ("product_name_fr", "product_name_ja", ...).
+struct OpenFoodFactsNameKey: CodingKey {
+    let stringValue: String
+    var intValue: Int? { nil }
+    init?(stringValue: String) { self.stringValue = stringValue }
+    init?(intValue: Int) { nil }
+
+    static var appLanguage: OpenFoodFactsNameKey? {
+        OpenFoodFactsNameKey(stringValue: "product_name_\(OpenFoodFactsLocalizedName.appLanguageCode)")
+    }
+}
+
 struct OpenFoodFactsProduct: Decodable {
     let productName: String?
     let productNameEn: String?
     let productNameUk: String?
+    /// The name in the app's own language, when the product has one.
+    let productNameLocal: String?
     let brands: String?
     let quantity: String?
     let servingSize: String?
@@ -65,6 +79,21 @@ struct OpenFoodFactsProduct: Decodable {
         case imageFrontUrl = "image_front_url"
         case nutriments
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        productName = try container.decodeIfPresent(String.self, forKey: .productName)
+        productNameEn = try container.decodeIfPresent(String.self, forKey: .productNameEn)
+        productNameUk = try container.decodeIfPresent(String.self, forKey: .productNameUk)
+        brands = try container.decodeIfPresent(String.self, forKey: .brands)
+        quantity = try container.decodeIfPresent(String.self, forKey: .quantity)
+        servingSize = try container.decodeIfPresent(String.self, forKey: .servingSize)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        imageFrontUrl = try container.decodeIfPresent(String.self, forKey: .imageFrontUrl)
+        nutriments = try container.decodeIfPresent(OpenFoodFactsNutriments.self, forKey: .nutriments)
+        let names = try decoder.container(keyedBy: OpenFoodFactsNameKey.self)
+        productNameLocal = OpenFoodFactsNameKey.appLanguage.flatMap { try? names.decodeIfPresent(String.self, forKey: $0) }
+    }
 }
 
 struct OpenFoodFactsSearchResponse: Decodable {
@@ -76,6 +105,7 @@ struct OpenFoodFactsSearchItem: Decodable {
     let productName: String?
     let productNameEn: String?
     let productNameUk: String?
+    let productNameLocal: String?
     let brands: String?
     let imageUrl: String?
     let imageFrontUrl: String?
@@ -104,6 +134,8 @@ struct OpenFoodFactsSearchItem: Decodable {
         imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
         imageFrontUrl = try container.decodeIfPresent(String.self, forKey: .imageFrontUrl)
         nutriments = try container.decodeIfPresent(OpenFoodFactsNutriments.self, forKey: .nutriments)
+        let names = try decoder.container(keyedBy: OpenFoodFactsNameKey.self)
+        productNameLocal = OpenFoodFactsNameKey.appLanguage.flatMap { try? names.decodeIfPresent(String.self, forKey: $0) }
     }
 
     private static func decodeFlexibleString(_ container: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> String? {
@@ -130,6 +162,9 @@ struct OpenFoodFactsNutriments: Decodable {
     let fiber100g: Double?
     let sugars100g: Double?
     let sodium100g: Double?
+    let fiberServing: Double?
+    let sugarsServing: Double?
+    let sodiumServing: Double?
 
     enum CodingKeys: String, CodingKey {
         case energyKcal100g = "energy-kcal_100g"
@@ -143,6 +178,9 @@ struct OpenFoodFactsNutriments: Decodable {
         case fiber100g = "fiber_100g"
         case sugars100g = "sugars_100g"
         case sodium100g = "sodium_100g"
+        case fiberServing = "fiber_serving"
+        case sugarsServing = "sugars_serving"
+        case sodiumServing = "sodium_serving"
     }
 
     init(from decoder: Decoder) throws {
@@ -158,6 +196,9 @@ struct OpenFoodFactsNutriments: Decodable {
         fiber100g = Self.decodeFlexibleDouble(container, key: .fiber100g)
         sugars100g = Self.decodeFlexibleDouble(container, key: .sugars100g)
         sodium100g = Self.decodeFlexibleDouble(container, key: .sodium100g)
+        fiberServing = Self.decodeFlexibleDouble(container, key: .fiberServing)
+        sugarsServing = Self.decodeFlexibleDouble(container, key: .sugarsServing)
+        sodiumServing = Self.decodeFlexibleDouble(container, key: .sodiumServing)
     }
 
     private static func decodeFlexibleDouble(_ container: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> Double? {
@@ -199,7 +240,7 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
         components.queryItems = [
             URLQueryItem(
                 name: "fields",
-                value: "code,product_name,product_name_en,product_name_uk,brands,quantity,serving_size,image_url,image_front_url,nutriments"
+                value: "code,\(OpenFoodFactsLocalizedName.nameFields),brands,quantity,serving_size,image_url,image_front_url,nutriments"
             )
         ]
         guard let url = components.url else {
@@ -211,22 +252,26 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
         request.setValue("BityCalorieCounter/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw OpenFoodFactsServiceError.transport(underlying: error)
-        }
+        // A product scanned once is found again without a connection.
+        let data = try await OfflineFallback.data(for: request) { [session] in
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await session.data(for: request)
+            } catch {
+                throw OpenFoodFactsServiceError.transport(underlying: error)
+            }
 
-        guard let http = response as? HTTPURLResponse else {
-            throw OpenFoodFactsServiceError.invalidResponse
-        }
-        if http.statusCode == 404 {
-            throw BarcodeLookupError.notFound
-        }
-        guard (200...299).contains(http.statusCode) else {
-            throw OpenFoodFactsServiceError.invalidResponse
+            guard let http = response as? HTTPURLResponse else {
+                throw OpenFoodFactsServiceError.invalidResponse
+            }
+            if http.statusCode == 404 {
+                throw BarcodeLookupError.notFound
+            }
+            guard (200...299).contains(http.statusCode) else {
+                throw OpenFoodFactsServiceError.invalidResponse
+            }
+            return data
         }
 
         let decoded: OpenFoodFactsProductResponse
@@ -243,7 +288,8 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
         let name = OpenFoodFactsLocalizedName.pick(
             productName: product.productName,
             productNameEn: product.productNameEn,
-            productNameUk: product.productNameUk
+            productNameUk: product.productNameUk,
+            productNameLocal: product.productNameLocal
         )
         guard let name else {
             throw BarcodeLookupError.notFound
@@ -268,7 +314,13 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
             proteinPerServing: nutrients?.proteinsServing,
             carbsPerServing: nutrients?.carbohydratesServing,
             fatsPerServing: nutrients?.fatServing,
-            source: .openFoodFacts
+            source: .openFoodFacts,
+            fiberPer100g: nutrients?.fiber100g,
+            sugarPer100g: nutrients?.sugars100g,
+            sodiumPer100g: nutrients?.sodium100g.map { $0 * 1000 },
+            fiberPerServing: nutrients?.fiberServing,
+            sugarPerServing: nutrients?.sugarsServing,
+            sodiumPerServing: nutrients?.sodiumServing.map { $0 * 1000 }
         )
     }
 
@@ -312,7 +364,9 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
         return try await fetchSearchProducts(url: url)
     }
 
-    private static let searchFields = "code,product_name,product_name_en,product_name_uk,brands,image_url,image_front_url,nutriments"
+    private static var searchFields: String {
+        "code,\(OpenFoodFactsLocalizedName.nameFields),brands,image_url,image_front_url,nutriments"
+    }
 
     private func fetchSearchProducts(url: URL) async throws -> [FoodProduct] {
         var request = URLRequest(url: url)
@@ -321,47 +375,50 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
         request.setValue("BityCalorieCounter/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        var lastError: OpenFoodFactsServiceError = .invalidResponse
-        for _ in 0..<2 {
-            let data: Data
-            let response: URLResponse
-            do {
-                (data, response) = try await session.data(for: request)
-            } catch {
-                lastError = .transport(underlying: error)
-                continue
-            }
+        let data = try await OfflineFallback.data(for: request) { [session] in
+            var lastError: OpenFoodFactsServiceError = .invalidResponse
+            for _ in 0..<2 {
+                let data: Data
+                let response: URLResponse
+                do {
+                    (data, response) = try await session.data(for: request)
+                } catch {
+                    lastError = .transport(underlying: error)
+                    continue
+                }
 
-            guard let http = response as? HTTPURLResponse else {
-                lastError = .invalidResponse
-                continue
+                guard let http = response as? HTTPURLResponse else {
+                    lastError = .invalidResponse
+                    continue
+                }
+                if http.statusCode == 429 || http.statusCode == 503 {
+                    lastError = .invalidResponse
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    continue
+                }
+                guard (200...299).contains(http.statusCode) else {
+                    throw OpenFoodFactsServiceError.invalidResponse
+                }
+                return data
             }
-            if http.statusCode == 429 || http.statusCode == 503 {
-                lastError = .invalidResponse
-                try? await Task.sleep(nanoseconds: 250_000_000)
-                continue
-            }
-            guard (200...299).contains(http.statusCode) else {
-                throw OpenFoodFactsServiceError.invalidResponse
-            }
-
-            let decoded: OpenFoodFactsSearchResponse
-            do {
-                decoded = try decoder.decode(OpenFoodFactsSearchResponse.self, from: data)
-            } catch {
-                throw OpenFoodFactsServiceError.decodingFailed
-            }
-
-            return (decoded.products ?? []).compactMap(Self.mapSearchProduct)
+            throw lastError
         }
-        throw lastError
+
+        let decoded: OpenFoodFactsSearchResponse
+        do {
+            decoded = try decoder.decode(OpenFoodFactsSearchResponse.self, from: data)
+        } catch {
+            throw OpenFoodFactsServiceError.decodingFailed
+        }
+        return (decoded.products ?? []).compactMap(Self.mapSearchProduct)
     }
 
     private static func mapSearchProduct(_ item: OpenFoodFactsSearchItem) -> FoodProduct? {
         let name = OpenFoodFactsLocalizedName.pick(
             productName: item.productName,
             productNameEn: item.productNameEn,
-            productNameUk: item.productNameUk
+            productNameUk: item.productNameUk,
+            productNameLocal: item.productNameLocal
         ).flatMap(decodedText)
         guard let name else { return nil }
         let barcode = item.code?.filter(\.isNumber)
@@ -410,10 +467,24 @@ final class OpenFoodFactsService: BarcodeProductLookingUp, OpenFoodFactsSearchin
 }
 
 enum OpenFoodFactsLocalizedName {
+    /// The language Open Food Facts should name products in: the one the app is shown in.
+    static var appLanguageCode: String {
+        let raw = Bundle.main.preferredLocalizations.first ?? "en"
+        return raw.split(separator: "-").first.map { String($0).lowercased() } ?? "en"
+    }
+
+    static var nameFields: String {
+        let local = appLanguageCode
+        return ["product_name", "product_name_en", "product_name_uk", local == "en" || local == "uk" ? nil : "product_name_\(local)"]
+            .compactMap { $0 }
+            .joined(separator: ",")
+    }
+
     static func pick(
         productName: String?,
         productNameEn: String?,
         productNameUk: String?,
+        productNameLocal: String? = nil,
         locale: String = Locale.deviceIdentifier
     ) -> String? {
         let language = locale
@@ -425,8 +496,10 @@ enum OpenFoodFactsLocalizedName {
         let ranked: [String?]
         if language == "uk" {
             ranked = [productNameUk, productName, productNameEn]
+        } else if language == "en" {
+            ranked = [productNameEn, productName, productNameUk]
         } else {
-            ranked = [productName, productNameEn, productNameUk]
+            ranked = [productNameLocal, productName, productNameEn, productNameUk]
         }
         return ranked
             .compactMap { value in

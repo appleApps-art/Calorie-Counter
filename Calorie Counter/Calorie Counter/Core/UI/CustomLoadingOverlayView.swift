@@ -1,8 +1,7 @@
-import Lottie
 import UIKit
 
 final class CustomLoadingOverlayView: UIView {
-    @IBOutlet private weak var animationView: LottieAnimationView!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
 
     private var isVisible = false
 
@@ -38,7 +37,7 @@ final class CustomLoadingOverlayView: UIView {
             superview?.bringSubviewToFront(self)
             isHidden = false
             isUserInteractionEnabled = true
-            playLoader()
+            activityIndicator.startAnimating()
             UIView.animate(withDuration: 0.18) {
                 self.alpha = 1
             }
@@ -49,20 +48,10 @@ final class CustomLoadingOverlayView: UIView {
             } completion: { _ in
                 if !self.isVisible {
                     self.isHidden = true
-                    self.animationView.stop()
+                    self.activityIndicator.stopAnimating()
                 }
             }
         }
-    }
-
-    private func playLoader() {
-        animationView.animation = LottieAnimation.named("CustomLoadingTransparent")
-        animationView.loopMode = .loop
-        animationView.backgroundBehavior = .pauseAndRestore
-        animationView.contentMode = .scaleAspectFill
-        animationView.backgroundColor = .clear
-        animationView.isOpaque = false
-        animationView.play()
     }
 
     private func commonInit() {
@@ -73,8 +62,10 @@ final class CustomLoadingOverlayView: UIView {
             content.isOpaque = false
             content.backgroundColor = .clear
         }
-        animationView?.isOpaque = false
-        animationView?.backgroundColor = .clear
+        activityIndicator?.hidesWhenStopped = false
+        // The scrim only dims what is behind it, so the spinner follows the theme: dark on the
+        // light screen, light on the dark one.
+        activityIndicator?.color = AppColor.labelsPrimary
         isHidden = true
         alpha = 0
     }

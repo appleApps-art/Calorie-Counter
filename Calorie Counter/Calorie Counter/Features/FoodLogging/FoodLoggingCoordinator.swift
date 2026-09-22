@@ -6,6 +6,7 @@ final class FoodLoggingCoordinator {
     private var classificationTask: Task<Void, Never>?
     private var classificationRequest = UUID()
     private var foodPhotoCapturer: FoodPhotoCapturing = UnconfiguredFoodPhotoCapturer()
+    private weak var screenBeingReplaced: UIViewController?
 
     init(navigationController: UINavigationController, container: DIContainer) {
         self.navigationController = navigationController
@@ -32,24 +33,10 @@ final class FoodLoggingCoordinator {
         viewModel.onProductReady = { [weak self, weak host] draft in
             self?.openProductDetails(draft, navigationController: host)
         }
-        viewModel.onSwitchMode = { [weak self, weak host] action in
+        viewModel.onSwitchMode = { [weak self, weak host, weak viewController] action in
             guard let self, let host else { return }
             if case .scanBarcode = action { return }
-            let flow = host as? AppNavigationController
-            let dismissesAtRoot = flow?.dismissesWhenPoppedToRoot ?? false
-            flow?.dismissesWhenPoppedToRoot = false
-            defer { flow?.dismissesWhenPoppedToRoot = dismissesAtRoot }
-            host.popViewController(animated: false)
-            switch action {
-            case .scanFood:
-                self.openAIPhoto(mealType: mealType, date: date, navigationController: host)
-            case .search:
-                self.openFoodSearch(mealType: mealType, date: date, navigationController: host)
-            case .scanBarcode:
-                break
-            case .voiceLog:
-                self.openVoiceLog(mealType: mealType, date: date, navigationController: host)
-            }
+            self.switchCaptureMode(to: action, replacing: viewController, in: host, mealType: mealType, date: date)
         }
     }
 
@@ -205,24 +192,10 @@ final class FoodLoggingCoordinator {
         viewModel.onLogged = { [weak self, weak host] in
             self?.popFoodScreen(host)
         }
-        viewModel.onSwitchMode = { [weak self, weak host] action in
+        viewModel.onSwitchMode = { [weak self, weak host, weak viewController] action in
             guard let self, let host else { return }
             if case .scanFood = action { return }
-            let flow = host as? AppNavigationController
-            let dismissesAtRoot = flow?.dismissesWhenPoppedToRoot ?? false
-            flow?.dismissesWhenPoppedToRoot = false
-            defer { flow?.dismissesWhenPoppedToRoot = dismissesAtRoot }
-            host.popViewController(animated: false)
-            switch action {
-            case .scanBarcode:
-                self.openBarcodeScanner(mealType: mealType, date: date, navigationController: host)
-            case .search:
-                self.openFoodSearch(mealType: mealType, date: date, navigationController: host)
-            case .scanFood:
-                break
-            case .voiceLog:
-                self.openVoiceLog(mealType: mealType, date: date, navigationController: host)
-            }
+            self.switchCaptureMode(to: action, replacing: viewController, in: host, mealType: mealType, date: date)
         }
         viewModel.onViewDetails = { [weak self, weak host] draft in
             self?.openProductDetails(draft, navigationController: host)
@@ -276,6 +249,11 @@ final class FoodLoggingCoordinator {
         navigationController: UINavigationController? = nil,
         onAdd: ((ProductDetailsDraft) -> Void)? = nil
     ) {
+        // From food logging a dish opens as a recipe: the diary, a scan result or a search hit.
+        Analytics.tracker.track(.recipeOpened(
+            source: loggingContext?.source ?? "food_logging",
+            origin: recipe.origin.isAIRecipe ? "ai" : "catalog"
+        ))
         let viewModel = RecipeDetailViewModel(
             recipe: recipe,
             searchRecipesUseCase: container.searchRecipesUseCase,
@@ -310,6 +288,9 @@ final class FoodLoggingCoordinator {
         _ draft: ProductDetailsDraft,
         showsAddToDiary: Bool = true,
         addButtonTitle: String? = nil,
+        // The pantry keeps products on the product screen: a dish there would open the recipe page,
+        // whose add button waits for full recipe details that a pantry product never has.
+        routesDishesToRecipe: Bool = true,
         navigationController: UINavigationController? = nil,
         onAdd: ((ProductDetailsDraft) -> Void)? = nil
     ) {
@@ -320,7 +301,7 @@ final class FoodLoggingCoordinator {
             let host = navigationController ?? self.navigationController
             let origin = host.topViewController
             let wasVisible = host.viewIfLoaded?.window != nil
-            let spinner = UIActivityIndicatorView(style: .large)
+            let spinner = UIActivityIndicatorView(style: .medium)
             spinner.translatesAutoresizingMaskIntoConstraints = false
             let loadingHost = origin?.view ?? host.view!
             loadingHost.addSubview(spinner)
@@ -338,24 +319,30 @@ final class FoodLoggingCoordinator {
                           host.topViewController === origin, !host.isBeingDismissed,
                           (!wasVisible || host.viewIfLoaded?.window != nil) else { return }
                     self.openProductDetails(resolved, showsAddToDiary: showsAddToDiary,
-                                            addButtonTitle: addButtonTitle, navigationController: navigationController, onAdd: onAdd)
+                                            addButtonTitle: addButtonTitle, routesDishesToRecipe: routesDishesToRecipe,
+                                            navigationController: navigationController, onAdd: onAdd)
                 } catch {
                     guard !Task.isCancelled, self.classificationRequest == requestID,
                           host.topViewController === origin, !host.isBeingDismissed,
                           (!wasVisible || host.viewIfLoaded?.window != nil) else { return }
+                    Analytics.tracker.track(.errorShown(
+                        context: "food_classification",
+                        reason: NetworkMonitor.shared.isOnline ? "unavailable" : "offline"
+                    ))
                     let alert = UIAlertController(title: L10n.tr("food.classificationUnavailable.title"),
                                                   message: L10n.tr("food.classificationUnavailable.message"), preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: L10n.tr("common.cancel"), style: .cancel))
                     alert.addAction(UIAlertAction(title: L10n.tr("search.retry"), style: .default) { [weak self] _ in
                         self?.openProductDetails(draft, showsAddToDiary: showsAddToDiary,
-                                                 addButtonTitle: addButtonTitle, navigationController: navigationController, onAdd: onAdd)
+                                                 addButtonTitle: addButtonTitle, routesDishesToRecipe: routesDishesToRecipe,
+                                                 navigationController: navigationController, onAdd: onAdd)
                     })
                     host.present(alert, animated: true)
                 }
             }
             return
         }
-        if draft.resolvedFoodType == .dish {
+        if draft.resolvedFoodType == .dish, routesDishesToRecipe {
             openRecipeDetail(draft.toFoodEntry().asRecipe(), showsAddToDiary: showsAddToDiary,
                              loggingContext: draft, addButtonTitle: addButtonTitle, navigationController: navigationController, onAdd: onAdd)
             return
@@ -365,7 +352,8 @@ final class FoodLoggingCoordinator {
             diaryProvider: { [container] date in try container.fetchDailyDiaryUseCase.execute(for: date) },
             relatedRecipeLoader: { [container] ingredient in
                 try await container.searchRecipesUseCase.recipes(containing: ingredient)
-            }
+            },
+            fallbackImageURL: { AIAssistantAPIConfiguration.production.foodImageURL(name: $0) }
         )
         viewModel.configure(draft, showsAddToDiary: showsAddToDiary, addButtonTitle: addButtonTitle)
         let viewController = ProductDetailsViewController(viewModel: viewModel)
@@ -593,6 +581,13 @@ final class FoodLoggingCoordinator {
         from source: UINavigationController?
     ) -> UINavigationController {
         let host = source ?? navigationController
+        if let replaced = screenBeingReplaced, host.viewControllers.contains(where: { $0 === replaced }) {
+            // Switching mode swaps the screen in place, the way the segmented control reads.
+            var stack = host.viewControllers
+            stack.removeAll { $0 === replaced }
+            host.setViewControllers(stack + [viewController], animated: false)
+            return host
+        }
         if isSheetContainer(host) {
             if let presented = host.presentedViewController as? UINavigationController,
                presented.modalPresentationStyle == .fullScreen {
@@ -624,6 +619,30 @@ final class FoodLoggingCoordinator {
             placeholder.view.addSubview(snapshot)
         }
         return placeholder
+    }
+
+    /// The capture screens' segmented control opens another mode in place of the current one.
+    /// Popping first left a full-screen flow at its root for a moment, and such a flow closes itself
+    /// there, which dropped the user back on Home.
+    private func switchCaptureMode(
+        to action: HomeQuickLogAction,
+        replacing screen: UIViewController?,
+        in host: UINavigationController,
+        mealType: MealType,
+        date: Date
+    ) {
+        screenBeingReplaced = screen
+        defer { screenBeingReplaced = nil }
+        switch action {
+        case .scanFood:
+            openAIPhoto(mealType: mealType, date: date, navigationController: host)
+        case .scanBarcode:
+            openBarcodeScanner(mealType: mealType, date: date, navigationController: host)
+        case .search:
+            openFoodSearch(mealType: mealType, date: date, navigationController: host)
+        case .voiceLog:
+            openVoiceLog(mealType: mealType, date: date, navigationController: host)
+        }
     }
 
     private func popFoodScreen(_ nav: UINavigationController?) {

@@ -58,7 +58,7 @@ enum FoodEntryMapper {
         object.notes = entry.notes.isEmpty ? nil : entry.notes
         object.source = entry.source
         object.imageURLString = entry.imageURL?.absoluteString
-        object.imageData = entry.imageData
+        object.imageData = StoredPhoto.compacted(entry.imageData)
         object.healthSampleID = entry.healthSampleID
         object.isEaten = entry.isEaten
         object.ingredientsJSON = encodeStringArray(entry.ingredientLines)

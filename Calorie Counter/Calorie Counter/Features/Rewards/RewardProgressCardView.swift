@@ -21,16 +21,17 @@ final class RewardProgressCardView: UIView {
         titleLabel.text = L10n.tr("rewards.reward")
         detailLabel.text = progress.rewardDetail
         meterView.progress = CGFloat(progress.fill)
-        giftImageView.image = OnboardingStyle.symbol("gift", pointSize: 20, weight: .regular)?.withTintColor(
+        giftImageView.image = OnboardingStyle.symbol("gift", pointSize: 17, weight: .regular)?.withTintColor(
             AppColor.iconSecondary,
             renderingMode: .alwaysOriginal
         )
-        OnboardingStyle.lockFigmaFont(titleLabel, size: 17, weight: .regular, color: AppColor.labelsPrimary, kern: -0.43)
-        OnboardingStyle.lockFigmaFont(detailLabel, size: 15, weight: .regular, color: AppColor.iconSecondary, kern: -0.23)
+        // Callout in the design: 16 pt for both, the reward itself in secondary grey.
+        OnboardingStyle.lockFigmaFont(titleLabel, size: 16, weight: .regular, color: AppColor.labelsPrimary, kern: -0.31)
+        OnboardingStyle.lockFigmaFont(detailLabel, size: 16, weight: .regular, color: AppColor.labelsSecondary, kern: -0.31)
         titleLabel.applyWrapping()
         detailLabel.applyWrapping()
-        titleLabel.enableDynamicType(baseFont: .systemFont(ofSize: 17))
-        detailLabel.enableDynamicType(baseFont: .systemFont(ofSize: 15))
+        titleLabel.enableDynamicType(baseFont: .systemFont(ofSize: 16))
+        detailLabel.enableDynamicType(baseFont: .systemFont(ofSize: 16))
         rebuildTicks(progress)
         applyCardShadow()
     }
@@ -62,6 +63,7 @@ final class RewardProgressCardView: UIView {
                 color: index < filled ? AppColor.labelsPrimary : AppColor.iconSecondary,
                 kern: 0.06
             )
+            label.setContentCompressionResistancePriority(.required, for: .vertical)
             column.addArrangedSubview(tick)
             column.addArrangedSubview(label)
             ticksStackView.addArrangedSubview(column)
@@ -72,6 +74,10 @@ final class RewardProgressCardView: UIView {
         backgroundColor = .clear
         embedNibContent()
         guard let card = subviews.first else { return }
+        (card as? AdaptiveView)?.cardFillColor = AppColor.backgroundsPrimary
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.applyCardShadow()
+        }
         NSLayoutConstraint.deactivate(card.constraints.filter {
             $0.firstItem === card && $0.firstAttribute == .height && $0.secondItem == nil
         })
@@ -79,8 +85,15 @@ final class RewardProgressCardView: UIView {
             ($0.firstItem === meterView && $0.firstAttribute == .top)
                 || (($0.firstItem === titleLabel || $0.firstItem === detailLabel) && $0.firstAttribute == .centerY)
         }.forEach { $0.priority = .defaultHigh }
+        // The card hugs its content (151 pt in the design) and grows only with larger text.
+        let hug = card.bottomAnchor.constraint(equalTo: ticksStackView.bottomAnchor, constant: 29)
+        hug.priority = .init(999)
+        // A top-aligned stack is only a lower bound on its height; keep it as short as its tallest day.
+        let ticksFit = ticksStackView.heightAnchor.constraint(equalToConstant: 0)
+        ticksFit.priority = .init(990)
         NSLayoutConstraint.activate([
-            card.heightAnchor.constraint(greaterThanOrEqualToConstant: 151),
+            hug,
+            ticksFit,
             titleLabel.topAnchor.constraint(greaterThanOrEqualTo: card.topAnchor, constant: 16),
             detailLabel.topAnchor.constraint(greaterThanOrEqualTo: card.topAnchor, constant: 16),
             meterView.topAnchor.constraint(greaterThanOrEqualTo: titleLabel.bottomAnchor, constant: 16),
@@ -94,8 +107,9 @@ final class RewardProgressCardView: UIView {
         layer.cornerCurve = .continuous
         layer.masksToBounds = false
         layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.1
-        layer.shadowRadius = 16
+        let isDark = traitCollection.userInterfaceStyle == .dark
+        layer.shadowOpacity = isDark ? 0.45 : 0.1
+        layer.shadowRadius = isDark ? 8 : 4
         layer.shadowOffset = CGSize(width: 3, height: 4)
     }
 }

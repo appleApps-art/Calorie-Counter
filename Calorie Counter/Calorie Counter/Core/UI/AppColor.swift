@@ -15,7 +15,15 @@ enum AppColor {
         light: rgb(60, 60, 67, 0.6),
         dark: rgb(235, 235, 245, 0.7)
     )
+    static let labelsTertiary = dynamic(
+        light: rgb(60, 60, 67, 0.3),
+        dark: rgb(235, 235, 245, 0.3)
+    )
     static let accentRed = dynamic(light: rgb(255, 56, 60), dark: rgb(255, 66, 69))
+    static let fillPrimary = dynamic(
+        light: rgb(120, 120, 128, 0.2),
+        dark: rgb(120, 120, 128, 0.36)
+    )
     static let fillSecondary = dynamic(
         light: rgb(120, 120, 128, 0.16),
         dark: rgb(120, 120, 128, 0.32)
@@ -28,22 +36,20 @@ enum AppColor {
         light: rgb(118, 118, 128, 0.12),
         dark: rgb(118, 118, 128, 0.24)
     )
+    /// The hairline between rows inside a card: grey on white, lighter grey on a dark card.
+    static let separatorOnCard = dynamic(
+        light: rgb(230, 230, 230),
+        dark: rgb(56, 56, 58)
+    )
     static let separatorVibrant = dynamic(light: rgb(230, 230, 230), dark: rgb(26, 26, 26))
     static let fillVibrantTertiary = dynamic(light: rgb(240, 239, 239), dark: rgb(18, 18, 18))
     static let pageIndicator = dynamic(light: rgb(204, 204, 204), dark: rgb(108, 108, 112))
     static let textMuted = color("BityTextMuted", light: (102, 102, 105, 1), dark: (235, 235, 245, 0.45))
     static let textBody = color("BityTextBody", light: (51, 51, 54), dark: (245, 245, 245))
-    static let protein = color("BityProtein", light: (255, 92, 92))
-    static let proteinTrack = color("BityProteinTrack", light: (255, 225, 225))
     static let carbs = color("BityCarbs", light: (255, 176, 32))
-    static let carbsTrack = color("BityCarbsTrack", light: (255, 241, 209))
-    static let fat = color("BityFat", light: (75, 158, 255))
-    static let fatTrack = color("BityFatTrack", light: (220, 236, 255))
     static let accentBlue = dynamic(light: rgb(0, 136, 255), dark: rgb(0, 145, 255))
     static let accentIndigo = dynamic(light: rgb(97, 85, 245), dark: rgb(109, 124, 255))
     static let accentMint = dynamic(light: rgb(0, 200, 179), dark: rgb(0, 218, 195))
-    static let water = color("BityWater", light: (0, 136, 255), dark: (0, 145, 255))
-    static let waterSoft = color("BityWaterSoft", light: (232, 244, 255))
     static let breakfast = color("BityBreakfast", light: (255, 232, 200))
     static let lunch = color("BityLunch", light: (255, 243, 196))
     static let dinner = color("BityDinner", light: (227, 224, 255))
@@ -62,6 +68,17 @@ enum AppColor {
     static let onAccent = dynamic(light: .white, dark: .black)
     static let tabSelected = dynamic(light: rgb(0, 129, 152), dark: rgb(59, 221, 236))
     static let grabber = dynamic(light: rgb(60, 60, 67, 0.3), dark: rgb(51, 51, 51))
+    /// Tint laid over the system glass on every bottom sheet, so sheets and sheet-like panels match.
+    static let sheetGlassTint = dynamic(
+        light: UIColor(white: 0.96, alpha: 0.35),
+        dark: UIColor.black.withAlphaComponent(0.6)
+    )
+    /// The same tint, lighter, for the panel that shows a recognized meal. It sits over the photo or
+    /// the voice screen, and at full strength its solid cards melt into it.
+    static let resultPanelTint = dynamic(
+        light: UIColor(white: 0.96, alpha: 0.15),
+        dark: UIColor.black.withAlphaComponent(0.35)
+    )
     static let overlayDefault = dynamic(
         light: rgb(0, 0, 0, 0x33 / 255),
         dark: rgb(0, 0, 0, 0x7A / 255)

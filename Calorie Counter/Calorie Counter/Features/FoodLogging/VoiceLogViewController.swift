@@ -1,7 +1,7 @@
 import UIKit
 
 final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
-    @IBOutlet private weak var decorationsView: VoiceLogDecorationsView!
+    @IBOutlet private weak var backgroundImageView: UIImageView!
     @IBOutlet private weak var backButton: UIButton!
     @IBOutlet private weak var titleLabel: AdaptiveLabel!
     @IBOutlet private weak var waveformView: VoiceWaveformView!
@@ -42,6 +42,9 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
     private let viewModel: VoiceFoodLoggingViewModel
     private let loadingOverlay = CustomLoadingOverlayView()
     private let micChrome = VoiceMicButtonChrome()
+    private let resultSheetTint = UIView()
+    private var resultSwipeDismissal: ResultPanelSwipeDismissal?
+    private let productImageLoader = UIActivityIndicatorView(style: .medium)
     private var meterLink: CADisplayLink?
     private var cursorTimer: Timer?
     private var isApplyingTranscript = false
@@ -58,6 +61,8 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = AppColor.teal
+        // voiceBackground is the teal field with the fruit outlines from the design, the same in both themes.
+        backgroundImageView.image = UIImage(named: "voiceBackground")
         navigationItem.largeTitleDisplayMode = .never
         configureChrome()
         configureResultSheet()
@@ -68,16 +73,12 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         micChrome.layoutIfNeeded()
+        RecognitionResultPanel.layout(tint: resultSheetTint, in: resultSheet)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        decorationsView.playIntroIfNeeded()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -115,6 +116,13 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
         }
         viewModel.analysis.bind { [weak self] _ in
             self?.renderResult()
+        }
+        viewModel.resultImage.bind { [weak self] image in
+            self?.productImageView.image = image
+            self?.refreshProductImageLoader()
+        }
+        viewModel.isResultImageLoading.bind { [weak self] _ in
+            self?.refreshProductImageLoader()
         }
         viewModel.showsFullDetails.bind { [weak self] visible in
             self?.detailsLabel.isHidden = !visible
@@ -281,16 +289,7 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
     }
 
     private func configureResultSheet() {
-        resultSheet.useLiveGlass = true
-        resultSheet.applyCardShadow = true
-        resultSheet.showsDropShadow = true
-        resultSheet.matchScreenCorners = true
-        productCard.useLiveGlass = true
-        productCard.applyCardShadow = true
-        productCard.showsDropShadow = false
-        scoreCard.useLiveGlass = true
-        scoreCard.applyCardShadow = true
-        scoreCard.showsDropShadow = false
+        RecognitionResultPanel.style(sheet: resultSheet, tint: resultSheetTint, cards: [productCard, scoreCard] + microCards)
         scoreCircleView.useLiveGlass = false
         scoreCircleView.backgroundColor = AppColor.accentMint
         productImageView.contentMode = .scaleAspectFill
@@ -350,12 +349,6 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
 
         detailsLabel.numberOfLines = 0
         detailsLabel.isHidden = true
-        microCards.forEach { card in
-            card.useLiveGlass = false
-            card.backgroundColor = AppColor.card
-            card.layer.borderWidth = 1
-            card.layer.borderColor = OnboardingStyle.fillQuaternary.resolvedColor(with: traitCollection).cgColor
-        }
         dimView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
         dimView.alpha = 0
         dimView.isHidden = true
@@ -363,11 +356,27 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
         resultSheet.isHidden = true
         resultSheet.transform = CGAffineTransform(translationX: 0, y: 48)
         pinResultScrollContent()
+        installResultSwipeDismissal()
+    }
+
+    private func refreshProductImageLoader() {
+        RecognitionResultPanel.setImageLoading(
+            viewModel.isResultImageLoading.value,
+            spinner: productImageLoader,
+            in: productImageView
+        )
     }
 
     private func pinResultScrollContent() {
         guard let stack = productCard.superview, let scroll = stack.superview as? UIScrollView else { return }
         scroll.pinFilledContent(stack, hugHeight: true)
+    }
+
+    private func installResultSwipeDismissal() {
+        let scroll = productCard.superview?.superview as? UIScrollView
+        resultSwipeDismissal = ResultPanelSwipeDismissal(panel: resultSheet, scrollView: scroll) { [weak self] in
+            self?.viewModel.dismissResultTapped()
+        }
     }
 
     private func applyPhase(_ phase: VoiceLogPhase, animated: Bool) {

@@ -39,6 +39,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
     @IBOutlet private weak var datesCard: AdaptiveView!
     @IBOutlet private weak var datesTitleLabel: AdaptiveLabel!
     @IBOutlet private weak var datesValueLabel: AdaptiveLabel!
+    @IBOutlet private weak var datesIconView: UIImageView!
     @IBOutlet private weak var calendarContainer: UIView!
     @IBOutlet private weak var detailsCard: AdaptiveView!
     @IBOutlet private weak var detailsTitleLabel: AdaptiveLabel!
@@ -60,6 +61,10 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
     private var lastChipLayoutWidth: CGFloat = 0
     private var canRender = false
     private var isAnimatingContent = false
+    /// In the design the chosen dates sit in a filled pill, with a hairline under the row.
+    private let datesPillView = UIView()
+    private let datesSeparatorView = UIView()
+    private var optionChips: [ObjectIdentifier: [String: UIButton]] = [:]
 
     init(viewModel: CreateRecipeFormViewModel) {
         self.viewModel = viewModel
@@ -111,6 +116,8 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         styleFilterCard(dietCard)
         styleFilterCard(datesCard)
         styleElevatedCard(detailsCard)
+        // The calendar and the details card are 16 in the design, the filter cards 24.
+        [datesCard, detailsCard].forEach { $0?.designCornerRadius = 16 }
         configureChipScrolls()
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (screen: CreateRecipeFormViewController, _) in
             screen.styleFilterCard(screen.pantryCard)
@@ -149,6 +156,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         styleSection(caloriesLabel, L10n.tr("recipes.filters.calories"))
         styleSection(cuisineLabel, L10n.tr("recipes.filters.cuisine"))
         styleSection(dietLabel, L10n.tr("recipes.filters.diet"))
+        styleDatesRow()
         datesTitleLabel.text = L10n.tr("recipes.create.selectDates")
         OnboardingStyle.lockFigmaFont(datesTitleLabel, size: 17, weight: .regular, color: AppColor.labelsPrimary, kern: -0.43)
         detailsTitleLabel.text = L10n.tr(
@@ -253,6 +261,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
             layoutSourceTrack()
         }
         micChrome.layoutIfNeeded()
+        datesPillView.layer.cornerRadius = datesPillView.bounds.height / 2
         relayoutProductChipsIfNeeded()
     }
 
@@ -341,6 +350,10 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
     @objc private func searchChanged() { viewModel.updateIngredientQuery(searchTextField.text ?? "") }
     @objc private func micTapped() { viewModel.toggleVoiceTapped() }
     @objc private func createTapped() {
+        if viewModel.acceptPendingIngredientAndCheckMissing() {
+            showMissingIngredients()
+            return
+        }
         startCreateLoading()
         viewModel.createTapped()
     }
@@ -372,13 +385,58 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         viewModel.updateDates(dates)
     }
 
+    private func styleDatesRow() {
+        guard viewModel.kind == .mealPlan else { return }
+        datesIconView.image = UIImage(systemName: "calendar")?.withRenderingMode(.alwaysTemplate)
+        datesIconView.tintColor = AppColor.labelsPrimary
+        datesPillView.backgroundColor = AppColor.fillQuaternary
+        datesPillView.isUserInteractionEnabled = false
+        datesPillView.layer.cornerCurve = .continuous
+        datesPillView.translatesAutoresizingMaskIntoConstraints = false
+        datesSeparatorView.backgroundColor = AppColor.separatorOnCard
+        datesSeparatorView.translatesAutoresizingMaskIntoConstraints = false
+        guard let row = datesValueLabel.superview else { return }
+        row.insertSubview(datesPillView, belowSubview: datesValueLabel)
+        datesCard.addSubview(datesSeparatorView)
+        NSLayoutConstraint.activate([
+            datesPillView.leadingAnchor.constraint(equalTo: datesValueLabel.leadingAnchor, constant: .adaptWidth(-11)),
+            datesPillView.trailingAnchor.constraint(equalTo: datesValueLabel.trailingAnchor, constant: .adaptWidth(11)),
+            datesPillView.topAnchor.constraint(equalTo: datesValueLabel.topAnchor, constant: .adaptHeight(-6)),
+            datesPillView.bottomAnchor.constraint(equalTo: datesValueLabel.bottomAnchor, constant: .adaptHeight(6)),
+            datesSeparatorView.leadingAnchor.constraint(equalTo: datesCard.leadingAnchor),
+            datesSeparatorView.trailingAnchor.constraint(equalTo: datesCard.trailingAnchor),
+            datesSeparatorView.topAnchor.constraint(equalTo: row.bottomAnchor, constant: .adaptHeight(16)),
+            datesSeparatorView.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale)
+        ])
+        spanCalendarAcrossTheCard()
+    }
+
+    /// In the design the month grid runs the full width of the card, just under the hairline,
+    /// while the row above it keeps the card's own 16pt padding.
+    private func spanCalendarAcrossTheCard() {
+        guard let stack = calendarContainer.superview as? UIStackView else { return }
+        stack.removeArrangedSubview(calendarContainer)
+        calendarContainer.removeFromSuperview()
+        datesCard.constraints
+            .filter { ($0.firstItem === stack || $0.secondItem === stack) && ($0.firstAttribute == .bottom || $0.secondAttribute == .bottom) }
+            .forEach { $0.isActive = false }
+        calendarContainer.translatesAutoresizingMaskIntoConstraints = false
+        datesCard.addSubview(calendarContainer)
+        NSLayoutConstraint.activate([
+            calendarContainer.leadingAnchor.constraint(equalTo: datesCard.leadingAnchor),
+            calendarContainer.trailingAnchor.constraint(equalTo: datesCard.trailingAnchor),
+            calendarContainer.topAnchor.constraint(equalTo: datesSeparatorView.bottomAnchor, constant: .adaptHeight(3)),
+            datesCard.bottomAnchor.constraint(equalTo: calendarContainer.bottomAnchor, constant: .adaptHeight(8))
+        ])
+    }
+
     private func renderDates() {
         guard viewModel.kind == .mealPlan else { return }
         datesValueLabel.text = viewModel.dateRangeText
         OnboardingStyle.lockFigmaFont(
             datesValueLabel,
             size: 17,
-            weight: .semibold,
+            weight: .regular,
             color: AppColor.labelsPrimary,
             kern: -0.43
         )
@@ -427,14 +485,24 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
 
     private func renderCookChips() {
         guard canRender else { return }
-        cookStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        viewModel.cookOptions.forEach { key, minutes in
-            cookStack.addArrangedSubview(
-                chip(title: L10n.tr(key), selected: viewModel.cookMinutes.value == minutes) { [weak self] in
-                    self?.viewModel.selectCookTime(minutes)
-                }
-            )
+        let keys = viewModel.cookOptions.map(\.0)
+        if let existing = builtChips(in: cookStack, keys: keys) {
+            viewModel.cookOptions.forEach { key, minutes in
+                guard let button = existing[key] else { return }
+                styleChip(button, selected: viewModel.cookMinutes.value == minutes)
+            }
+            return
         }
+        cookStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        var built: [String: UIButton] = [:]
+        viewModel.cookOptions.forEach { key, minutes in
+            let button = chip(title: L10n.tr(key), selected: viewModel.cookMinutes.value == minutes) { [weak self] in
+                self?.viewModel.selectCookTime(minutes)
+            }
+            built[key] = button
+            cookStack.addArrangedSubview(button)
+        }
+        optionChips[ObjectIdentifier(cookStack)] = built
     }
 
     private func renderCuisineChips() {
@@ -541,7 +609,14 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         let removed = visibleSet.subtracting(titles)
         let added = titles.filter { !visibleSet.contains($0) }
         if added.isEmpty {
-            collapseChips(in: stack, titles: removed, animated: animated, alongside: alongside)
+            // The collapse animation only shrinks the removed chips; the rows that stay behind must
+            // be flowed again, or the survivors keep the widths the animation left them with.
+            collapseChips(in: stack, titles: removed, animated: animated, alongside: alongside) {
+                UIView.performWithoutAnimation {
+                    self.syncProductChips(stack, titles: titles, remove: remove)
+                    stack.layoutIfNeeded()
+                }
+            }
             return
         }
         let fill = {
@@ -569,10 +644,12 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         in stack: UIStackView,
         titles: Set<String>,
         animated: Bool,
-        alongside: @escaping () -> Void
+        alongside: @escaping () -> Void,
+        completion: @escaping () -> Void
     ) {
         guard !titles.isEmpty else {
             alongside()
+            completion()
             return
         }
         var buttons: [UIButton] = []
@@ -585,6 +662,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         }
         guard !buttons.isEmpty else {
             alongside()
+            completion()
             return
         }
         let widths = buttons.map { button -> NSLayoutConstraint in
@@ -654,6 +732,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
                 completion: { _ in
                     UIView.performWithoutAnimation(cleanup)
                     self.isAnimatingContent = false
+                    completion()
                 }
             )
         } else {
@@ -661,6 +740,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
                 apply()
                 cleanup()
             }
+            completion()
         }
     }
 
@@ -711,7 +791,33 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         }
         if let plan {
             viewModel.onCreatedMealPlan?(plan)
+            return
         }
+        Haptics.error()
+        // A recipe made from the same products before is kept and still opens offline; a new one
+        // needs the server, and the alert says so instead of blaming the products.
+        let offline = !NetworkMonitor.shared.isOnline
+        Analytics.tracker.track(.errorShown(context: "create_recipe", reason: offline ? "offline" : "failed"))
+        let alert = UIAlertController(
+            title: L10n.tr(offline ? "offline.title" : "recipes.create.failedTitle"),
+            message: L10n.tr(offline ? "offline.message" : "recipes.create.failedBody"),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("product.entry.ok"), style: .default))
+        present(alert, animated: true)
+    }
+
+    private func showMissingIngredients() {
+        view.endEditing(true)
+        Haptics.error()
+        Analytics.tracker.track(.errorShown(context: "create_recipe", reason: "no_ingredients"))
+        let alert = UIAlertController(
+            title: L10n.tr("recipes.create.noIngredientsTitle"),
+            message: viewModel.missingIngredientsMessage,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.tr("product.entry.ok"), style: .default))
+        present(alert, animated: true)
     }
 
     private func applyCalories(_ value: Int) {
@@ -900,7 +1006,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         let title = button === pantrySourceButton
             ? L10n.tr("recipes.create.myPantry")
             : L10n.tr("recipes.create.customIngredients")
-        let color: UIColor = selected ? .black : AppColor.labelsPrimary
+        let color: UIColor = selected ? AppColor.onAccent : AppColor.labelsPrimary
         let font = UIFont.systemFont(ofSize: 13, weight: selected ? .semibold : .medium)
         button.setTitle(title, for: .normal)
         button.setAttributedTitle(
@@ -939,14 +1045,23 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         selected: (String) -> Bool,
         action: @escaping (String) -> Void
     ) {
+        if let existing = builtChips(in: stack, keys: keys) {
+            keys.forEach { key in
+                guard let button = existing[key] else { return }
+                styleChip(button, selected: selected(key))
+            }
+            return
+        }
         stack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         stack.axis = .horizontal
         stack.distribution = .fill
+        var built: [String: UIButton] = [:]
         keys.forEach { key in
-            stack.addArrangedSubview(
-                chip(title: L10n.tr(key), selected: selected(key)) { action(key) }
-            )
+            let button = chip(title: L10n.tr(key), selected: selected(key)) { action(key) }
+            built[key] = button
+            stack.addArrangedSubview(button)
         }
+        optionChips[ObjectIdentifier(stack)] = built
     }
 
     private func fillWrapped(
@@ -955,10 +1070,18 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
         selected: (String) -> Bool,
         action: @escaping (String) -> Void
     ) {
+        if let existing = builtChips(in: stack, keys: keys) {
+            keys.forEach { key in
+                guard let button = existing[key] else { return }
+                styleChip(button, selected: selected(key))
+            }
+            return
+        }
         stack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         stack.axis = .vertical
         stack.distribution = .fill
         stack.spacing = .adaptHeight(12)
+        var built: [String: UIButton] = [:]
         stride(from: 0, to: keys.count, by: 3).forEach { index in
             let row = UIStackView()
             row.axis = .horizontal
@@ -974,10 +1097,32 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
                     button.setContentHuggingPriority(.defaultLow, for: .horizontal)
                     button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
                 }
+                built[key] = button
                 row.addArrangedSubview(button)
             }
             stack.addArrangedSubview(row)
         }
+        optionChips[ObjectIdentifier(stack)] = built
+    }
+
+    /// Selecting an option must only repaint the chips: rebuilding the row makes the whole
+    /// section flash and re-measure.
+    private func builtChips(in stack: UIStackView, keys: [String]) -> [String: UIButton]? {
+        guard let built = optionChips[ObjectIdentifier(stack)],
+              built.count == keys.count,
+              keys.allSatisfy({ built[$0]?.superview != nil }) else { return nil }
+        return built
+    }
+
+    private func styleChip(_ button: UIButton, selected: Bool) {
+        guard var configuration = button.configuration else { return }
+        let foreground = selected ? AppColor.onAccent : AppColor.labelsPrimary
+        let background = selected ? AppColor.teal : AppColor.fillQuaternary
+        guard configuration.baseForegroundColor != foreground
+            || configuration.baseBackgroundColor != background else { return }
+        configuration.baseForegroundColor = foreground
+        configuration.baseBackgroundColor = background
+        button.configuration = configuration
     }
 
     private func relayoutProductChipsIfNeeded() {
@@ -1147,7 +1292,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
             attributes.kern = -0.23
             return attributes
         }
-        config.baseForegroundColor = selected ? .black : AppColor.labelsPrimary
+        config.baseForegroundColor = selected ? AppColor.onAccent : AppColor.labelsPrimary
         config.baseBackgroundColor = selected ? AppColor.teal : AppColor.fillQuaternary
         button.configuration = config
         button.setContentHuggingPriority(.required, for: .horizontal)

@@ -58,11 +58,13 @@ final class OnboardingAgeViewController: BaseViewController {
 
     @objc
     private func backTapped() {
+        Haptics.light()
         onBack?()
     }
 
     @objc
     private func continueTapped() {
+        Haptics.light()
         onContinue?(selectedAge)
     }
 }

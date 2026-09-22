@@ -20,6 +20,8 @@ final class ParseAIAssistantActionsUseCase {
             return parseRecipeSave(args).map(AIAssistantAction.saveRecipe)
         case "propose_recipe_ingredient_swap":
             return parseRecipeIngredientSwap(args).map(AIAssistantAction.swapRecipeIngredient)
+        case "propose_meal_plan_swap":
+            return parseMealPlanSwap(args).map(AIAssistantAction.swapMealPlanMeal)
         case "propose_water_log":
             return parseWater(args).map(AIAssistantAction.logWater)
         case "propose_preference_save":
@@ -150,7 +152,10 @@ final class ParseAIAssistantActionsUseCase {
                 steps: ToolCallValue.stringArray(dict["steps"]),
                 mealType: ToolCallValue.string(dict["mealType"]).flatMap(MealType.init(rawValue:)),
                 portionGrams: ToolCallValue.number(dict["portionGrams"]),
-                portionMilliliters: ToolCallValue.number(dict["portionMilliliters"])
+                portionMilliliters: ToolCallValue.number(dict["portionMilliliters"]),
+                fiber: ToolCallValue.number(dict["fiber"]),
+                sugar: ToolCallValue.number(dict["sugar"]),
+                sodium: ToolCallValue.number(dict["sodium"])
             )
         }
         guard !options.isEmpty else { return nil }
@@ -174,7 +179,33 @@ final class ParseAIAssistantActionsUseCase {
             externalRecipeId: ToolCallValue.string(args["externalRecipeId"]),
             imageURL: ToolCallValue.url(args["imageURL"]) ?? ToolCallValue.url(args["image"]),
             ingredients: ToolCallValue.stringArray(args["ingredients"]),
-            steps: ToolCallValue.stringArray(args["steps"])
+            steps: ToolCallValue.stringArray(args["steps"]),
+            fiber: ToolCallValue.number(args["fiber"]),
+            sugar: ToolCallValue.number(args["sugar"]),
+            sodium: ToolCallValue.number(args["sodium"])
+        )
+    }
+
+    private func parseMealPlanSwap(_ args: [String: Any]) -> MealPlanSwapProposal? {
+        let replacement = ToolCallValue.dictionary(args["replacement"])
+        guard let title = ToolCallValue.string(replacement["title"]) ?? ToolCallValue.string(replacement["name"]),
+              !title.isEmpty else { return nil }
+        let mealTypeRaw = ToolCallValue.string(args["mealType"])?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return MealPlanSwapProposal(
+            planId: ToolCallValue.string(args["planId"]),
+            dayNumber: ToolCallValue.number(args["dayNumber"]).map { Int($0) },
+            mealType: mealTypeRaw.flatMap(MealType.init(rawValue:)),
+            currentTitle: ToolCallValue.string(args["currentTitle"]),
+            replacementTitle: title,
+            calories: ToolCallValue.number(replacement["calories"]),
+            protein: ToolCallValue.number(replacement["protein"]),
+            carbs: ToolCallValue.number(replacement["carbs"]),
+            fats: ToolCallValue.number(replacement["fats"]),
+            ingredients: ToolCallValue.stringArray(replacement["ingredients"]),
+            steps: ToolCallValue.stringArray(replacement["steps"]),
+            reason: ToolCallValue.string(args["reason"])
         )
     }
 
@@ -277,7 +308,8 @@ final class ConfirmAIAssistantActionUseCase {
             let entry = try logFoodUseCase.execute(proposal.asFoodLogProposal().toFoodEntry())
             try awardXPUseCase?.execute(kind: .foodSwap)
             return entry
-        case .mealSuggestions:
+        case .mealSuggestions, .swapMealPlanMeal:
+            // The plan screen owns its own writes; the chat only hands the proposal over.
             return nil
         case .saveRecipe(let proposal):
             try recipeRepository.save(proposal.toRecipe())

@@ -22,10 +22,26 @@ final class AwardXPUseCase {
         )
         try rewardsRepository.append(event)
         var state = try rewardsRepository.fetchState()
+        let previousLevel = state.level
         state.totalXP += event.amount
+        if state.level != previousLevel {
+            Analytics.tracker.track(.levelReached(level: state.level.number))
+            Analytics.tracker.setUserProperties(["level": state.level.number, "xp": state.totalXP])
+        }
         state.updatedAt = date
         try rewardsRepository.save(state)
         _ = try evaluateBadgesUseCase.execute()
+    }
+
+    /// Takes back the XP a diary entry earned when the user deletes it. Otherwise adding and
+    /// removing the same glass of water or meal could be repeated for levels.
+    func revoke(relatedID: UUID, date: Date = Date()) throws {
+        let removed = try rewardsRepository.removeEvents(relatedID: relatedID)
+        guard !removed.isEmpty else { return }
+        var state = try rewardsRepository.fetchState()
+        state.totalXP = max(0, state.totalXP - removed.reduce(0) { $0 + $1.amount })
+        state.updatedAt = date
+        try rewardsRepository.save(state)
     }
 }
 
@@ -122,16 +138,29 @@ final class EvaluateBadgesUseCase {
             calendar: calendar
         )
 
-        let complete = progress.filter(\.isComplete)
         var latest = try rewardsRepository.fetchState()
-        latest.unlockedBadgeIDs = complete.map(\.badge.rawValue)
+        // A badge, once earned, stays earned: a missed day starts a new run, it does not take the
+        // badge away. A celebrated (seen) badge was complete when it was shown.
+        let earned = Set(latest.unlockedBadgeIDs)
+            .union(latest.seenBadgeIDs)
+            .union(progress.filter(\.isComplete).map(\.badge.rawValue))
+        let shown = progress.map { item in
+            earned.contains(item.badge.rawValue)
+                ? BadgeProgress(badge: item.badge, current: item.goal, goal: item.goal)
+                : item
+        }
+        let previouslyEarned = Set(latest.unlockedBadgeIDs).union(latest.seenBadgeIDs)
+        for badge in RewardBadge.allCases where earned.contains(badge.rawValue) && !previouslyEarned.contains(badge.rawValue) {
+            Analytics.tracker.track(.badgeUnlocked(badge: badge.rawValue))
+        }
+        latest.unlockedBadgeIDs = RewardBadge.allCases.map(\.rawValue).filter(earned.contains)
         latest.updatedAt = now
         try rewardsRepository.save(latest)
-        let unseen = BadgeProgress.awaitingCelebration(in: complete, seenIDs: latest.seenBadgeIDs)
+        let unseen = BadgeProgress.awaitingCelebration(in: shown, seenIDs: latest.seenBadgeIDs)
         if !unseen.isEmpty {
             onNewlyUnlocked?(unseen)
         }
-        return progress
+        return shown
     }
 }
 
@@ -266,6 +295,18 @@ enum BadgeProgressCalculator {
         calendar: Calendar
     ) -> [BadgeProgress] {
         let foodByDay = Dictionary(grouping: foods, by: { calendar.startOfDay(for: $0.date) })
+        // Diary entries carry their day, not the moment they were logged (added meals sit at
+        // midnight), so the time-of-day badges read when the food was actually logged.
+        let loggedAt = Dictionary(
+            events.filter { $0.kind == .food }.compactMap { event in event.relatedID.map { ($0, event.date) } },
+            uniquingKeysWith: { min($0, $1) }
+        )
+        func loggedOnItsDay(_ entry: FoodEntry, _ day: Date) -> Date? {
+            // Without an XP event, a timestamp of exactly midnight is only the entry's day, not a time.
+            let time = loggedAt[entry.id] ?? (entry.date == calendar.startOfDay(for: entry.date) ? nil : entry.date)
+            guard let time, calendar.isDate(time, inSameDayAs: day) else { return nil }
+            return time
+        }
         let waterByDay = Dictionary(grouping: waters, by: { calendar.startOfDay(for: $0.date) })
         let foodDays = Set(foodByDay.keys)
         let hydrationDays = Set(waterByDay.compactMap { day, entries -> Date? in
@@ -282,11 +323,21 @@ enum BadgeProgressCalculator {
             isBalanced(entries) ? day : nil
         })
         let earlyBirdDays = Set(foodByDay.compactMap { day, entries -> Date? in
-            entries.contains(where: { calendar.component(.hour, from: $0.date) < 9 }) ? day : nil
+            entries.contains(where: { entry in
+                loggedOnItsDay(entry, day).map { calendar.component(.hour, from: $0) < 9 } ?? false
+            }) ? day : nil
         })
+        let lateHour = 21
+        let eveningIsOver = calendar.component(.hour, from: now) >= lateHour
         let noLateSnackDays = Set(foodByDay.compactMap { day, entries -> Date? in
             guard !entries.isEmpty else { return nil }
-            return entries.allSatisfy({ calendar.component(.hour, from: $0.date) < 21 }) ? day : nil
+            // Today can still end with a late snack until the evening is over.
+            if calendar.isDate(day, inSameDayAs: now), !eveningIsOver { return nil }
+            let lateSnack = entries.contains { entry in
+                guard entry.mealType == .snacks, let time = loggedOnItsDay(entry, day) else { return false }
+                return calendar.component(.hour, from: time) >= lateHour
+            }
+            return lateSnack ? nil : day
         })
         let explorerDays = Set(foodByDay.compactMap { day, entries -> Date? in
             Set(entries.map(\.name)).count >= 3 ? day : nil
@@ -298,10 +349,8 @@ enum BadgeProgressCalculator {
                 return weekday == 1 || weekday == 7
             }
         }()
-        let swapDays = Set(
-            events.filter { $0.kind == .foodSwap }.map { calendar.startOfDay(for: $0.date) }
-        )
-        let photoDays = Set(photos.map { calendar.startOfDay(for: $0.date) })
+        let swapCount = events.filter { $0.kind == .foodSwap }.count
+        let photoWeeks = Set(photos.map { BadgeStreakMath.weekStart($0.date, calendar: calendar) })
         let weightWeeks = Set(weights.map { BadgeStreakMath.weekStart($0.date, calendar: calendar) })
 
         return RewardBadge.allCases.map { badge in
@@ -324,9 +373,9 @@ enum BadgeProgressCalculator {
             case .earlyBirdLogger:
                 raw = BadgeStreakMath.consecutiveDays(in: earlyBirdDays, now: now, calendar: calendar)
             case .smartChoice:
-                raw = BadgeStreakMath.consecutiveDays(in: swapDays, now: now, calendar: calendar)
+                raw = swapCount
             case .visualJourney:
-                raw = BadgeStreakMath.consecutiveDays(in: photoDays, now: now, calendar: calendar)
+                raw = BadgeStreakMath.consecutiveWeeks(in: photoWeeks, now: now, calendar: calendar)
             case .noLateSnacks:
                 raw = BadgeStreakMath.consecutiveDays(in: noLateSnackDays, now: now, calendar: calendar)
             case .nutrientExplorer:

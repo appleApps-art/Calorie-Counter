@@ -17,8 +17,6 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
     @IBOutlet private weak var hintLabel: AdaptiveLabel!
     @IBOutlet private weak var enterManuallyButton: UIButton!
     @IBOutlet private weak var galleryButton: UIButton!
-    @IBOutlet private weak var shutterButton: UIButton!
-    @IBOutlet private weak var shutterDiscView: UIView!
     @IBOutlet private weak var modeControl: UISegmentedControl!
 
     private let viewModel: BarcodeFoodLoggingViewModel
@@ -27,6 +25,8 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
     private var isTorchOn = false
     private let frameCornerRadius: CGFloat = 26
     private var lastLayoutSize: CGSize = .zero
+    /// The frame the code was read from stays on screen while it is looked up, as a photo scan does.
+    private let freezeFrameView = UIImageView()
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
@@ -50,15 +50,18 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         navigationItem.largeTitleDisplayMode = .never
         configureCameraChrome()
         scanner.attachPreview(to: previewView)
+        freezeFrameView.contentMode = .scaleAspectFill
+        freezeFrameView.clipsToBounds = true
+        freezeFrameView.isHidden = true
+        freezeFrameView.frame = previewView.bounds
+        freezeFrameView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        previewView.insertSubview(freezeFrameView, belowSubview: overlayView)
         previewView.bringSubviewToFront(overlayView)
         scanner.onBarcodeScanned = { [weak self] code in
             self?.handleScannedCode(code)
         }
         scanner.onScanFailed = { [weak self] error in
             self?.viewModel.captureFailed(error)
-        }
-        scanner.onStillPhotoCaptured = { [weak self] data in
-            self?.handleCapturedPhoto(data)
         }
         overlayView.isUserInteractionEnabled = false
         hintBar.isUserInteractionEnabled = false
@@ -98,7 +101,6 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
             overlayView.holeRect = hole
             updateInterestRect()
         }
-        layoutShutterButton()
         if view.bounds.size != lastLayoutSize {
             lastLayoutSize = view.bounds.size
             modeControl.shrinkCameraModeTitlesToFit()
@@ -120,7 +122,6 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
                     self.hintLabel.text = value
                 }
                 OnboardingStyle.lockFigmaFont(self.hintLabel, size: 17, weight: .regular, color: .white, kern: -0.43)
-                self.updateShutterAndHint(phase: .idle)
             }
         }
     }
@@ -130,27 +131,8 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         viewModel.closeTapped()
     }
 
-    @objc
-    private func shutterTapped() {
-        guard viewModel.phase.value == .idle else { return }
-        let frame = previewView.convert(frameView.bounds, from: frameView)
-        viewModel.beginCapture()
-        scanner.captureStillPhoto(scanFrameInPreview: frame)
-    }
 
-    @objc
-    private func shutterPressed() {
-        UIView.animate(withDuration: 0.12) {
-            self.shutterDiscView.transform = CGAffineTransform(scaleX: 0.86, y: 0.86)
-        }
-    }
 
-    @objc
-    private func shutterReleased() {
-        UIView.animate(withDuration: 0.18) {
-            self.shutterDiscView.transform = .identity
-        }
-    }
 
     @objc
     private func flashTapped() {
@@ -177,21 +159,9 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         let sheet = BarcodeManualEntryViewController()
         sheet.modalPresentationStyle = .pageSheet
         if let presentation = sheet.sheetPresentationController {
-            let compact = UISheetPresentationController.Detent.Identifier("barcodeManual")
-            let keyboard = UISheetPresentationController.Detent.Identifier("barcodeManualKeyboard")
-            presentation.detents = [
-                .custom(identifier: compact) { [weak presentation] context in
-                    presentation?.inspectorDetentHeight(305, maximumHeight: context.maximumDetentValue)
-                        ?? min(305, context.maximumDetentValue)
-                },
-                .custom(identifier: keyboard) { [weak presentation] context in
-                    presentation?.inspectorDetentHeight(592, maximumHeight: context.maximumDetentValue)
-                        ?? min(592, context.maximumDetentValue)
-                }
-            ]
-            presentation.selectedDetentIdentifier = keyboard
-            presentation.prefersGrabberVisible = true
-            presentation.prefersScrollingExpandsWhenScrolledToEdge = false
+            // One height, as in the design: iOS lifts the sheet above the keyboard by itself, so a
+            // second, taller detent only left an empty gap between the button and the keys.
+            presentation.applyFigmaInspectorDetent(305)
         }
         sheet.onClose = { [weak self, weak sheet] in
             sheet?.dismiss(animated: true) {
@@ -201,15 +171,6 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         sheet.onLookup = { [weak self, weak sheet] code in
             self?.viewModel.lookup(barcode: code)
             sheet?.dismiss(animated: true)
-        }
-        sheet.onKeyboardFocusChanged = { [weak sheet] focused in
-            guard let presentation = sheet?.sheetPresentationController else { return }
-            let identifier = UISheetPresentationController.Detent.Identifier(
-                focused ? "barcodeManualKeyboard" : "barcodeManual"
-            )
-            presentation.animateChanges {
-                presentation.selectedDetentIdentifier = identifier
-            }
         }
         sheet.presentationController?.delegate = self
         present(sheet, animated: true)
@@ -259,7 +220,6 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
             foregroundColor: .white
         )
         galleryButton.addTarget(self, action: #selector(galleryTapped), for: .touchUpInside)
-        configureShutterButton()
         OnboardingStyle.styleGlassButton(
             enterManuallyButton,
             title: L10n.tr("barcode.camera.enterManually"),
@@ -281,7 +241,7 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         OnboardingStyle.lockFigmaFont(tooltipLabel, size: 15, weight: .regular, color: .white, kern: -0.23)
 
         hintBar.useLiveGlass = false
-        hintBar.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+        hintBar.backgroundColor = UIColor.black.withAlphaComponent(0.2)
         hintLabel.textColor = .white
         hintSpinner.color = .white
         hintSpinner.hidesWhenStopped = true
@@ -307,9 +267,11 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         modeControl.isEnabled = idle
         galleryButton.isEnabled = idle
         enterManuallyButton.isEnabled = idle
-        shutterButton.isEnabled = idle
         scanner.setAcceptsScans(idle)
-        updateShutterAndHint(phase: phase)
+        if idle {
+            freezeFrameView.isHidden = true
+            freezeFrameView.image = nil
+        }
 
         switch phase {
         case .idle:
@@ -340,9 +302,15 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
         OnboardingStyle.lockFigmaFont(hintLabel, size: 17, weight: .regular, color: .white, kern: -0.43)
     }
 
+    /// A code read live freezes the camera on the frame it was read from, so the user can take the
+    /// phone away while the product is looked up.
     private func handleScannedCode(_ code: String) {
         Haptics.success()
         viewModel.lookup(barcode: code)
+        guard viewModel.phase.value == .identifying else { return }
+        scanner.freezeCurrentFrame { [weak self] image in
+            self?.showFrozenFrame(image)
+        }
     }
 
     private func handlePickedImage(_ image: UIImage) {
@@ -351,77 +319,19 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
             viewModel.showIdleMessage(L10n.tr("barcode.error.invalid"))
             return
         }
-        handleScannedCode(code)
+        Haptics.success()
+        viewModel.lookup(barcode: code)
+        showFrozenFrame(image)
     }
 
-    private func handleCapturedPhoto(_ data: Data) {
-        guard let image = UIImage(data: data) else {
-            viewModel.showIdleMessage(L10n.tr("barcode.error.invalid"))
-            return
-        }
-        handlePickedImage(image)
+    private func showFrozenFrame(_ image: UIImage?) {
+        guard let image, viewModel.phase.value != .idle else { return }
+        freezeFrameView.image = image
+        freezeFrameView.isHidden = false
     }
 
-    private func configureShutterButton() {
-        shutterButton.configuration = nil
-        shutterButton.setTitle(nil, for: .normal)
-        shutterButton.setImage(nil, for: .normal)
-        shutterButton.setBackgroundImage(nil, for: .normal)
-        shutterButton.backgroundColor = .clear
-        shutterButton.tintColor = .clear
-        shutterButton.clipsToBounds = false
-        shutterButton.layer.borderWidth = 0
-        shutterButton.adjustsImageWhenHighlighted = false
-        shutterButton.accessibilityLabel = L10n.tr("progressPhoto.shutter")
-        shutterButton.controlHaptic = .none
-        shutterButton.addTarget(self, action: #selector(shutterTapped), for: .touchUpInside)
-        shutterButton.addTarget(self, action: #selector(shutterPressed), for: .touchDown)
-        shutterButton.addTarget(self, action: #selector(shutterReleased), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-        shutterDiscView.backgroundColor = .white
-        shutterDiscView.isUserInteractionEnabled = false
-        shutterDiscView.layer.masksToBounds = true
-        guard let wrap = shutterButton.superview else { return }
-        wrap.backgroundColor = .clear
-        wrap.layer.borderWidth = 4
-        wrap.layer.borderColor = UIColor.white.cgColor
-        wrap.clipsToBounds = false
-        wrap.layer.masksToBounds = false
-        wrap.setContentCompressionResistancePriority(.required, for: .vertical)
-        wrap.setContentHuggingPriority(.required, for: .vertical)
-        wrap.bringSubviewToFront(shutterDiscView)
-    }
 
-    private func layoutShutterButton() {
-        let wrapSide = shutterButton.superview?.bounds.width ?? shutterButton.bounds.width
-        let discSide = shutterDiscView.bounds.width
-        shutterButton.layer.cornerRadius = wrapSide / 2
-        shutterButton.layer.cornerCurve = .continuous
-        shutterDiscView.layer.cornerRadius = discSide / 2
-        shutterDiscView.layer.cornerCurve = .continuous
-        guard let wrap = shutterButton.superview else { return }
-        wrap.layer.cornerRadius = wrap.bounds.width / 2
-        wrap.layer.cornerCurve = .continuous
-        wrap.layer.borderWidth = 4
-        wrap.layer.borderColor = UIColor.white.cgColor
-        wrap.bringSubviewToFront(shutterDiscView)
-    }
 
-    private func updateShutterAndHint(phase: BarcodeCameraPhase) {
-        let showShutter = phase == .idle
-        let wrap = shutterButton.superview
-        wrap?.isHidden = !showShutter
-        wrap?.isUserInteractionEnabled = showShutter
-        shutterButton.isUserInteractionEnabled = showShutter
-        wrap?.alpha = showShutter ? 1 : 0
-        let hintKey = L10n.tr("barcode.camera.hint")
-        let hasError = phase == .idle
-            && viewModel.statusText.value != hintKey
-            && viewModel.statusText.value != L10n.tr("barcode.camera.identifying")
-            && viewModel.statusText.value != L10n.tr("barcode.camera.recognized")
-        let showHint = phase != .idle || hasError
-        hintBar.isHidden = !showHint
-        hintBar.alpha = showHint ? 1 : 0
-    }
 
     private func firstBarcode(in image: UIImage) -> String? {
         guard let cgImage = image.cgImage else { return nil }

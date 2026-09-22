@@ -86,34 +86,11 @@ final class CreateRecipeUseCase {
     }
 
     func execute(_ input: RecipeGenerationInput) async throws -> Recipe? {
-        let recipes = try await searchRecipesUseCase.generateRecipes(
-            query: Self.query(from: input),
-            filters: Self.filters(from: input)
-        )
-        guard let recipe = recipes.first else { return nil }
+        // A title search for the product list used to fill the gap with unrelated dishes that needed
+        // other products; no recipe is better than one the user cannot cook.
+        guard let recipe = await searchRecipesUseCase.generateRecipe(from: input) else { return nil }
         try? recipeRepository.save(recipe)
         return recipe
-    }
-
-    static func query(from input: RecipeGenerationInput) -> String {
-        var parts = input.ingredients
-        let details = input.details.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !details.isEmpty {
-            parts.append(details)
-        }
-        return parts.joined(separator: ", ")
-    }
-
-    static func filters(from input: RecipeGenerationInput) -> RecipeSearchFilters {
-        var filters = RecipeSearchFilters.empty
-        filters.mealTypes = input.mealTypes
-        if let cuisine = input.cuisine { filters.cuisines = [cuisine] }
-        if let diet = input.diet { filters.diets = [diet] }
-        filters.maxReadyMinutes = input.maxReadyMinutes
-        if let maxCalories = input.maxCalories {
-            filters.maxCalories = maxCalories
-        }
-        return filters
     }
 }
 
@@ -142,13 +119,16 @@ final class CreateMealPlanUseCase {
         let mealTypes = MealPlanPacker.orderedMealTypes(Self.mealTypes(from: input))
         let dayCount = Self.dayCount(from: input)
         let diary = try? fetchDailyDiaryUseCase.execute()
-        let calorieGoal = diary?.goals.calorieTarget ?? UserGoals.default.calorieTarget
-        let proteinGoal = diary?.goals.proteinTarget ?? UserGoals.default.proteinTarget
+        // The whole of the user's goals, macros included: calories alone let a plan of pasta
+        // and pastries pass as "on target".
+        let targets = MealPlanTargets(goals: diary?.goals ?? .default)
+        let calorieGoal = targets.calories
         let pools = await collectPools(
             input: input,
             mealTypes: mealTypes,
             dayCount: dayCount,
-            calorieGoal: calorieGoal
+            calorieGoal: calorieGoal,
+            proteinGoal: targets.protein
         )
         let available = mealTypes.filter { !(pools[$0] ?? []).isEmpty }
         guard !available.isEmpty else { return nil }
@@ -156,21 +136,16 @@ final class CreateMealPlanUseCase {
             pools: pools,
             dayCount: dayCount,
             mealTypes: available,
-            calorieGoal: calorieGoal,
-            proteinGoal: proteinGoal
+            targets: targets
         )
         guard !packed.recipes.isEmpty else { return nil }
         let preferences = (try? fetchUserPreferencesUseCase.execute()) ?? .empty
-        let title = Self.planTitle(
-            input: input,
-            preferences: preferences,
-            fallback: packed.recipes.first?.title
-        )
+        let title = nextPlanTitle()
         let plan = MealPlan(
             id: UUID(),
             title: title,
             weeks: max(1, (dayCount + 6) / 7),
-            imageURL: packed.recipes.first?.imageURL,
+            imageURL: nil,
             recipes: packed.recipes,
             createdAt: Date(),
             dayLayouts: packed.layouts,
@@ -184,7 +159,8 @@ final class CreateMealPlanUseCase {
         input: RecipeGenerationInput,
         mealTypes: [MealType],
         dayCount: Int,
-        calorieGoal: Double
+        calorieGoal: Double,
+        proteinGoal: Double = 0
     ) async -> [MealType: [Recipe]] {
         let number = Self.searchNumber(dayCount: dayCount)
         var result: [MealType: [Recipe]] = [:]
@@ -197,6 +173,7 @@ final class CreateMealPlanUseCase {
                         mealTypes: mealTypes,
                         dayCount: dayCount,
                         calorieGoal: calorieGoal,
+                        proteinGoal: proteinGoal,
                         number: number
                     )
                     return (meal, recipes)
@@ -215,6 +192,7 @@ final class CreateMealPlanUseCase {
         mealTypes: [MealType],
         dayCount: Int,
         calorieGoal: Double,
+        proteinGoal: Double,
         number: Int
     ) async -> [Recipe] {
         let hasIngredients = !input.ingredients.isEmpty
@@ -224,6 +202,7 @@ final class CreateMealPlanUseCase {
             input: input,
             mealTypes: mealTypes,
             calorieGoal: calorieGoal,
+            proteinGoal: proteinGoal,
             includeIngredients: usedIngredients,
             applyCalorieWindow: true,
             number: number
@@ -235,6 +214,7 @@ final class CreateMealPlanUseCase {
                 input: input,
                 mealTypes: mealTypes,
                 calorieGoal: calorieGoal,
+                proteinGoal: proteinGoal,
                 includeIngredients: false,
                 applyCalorieWindow: true,
                 number: number
@@ -248,6 +228,7 @@ final class CreateMealPlanUseCase {
                     input: input,
                     mealTypes: mealTypes,
                     calorieGoal: calorieGoal,
+                    proteinGoal: proteinGoal,
                     includeIngredients: usedIngredients,
                     applyCalorieWindow: false,
                     number: number
@@ -260,6 +241,7 @@ final class CreateMealPlanUseCase {
                 input: input,
                 mealTypes: mealTypes,
                 calorieGoal: calorieGoal,
+                proteinGoal: proteinGoal,
                 includeIngredients: false,
                 applyCalorieWindow: false,
                 number: number
@@ -273,6 +255,7 @@ final class CreateMealPlanUseCase {
         input: RecipeGenerationInput,
         mealTypes: [MealType],
         calorieGoal: Double,
+        proteinGoal: Double,
         includeIngredients: Bool,
         applyCalorieWindow: Bool,
         number: Int
@@ -282,6 +265,7 @@ final class CreateMealPlanUseCase {
             input: input,
             includeIngredients: includeIngredients,
             calorieGoal: calorieGoal,
+            proteinGoal: proteinGoal,
             mealTypes: mealTypes,
             applyCalorieWindow: applyCalorieWindow,
             number: number
@@ -298,13 +282,17 @@ final class CreateMealPlanUseCase {
         input: RecipeGenerationInput,
         includeIngredients: Bool,
         calorieGoal: Double = UserGoals.default.calorieTarget,
+        proteinGoal: Double = 0,
         mealTypes: [MealType] = [.breakfast, .lunch, .dinner],
         applyCalorieWindow: Bool = true,
         number: Int = 24
     ) -> SpoonacularRecipeSearch {
         let ingredients = includeIngredients ? Self.includeIngredients(from: input.ingredients) : nil
         let window = applyCalorieWindow
-            ? MealPlanPacker.calorieWindow(meal: meal, calorieGoal: calorieGoal, mealTypes: mealTypes)
+            ? Self.calorieWindow(
+                MealPlanPacker.calorieWindow(meal: meal, calorieGoal: calorieGoal, mealTypes: mealTypes),
+                dietKey: input.diet
+            )
             : nil
         return SpoonacularRecipeSearch(
             query: Self.query(for: meal, details: input.details, dietKey: input.diet),
@@ -315,8 +303,24 @@ final class CreateMealPlanUseCase {
             diet: Self.diet(from: input.diet),
             type: Self.dishType(from: meal),
             includeIngredients: ingredients,
-            maxReadyTime: input.maxReadyMinutes
+            maxReadyTime: input.maxReadyMinutes,
+            sort: "popularity",
+            minProtein: applyCalorieWindow
+                ? Self.proteinFloor(meal: meal, proteinGoal: proteinGoal, mealTypes: mealTypes)
+                : nil
         )
+    }
+
+    /// A main meal brings at least about half of its share of the day's protein. Snacks are
+    /// left free, and the fallback searches without a window drop the floor as well.
+    static func proteinFloor(meal: MealType, proteinGoal: Double, mealTypes: [MealType]) -> Int? {
+        guard meal != .snacks, proteinGoal > 0 else { return nil }
+        let slot = MealPlanPacker.slotTargets(
+            mealTypes: mealTypes,
+            targets: MealPlanTargets(calories: 1, protein: proteinGoal)
+        )[meal]?.protein ?? 0
+        let floor = Int((slot * 0.5).rounded())
+        return floor > 0 ? floor : nil
     }
 
     static func cuisine(from raw: String?) -> String? {
@@ -340,54 +344,48 @@ final class CreateMealPlanUseCase {
     static func dishType(from meal: MealType) -> String? {
         switch meal {
         case .breakfast: return "breakfast"
-        case .lunch: return nil
-        case .dinner: return "main course"
+        // Without a dish type lunch used to come back as sauces, drinks and desserts.
+        case .lunch, .dinner: return "main course"
         case .snacks: return "snack"
         }
     }
 
+    /// Only what the user asked for in their own words. The dish type, diet, cuisine and the
+    /// calorie window are proper filters; sending "lunch" or "Balance" as search text only pulled
+    /// in recipes that happen to carry those words in their title.
     private static func query(for meal: MealType, details: String, dietKey: String?) -> String {
-        var parts: [String] = []
-        switch meal {
-        case .breakfast: parts.append("breakfast")
-        case .lunch: parts.append("lunch")
-        case .dinner: parts.append("dinner")
-        case .snacks: parts.append("snack")
-        }
-        if let term = dietQueryTerm(from: dietKey) {
-            parts.append(term)
-        }
-        let extra = details.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !extra.isEmpty {
-            parts.append(extra)
-        }
-        return parts.joined(separator: " ")
+        details.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private static func dietQueryTerm(from raw: String?) -> String? {
-        switch raw {
-        case "recipes.filters.lean": return "Lean"
-        case "recipes.filters.weightGain": return "Weight Gain"
-        case "recipes.filters.balance": return "Balance"
-        default: return nil
+    /// "Lean" and "Weight gain" are not catalog diets; they move the calorie window instead.
+    static func calorieWindow(
+        _ window: (min: Int, max: Int),
+        dietKey: String?
+    ) -> (min: Int, max: Int) {
+        switch dietKey {
+        case "recipes.filters.lean":
+            return (window.min, max(window.min + 60, Int((Double(window.max) * 0.8).rounded())))
+        case "recipes.filters.weightGain":
+            return (Int((Double(window.min) * 1.15).rounded()), Int((Double(window.max) * 1.25).rounded()))
+        default:
+            return window
         }
     }
 
-    private static func planTitle(
-        input: RecipeGenerationInput,
-        preferences: UserPreferenceProfile,
-        fallback: String?
-    ) -> String {
-        if let diet = input.diet?.trimmingCharacters(in: .whitespacesAndNewlines), !diet.isEmpty {
-            return diet.hasPrefix("recipes.") ? L10n.tr(diet) : diet
+    /// Plans are numbered in the order they were made. A name taken from the goal or from the
+    /// dishes read either the same for every plan or like an advert, so the list says plainly
+    /// which plan is which and the subtitle carries the days and meals.
+    func nextPlanTitle() -> String {
+        let taken = Set(((try? mealPlanRepository.fetchAll()) ?? []).map { $0.title.lowercased() })
+        var number = taken.count + 1
+        while taken.contains(Self.planTitle(number: number).lowercased()) {
+            number += 1
         }
-        if let goal = preferences.goalType?.trimmingCharacters(in: .whitespacesAndNewlines), !goal.isEmpty {
-            return goal
-        }
-        if let diet = preferences.diet?.trimmingCharacters(in: .whitespacesAndNewlines), !diet.isEmpty {
-            return diet
-        }
-        return fallback ?? L10n.tr("recipes.tab.mealPlans")
+        return Self.planTitle(number: number)
+    }
+
+    static func planTitle(number: Int) -> String {
+        L10n.format("recipes.mealPlan.numberedTitle", max(1, number))
     }
 
     private static func includeIngredients(from names: [String]) -> String? {

@@ -71,6 +71,7 @@ final class BadgeUnlockPresenter {
         queue.removeFirst()
         isPresenting = true
         presentingBadge = next.badge
+        Analytics.tracker.track(.badgeCelebrationShown(badge: next.badge.rawValue))
         Haptics.success()
         var didConfirmSeen = false
         let detail = RewardDetailViewController(progress: next, playsCelebration: true)

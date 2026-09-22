@@ -23,8 +23,6 @@
                 <outlet property="overlayView" destination="bc-overlay" id="bc-o-ov"/>
                 <outlet property="previewView" destination="bc-preview" id="bc-o-prev"/>
                 <outlet property="scanLineView" destination="bc-scan" id="bc-o-scan"/>
-                <outlet property="shutterButton" destination="bc-shut" id="bc-o-shut"/>
-                <outlet property="shutterDiscView" destination="bc-shut-disc" id="bc-o-sdisc"/>
                 <outlet property="tooltipLabel" destination="bc-tip-label" id="bc-o-tipl"/>
                 <outlet property="tooltipView" destination="bc-tip" id="bc-o-tip"/>
                 <outlet property="view" destination="bc-root" id="bc-o-root"/>
@@ -255,57 +253,6 @@
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
                 </view>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bc-shut-wrap">
-                    <subviews>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="custom" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bc-shut"/>
-                        <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bc-shut-disc">
-                            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            <constraints>
-                                <constraint firstAttribute="width" constant="56" id="bc-shut-dw" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
-                                    <userDefinedRuntimeAttributes>
-                                        <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                            <real key="value" value="56"/>
-                                        </userDefinedRuntimeAttribute>
-                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
-                                    </userDefinedRuntimeAttributes>
-                                </constraint>
-                                <constraint firstAttribute="height" constant="56" id="bc-shut-dh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
-                                    <userDefinedRuntimeAttributes>
-                                        <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                            <real key="value" value="56"/>
-                                        </userDefinedRuntimeAttribute>
-                                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
-                                    </userDefinedRuntimeAttributes>
-                                </constraint>
-                            </constraints>
-                        </view>
-                    </subviews>
-                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="72" id="bc-shut-ww" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
-                            <userDefinedRuntimeAttributes>
-                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                    <real key="value" value="72"/>
-                                </userDefinedRuntimeAttribute>
-                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
-                            </userDefinedRuntimeAttributes>
-                        </constraint>
-                        <constraint firstAttribute="height" constant="72" id="bc-shut-wh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
-                            <userDefinedRuntimeAttributes>
-                                <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                                    <real key="value" value="72"/>
-                                </userDefinedRuntimeAttribute>
-                                <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToWidth" value="YES"/>
-                            </userDefinedRuntimeAttributes>
-                        </constraint>
-                        <constraint firstItem="bc-shut-disc" firstAttribute="centerX" secondItem="bc-shut-wrap" secondAttribute="centerX" id="bc-shut-dcx"/>
-                        <constraint firstItem="bc-shut-disc" firstAttribute="centerY" secondItem="bc-shut-wrap" secondAttribute="centerY" id="bc-shut-dcy"/>
-                        <constraint firstItem="bc-shut" firstAttribute="top" secondItem="bc-shut-wrap" secondAttribute="top" id="bc-shut-st"/>
-                        <constraint firstItem="bc-shut" firstAttribute="leading" secondItem="bc-shut-wrap" secondAttribute="leading" id="bc-shut-sl"/>
-                        <constraint firstAttribute="trailing" secondItem="bc-shut" secondAttribute="trailing" id="bc-shut-sr"/>
-                        <constraint firstAttribute="bottom" secondItem="bc-shut" secondAttribute="bottom" id="bc-shut-sb"/>
-                    </constraints>
-                </view>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bc-enter">
                     <constraints>
                         <constraint firstAttribute="height" constant="48" id="bc-eh" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
@@ -397,7 +344,7 @@
                 <constraint firstItem="bc-tip" firstAttribute="centerX" secondItem="bc-root" secondAttribute="centerX" id="bc-tipx"/>
                 <constraint firstItem="bc-tip" firstAttribute="centerY" secondItem="bc-close-wrap" secondAttribute="centerY" id="bc-tipcy"/>
                 <constraint firstItem="bc-hint" firstAttribute="centerX" secondItem="bc-root" secondAttribute="centerX" id="bc-hx"/>
-                <constraint firstItem="bc-hint" firstAttribute="top" secondItem="bc-frame" secondAttribute="bottom" constant="16" id="bc-ht" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="bc-hint" firstAttribute="top" relation="greaterThanOrEqual" secondItem="bc-frame" secondAttribute="bottom" constant="16" id="bc-ht" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
                             <real key="value" value="16"/>
@@ -405,23 +352,15 @@
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="bc-shut-wrap" firstAttribute="centerX" secondItem="bc-hint" secondAttribute="centerX" id="bc-shut-cx"/>
-                <constraint firstItem="bc-shut-wrap" firstAttribute="top" relation="greaterThanOrEqual" secondItem="bc-frame" secondAttribute="bottom" constant="16" id="bc-shut-ft" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
+                <constraint firstItem="bc-enter" firstAttribute="top" secondItem="bc-hint" secondAttribute="bottom" constant="83" priority="750" id="bc-hint-enter" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="16"/>
+                            <real key="value" value="83"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
                     </userDefinedRuntimeAttributes>
                 </constraint>
-                <constraint firstItem="bc-enter" firstAttribute="top" secondItem="bc-shut-wrap" secondAttribute="bottom" constant="16" id="bc-shut-enter" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
-                    <userDefinedRuntimeAttributes>
-                        <userDefinedRuntimeAttribute type="number" keyPath="designConstant">
-                            <real key="value" value="16"/>
-                        </userDefinedRuntimeAttribute>
-                        <userDefinedRuntimeAttribute type="boolean" keyPath="adaptToHeight" value="YES"/>
-                    </userDefinedRuntimeAttributes>
-                </constraint>
+                <constraint firstItem="bc-enter" firstAttribute="top" relation="greaterThanOrEqual" secondItem="bc-hint" secondAttribute="bottom" constant="16" id="bc-hint-enter-min"/>
                 <constraint firstItem="bc-enter" firstAttribute="centerX" secondItem="bc-root" secondAttribute="centerX" id="bc-ex"/>
                 <constraint firstItem="bc-gallery-wrap" firstAttribute="top" secondItem="bc-enter" secondAttribute="bottom" constant="16" id="bc-et" customClass="AdaptiveConstraint" customModule="Calorie_Counter" customModuleProvider="target">
                     <userDefinedRuntimeAttributes>

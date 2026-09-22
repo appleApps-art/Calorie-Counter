@@ -218,7 +218,7 @@ final class VoiceFoodAudioRecorder: NSObject, VoiceFoodAudioRecording {
 
     func stopRecording() throws -> Data {
         guard isRecording else {
-            throw VoiceFoodError.recordingFailed(message: "Recording is not active")
+            throw VoiceFoodError.recordingFailed(message: L10n.tr("voice.error.notRecording"))
         }
         isRecording = false
 
@@ -397,7 +397,7 @@ final class VoiceFoodAudioRecorder: NSObject, VoiceFoodAudioRecording {
 
     private func stopFileRecording() throws -> Data {
         guard let recorder else {
-            throw VoiceFoodError.recordingFailed(message: "Recording is not active")
+            throw VoiceFoodError.recordingFailed(message: L10n.tr("voice.error.notRecording"))
         }
 
         recorder.stop()

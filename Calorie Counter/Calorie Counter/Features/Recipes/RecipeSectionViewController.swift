@@ -9,6 +9,7 @@ final class RecipeSectionViewController: BaseViewController {
     private let viewModel: RecipeSectionViewModel
     private var renderedRecipeCount = 0
     private var isShowingPaginationSkeletons = false
+    private let offlineView = EmptyScreenView()
 
     init(viewModel: RecipeSectionViewModel) {
         self.viewModel = viewModel
@@ -39,7 +40,36 @@ final class RecipeSectionViewController: BaseViewController {
         )
         backButton.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
         scrollView.delegate = self
+        installOfflineView()
         viewModel.viewDidLoad()
+    }
+
+    private func installOfflineView() {
+        offlineView.translatesAutoresizingMaskIntoConstraints = false
+        offlineView.isHidden = true
+        offlineView.setContentTopInset(100)
+        offlineView.setMessageWidth(300)
+        offlineView.configureOffline(illustrationName: "emptyImage1") { [weak self] in
+            Analytics.tracker.track(.retryTapped(context: "recipe_section"))
+            self?.viewModel.viewDidLoad()
+        }
+        view.addSubview(offlineView)
+        NSLayoutConstraint.activate([
+            offlineView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            offlineView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            offlineView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            offlineView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(networkChanged), name: NetworkMonitor.didChange, object: nil
+        )
+    }
+
+    @objc private func networkChanged() {
+        if NetworkMonitor.shared.isOnline, !offlineView.isHidden {
+            viewModel.viewDidLoad()
+        }
+        renderContent()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -63,6 +93,12 @@ final class RecipeSectionViewController: BaseViewController {
 
     private func renderContent() {
         let recipes = viewModel.recipes.value
+        let showsOffline = !viewModel.isLoading.value && recipes.isEmpty && !NetworkMonitor.shared.isOnline
+        if showsOffline, offlineView.isHidden {
+            Analytics.tracker.track(.offlineStateShown(context: "recipe_section"))
+        }
+        offlineView.isHidden = !showsOffline
+        scrollView.isHidden = showsOffline
         if viewModel.isLoading.value, recipes.isEmpty {
             renderedRecipeCount = 0
             isShowingPaginationSkeletons = false

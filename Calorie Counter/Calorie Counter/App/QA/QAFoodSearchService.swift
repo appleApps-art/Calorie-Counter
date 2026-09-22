@@ -58,6 +58,12 @@ final class QAFoodSearchService: AIFoodSearching {
     ) async throws -> FoodProduct? {
         try await searchFoods(query: title).first
     }
+
+    /// QA stays offline, so creating a recipe answers with a fixed catalog dish instead of the server.
+    func createRecipe(_ request: RecipeCreationRequest) async throws -> Recipe? {
+        QACatalog.recipes(matching: request.ingredients.joined(separator: " ")).first
+            ?? QACatalog.recipes(matching: "healthy").first
+    }
 }
 
 final class QARecipeSectionsService: RecipeSectionsFetching {

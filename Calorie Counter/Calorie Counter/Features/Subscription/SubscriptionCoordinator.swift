@@ -38,6 +38,11 @@ final class SubscriptionCoordinator {
             },
             onCustomAction: events.onCustomAction
         )
+        // A purchase needs the store; offline the flow moves on at once instead of waiting on it.
+        guard NetworkMonitor.shared.isOnline else {
+            events.onError(NoConnectionError())
+            return
+        }
         Task { @MainActor in
             do {
                 let paywall = try await factory.makePaywallViewController(

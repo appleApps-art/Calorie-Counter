@@ -68,15 +68,18 @@ final class UpdateFoodEntryUseCase {
 
 final class DeleteFoodEntryUseCase {
     private let foodEntryRepository: FoodEntryRepositoryProtocol
+    private let awardXPUseCase: AwardXPUseCase?
     private let healthSync: HealthSyncing?
     private let analytics: AnalyticsTracking?
 
     init(
         foodEntryRepository: FoodEntryRepositoryProtocol,
+        awardXPUseCase: AwardXPUseCase? = nil,
         healthSync: HealthSyncing? = nil,
         analytics: AnalyticsTracking? = nil
     ) {
         self.foodEntryRepository = foodEntryRepository
+        self.awardXPUseCase = awardXPUseCase
         self.healthSync = healthSync
         self.analytics = analytics
     }
@@ -84,6 +87,8 @@ final class DeleteFoodEntryUseCase {
     func execute(id: UUID) throws {
         let mealType = (try? foodEntryRepository.fetchEntry(id: id))?.mealType.rawValue
         try foodEntryRepository.delete(id: id)
+        // The entry is gone either way; its XP goes with it.
+        try? awardXPUseCase?.revoke(relatedID: id)
         analytics?.track(.foodDeleted(mealType: mealType ?? "unknown"))
         HealthExportQueue.shared.enqueue(entryID: id) { [healthSync] in
             try await healthSync?.deleteSamples(entryID: id)
@@ -187,18 +192,22 @@ final class ReplaceFoodEntryUseCase {
 
 final class DeleteWaterEntryUseCase {
     private let waterEntryRepository: WaterEntryRepositoryProtocol
+    private let awardXPUseCase: AwardXPUseCase?
     private let healthSync: HealthSyncing?
 
     init(
         waterEntryRepository: WaterEntryRepositoryProtocol,
+        awardXPUseCase: AwardXPUseCase? = nil,
         healthSync: HealthSyncing? = nil
     ) {
         self.waterEntryRepository = waterEntryRepository
+        self.awardXPUseCase = awardXPUseCase
         self.healthSync = healthSync
     }
 
     func execute(id: UUID) throws {
         try waterEntryRepository.delete(id: id)
+        try? awardXPUseCase?.revoke(relatedID: id)
         HealthExportQueue.shared.enqueue(entryID: id) { [healthSync] in
             try await healthSync?.deleteSamples(entryID: id)
         }
@@ -207,18 +216,22 @@ final class DeleteWaterEntryUseCase {
 
 final class DeleteWorkoutEntryUseCase {
     private let workoutEntryRepository: WorkoutEntryRepositoryProtocol
+    private let awardXPUseCase: AwardXPUseCase?
     private let healthSync: HealthSyncing?
 
     init(
         workoutEntryRepository: WorkoutEntryRepositoryProtocol,
+        awardXPUseCase: AwardXPUseCase? = nil,
         healthSync: HealthSyncing? = nil
     ) {
         self.workoutEntryRepository = workoutEntryRepository
+        self.awardXPUseCase = awardXPUseCase
         self.healthSync = healthSync
     }
 
     func execute(id: UUID) throws {
         try workoutEntryRepository.delete(id: id)
+        try? awardXPUseCase?.revoke(relatedID: id)
         HealthExportQueue.shared.enqueue(entryID: id) { [healthSync] in
             try await healthSync?.deleteSamples(entryID: id)
         }

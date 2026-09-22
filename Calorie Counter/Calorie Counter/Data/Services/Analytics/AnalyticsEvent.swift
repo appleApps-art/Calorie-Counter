@@ -55,9 +55,15 @@ enum AnalyticsScreen: String {
     case recipeDetail = "recipe_detail"
     case mealPlanPreview = "meal_plan_preview"
     case foodProductDetail = "food_product_detail"
+    case changeDate = "change_date"
 }
 
 enum AnalyticsEvent {
+    // Launches and sessions
+    case appFirstOpened(appVersion: String)
+    case appOpened(launch: String, openCount: Int, daysSinceFirstOpen: Int, hoursSinceLastOpen: Int?)
+    case appBackgrounded(secondsInForeground: Int, lastScreen: String?, secondsOnLastScreen: Int?)
+
     case screenViewed(AnalyticsScreen)
     case tabSelected(String)
     case onboardingStarted
@@ -86,6 +92,56 @@ enum AnalyticsEvent {
     case appRatingShown(source: String)
     case appRatingTapped(action: String)
 
+    // Onboarding answers, one per step
+    case onboardingStepCompleted(step: String, value: String?)
+    case onboardingStepBack(step: String)
+
+    // Diary on Home
+    case quickLogOptionSelected(option: String)
+    case diaryDateChanged(daysFromToday: Int)
+    case foodMarkedEaten(eaten: Bool, mealType: String)
+    case allFoodMarkedEaten(count: Int)
+    case foodPortionChanged(mealType: String)
+    case waterRemoved
+
+    // Recognition by photo, voice, text or barcode
+    case foodRecognitionFinished(method: String, outcome: String, confidence: Int?)
+    case foodItemOpened(source: String, foodType: String?)
+
+    // Recipes, meal plans and pantry
+    case recipeHubTabSelected(tab: String)
+    case recipeOpened(source: String, origin: String)
+    case recipeSectionOpened(section: String)
+    case recipeFiltersApplied(count: Int)
+    case recipeSaved(saved: Bool)
+    case recipeAddTapped(mealType: String)
+    case recipeShared
+    case recipeCreateStarted(kind: String, source: String, ingredientCount: Int)
+    case recipeCreateFinished(kind: String, success: Bool, origin: String?, seconds: Int)
+    case mealPlanOpened
+    case pantryItemsAdded(count: Int, method: String)
+    case pantryItemsDeleted(count: Int)
+
+    // Assistant actions the user confirms from a chat card
+    case aiActionApplied(kind: String, success: Bool)
+
+    // Rewards
+    case badgeUnlocked(badge: String)
+    case badgeCelebrationShown(badge: String)
+    case badgeOpened(badge: String, earned: Bool)
+    case badgeShared(badge: String)
+    case levelReached(level: Int)
+
+    // Settings and notifications
+    case settingChanged(name: String, value: String)
+    case notificationOpened(kind: String)
+    case notificationPermissionAnswered(granted: Bool)
+
+    // Friction: where the app could not do what the user asked
+    case errorShown(context: String, reason: String)
+    case offlineStateShown(context: String)
+    case retryTapped(context: String)
+
     var appRatingTriggerSource: String? {
         switch self {
         case .foodLogged:
@@ -109,6 +165,80 @@ enum AnalyticsEvent {
 
     var name: String {
         switch self {
+        case .appFirstOpened:
+            return "app_first_opened"
+        case .appOpened:
+            return "app_opened"
+        case .appBackgrounded:
+            return "app_backgrounded"
+        case .onboardingStepCompleted:
+            return "onboarding_step_completed"
+        case .onboardingStepBack:
+            return "onboarding_step_back"
+        case .quickLogOptionSelected:
+            return "quick_log_option_selected"
+        case .diaryDateChanged:
+            return "diary_date_changed"
+        case .foodMarkedEaten:
+            return "food_marked_eaten"
+        case .allFoodMarkedEaten:
+            return "all_food_marked_eaten"
+        case .foodPortionChanged:
+            return "food_portion_changed"
+        case .waterRemoved:
+            return "water_removed"
+        case .foodRecognitionFinished:
+            return "food_recognition_finished"
+        case .foodItemOpened:
+            return "food_item_opened"
+        case .recipeHubTabSelected:
+            return "recipe_hub_tab_selected"
+        case .recipeOpened:
+            return "recipe_opened"
+        case .recipeSectionOpened:
+            return "recipe_section_opened"
+        case .recipeFiltersApplied:
+            return "recipe_filters_applied"
+        case .recipeSaved:
+            return "recipe_saved"
+        case .recipeAddTapped:
+            return "recipe_add_tapped"
+        case .recipeShared:
+            return "recipe_shared"
+        case .recipeCreateStarted:
+            return "recipe_create_started"
+        case .recipeCreateFinished:
+            return "recipe_create_finished"
+        case .mealPlanOpened:
+            return "meal_plan_opened"
+        case .pantryItemsAdded:
+            return "pantry_items_added"
+        case .pantryItemsDeleted:
+            return "pantry_items_deleted"
+        case .aiActionApplied:
+            return "ai_action_applied"
+        case .badgeUnlocked:
+            return "badge_unlocked"
+        case .badgeCelebrationShown:
+            return "badge_celebration_shown"
+        case .badgeOpened:
+            return "badge_opened"
+        case .badgeShared:
+            return "badge_shared"
+        case .levelReached:
+            return "level_reached"
+        case .settingChanged:
+            return "setting_changed"
+        case .notificationOpened:
+            return "notification_opened"
+        case .notificationPermissionAnswered:
+            return "notification_permission_answered"
+        case .errorShown:
+            return "error_shown"
+        case .offlineStateShown:
+            return "offline_state_shown"
+        case .retryTapped:
+            return "retry_tapped"
         case .screenViewed:
             return "screen_viewed"
         case .tabSelected:
@@ -168,6 +298,85 @@ enum AnalyticsEvent {
 
     var properties: [String: Any] {
         switch self {
+        case .appFirstOpened(let appVersion):
+            return ["app_version": appVersion]
+        case .appOpened(let launch, let openCount, let daysSinceFirstOpen, let hoursSinceLastOpen):
+            var properties: [String: Any] = [
+                "launch": launch, "open_count": openCount, "days_since_first_open": daysSinceFirstOpen
+            ]
+            properties["hours_since_last_open"] = hoursSinceLastOpen
+            return properties
+        case .appBackgrounded(let secondsInForeground, let lastScreen, let secondsOnLastScreen):
+            var properties: [String: Any] = ["seconds_in_foreground": secondsInForeground]
+            properties["last_screen"] = lastScreen
+            properties["seconds_on_last_screen"] = secondsOnLastScreen
+            return properties
+        case .onboardingStepCompleted(let step, let value):
+            var properties: [String: Any] = ["step": step]
+            properties["value"] = value
+            return properties
+        case .onboardingStepBack(let step):
+            return ["step": step]
+        case .quickLogOptionSelected(let option):
+            return ["option": option]
+        case .diaryDateChanged(let days):
+            return ["days_from_today": days]
+        case .foodMarkedEaten(let eaten, let mealType):
+            return ["eaten": eaten, "meal_type": mealType]
+        case .allFoodMarkedEaten(let count):
+            return ["count": count]
+        case .foodPortionChanged(let mealType):
+            return ["meal_type": mealType]
+        case .waterRemoved, .recipeShared, .mealPlanOpened:
+            return [:]
+        case .foodRecognitionFinished(let method, let outcome, let confidence):
+            var properties: [String: Any] = ["method": method, "outcome": outcome]
+            properties["confidence"] = confidence
+            return properties
+        case .foodItemOpened(let source, let foodType):
+            var properties: [String: Any] = ["source": source]
+            properties["food_type"] = foodType
+            return properties
+        case .recipeHubTabSelected(let tab):
+            return ["tab": tab]
+        case .recipeOpened(let source, let origin):
+            return ["source": source, "origin": origin]
+        case .recipeSectionOpened(let section):
+            return ["section": section]
+        case .recipeFiltersApplied(let count):
+            return ["filter_count": count]
+        case .recipeSaved(let saved):
+            return ["saved": saved]
+        case .recipeAddTapped(let mealType):
+            return ["meal_type": mealType]
+        case .recipeCreateStarted(let kind, let source, let ingredientCount):
+            return ["kind": kind, "source": source, "ingredient_count": ingredientCount]
+        case .recipeCreateFinished(let kind, let success, let origin, let seconds):
+            var properties: [String: Any] = ["kind": kind, "success": success, "seconds": seconds]
+            properties["origin"] = origin
+            return properties
+        case .pantryItemsAdded(let count, let method):
+            return ["count": count, "method": method]
+        case .pantryItemsDeleted(let count):
+            return ["count": count]
+        case .aiActionApplied(let kind, let success):
+            return ["kind": kind, "success": success]
+        case .badgeUnlocked(let badge), .badgeCelebrationShown(let badge), .badgeShared(let badge):
+            return ["badge": badge]
+        case .badgeOpened(let badge, let earned):
+            return ["badge": badge, "earned": earned]
+        case .levelReached(let level):
+            return ["level": level]
+        case .settingChanged(let name, let value):
+            return ["setting": name, "value": value]
+        case .notificationOpened(let kind):
+            return ["kind": kind]
+        case .notificationPermissionAnswered(let granted):
+            return ["granted": granted]
+        case .errorShown(let context, let reason):
+            return ["context": context, "reason": reason]
+        case .offlineStateShown(let context), .retryTapped(let context):
+            return ["context": context]
         case .screenViewed(let screen):
             return ["screen": screen.rawValue]
         case .tabSelected(let tab):
@@ -210,6 +419,49 @@ enum AnalyticsEvent {
             return ["source": source]
         case .appRatingTapped(let action):
             return ["action": action]
+        }
+    }
+}
+
+extension AnalyticsEvent {
+    /// A photo, voice, text or barcode recognition that gave the user a result.
+    static func recognized(_ method: String, confidence: Double? = nil) -> AnalyticsEvent {
+        .foodRecognitionFinished(
+            method: method,
+            outcome: "recognized",
+            confidence: confidence.map { Int(($0 * 100).rounded()) }
+        )
+    }
+
+    /// Why a recognition gave the user nothing: no connection, nothing edible, an unknown barcode
+    /// or the service failing.
+    static func recognitionFailed(_ method: String, error: Error) -> AnalyticsEvent {
+        let outcome: String
+        if (error as? FoodPhotoAnalysisError) == .noFood {
+            outcome = "no_food"
+        } else if (error as? BarcodeLookupError) == .notFound {
+            outcome = "not_found"
+        } else if error.isNoConnection {
+            outcome = "offline"
+        } else {
+            outcome = "failed"
+        }
+        return .foodRecognitionFinished(method: method, outcome: outcome, confidence: nil)
+    }
+}
+
+extension AIAssistantAction {
+    var analyticsKind: String {
+        switch self {
+        case .logFood: return "log_food"
+        case .replaceFood: return "replace_food"
+        case .swapFood: return "swap_food"
+        case .mealSuggestions: return "meal_suggestions"
+        case .saveRecipe: return "save_recipe"
+        case .swapRecipeIngredient: return "swap_recipe_ingredient"
+        case .swapMealPlanMeal: return "swap_meal_plan_meal"
+        case .logWater: return "log_water"
+        case .savePreference: return "save_preference"
         }
     }
 }

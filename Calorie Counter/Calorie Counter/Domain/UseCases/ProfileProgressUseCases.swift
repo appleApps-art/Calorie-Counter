@@ -128,7 +128,7 @@ final class SaveProgressPhotoUseCase {
         }
         let id = UUID()
         let fileName = "\(id.uuidString).jpg"
-        _ = try fileStore.saveJPEG(imageData, fileName: fileName)
+        _ = try fileStore.saveJPEG(StoredPhoto.compacted(imageData) ?? imageData, fileName: fileName)
         let photo = ProgressPhoto(
             id: id,
             fileName: fileName,
@@ -150,17 +150,21 @@ final class SaveProgressPhotoUseCase {
 final class DeleteProgressPhotoUseCase {
     private let progressPhotoRepository: ProgressPhotoRepositoryProtocol
     private let fileStore: ProgressPhotoFileStoring
+    private let awardXPUseCase: AwardXPUseCase?
 
     init(
         progressPhotoRepository: ProgressPhotoRepositoryProtocol,
-        fileStore: ProgressPhotoFileStoring
+        fileStore: ProgressPhotoFileStoring,
+        awardXPUseCase: AwardXPUseCase? = nil
     ) {
         self.progressPhotoRepository = progressPhotoRepository
         self.fileStore = fileStore
+        self.awardXPUseCase = awardXPUseCase
     }
 
     func execute(_ photo: ProgressPhoto) throws {
         try progressPhotoRepository.delete(id: photo.id)
+        try? awardXPUseCase?.revoke(relatedID: photo.id)
         try? fileStore.delete(fileName: photo.fileName)
     }
 }

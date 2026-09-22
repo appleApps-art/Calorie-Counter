@@ -94,7 +94,8 @@ final class DIContainer {
     private(set) lazy var buildAIAssistantUserContextUseCase: BuildAIAssistantUserContextUseCase = BuildAIAssistantUserContextUseCase(
         fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
         userProfileRepository: userProfileRepository,
-        userPreferenceRepository: userPreferenceRepository
+        userPreferenceRepository: userPreferenceRepository,
+        fetchMealPlansUseCase: fetchMealPlansUseCase
     )
 
     private(set) lazy var aiAssistantService: AIAssistantServiceProtocol = AIAssistantService(
@@ -112,6 +113,10 @@ final class DIContainer {
         #endif
         return AIFoodSearchService()
     }()
+    private(set) lazy var suggestPantryRecipeUseCase: SuggestPantryRecipeUseCase = SuggestPantryRecipeUseCase(
+        spoonacularService: spoonacularService,
+        fetchDailyDiaryUseCase: fetchDailyDiaryUseCase
+    )
     private(set) lazy var searchRecipesUseCase: SearchRecipesUseCase = SearchRecipesUseCase(
         spoonacularService: spoonacularService,
         aiFoodSearchService: aiFoodSearchService
@@ -218,15 +223,18 @@ final class DIContainer {
     )
     private(set) lazy var deleteFoodEntryUseCase: DeleteFoodEntryUseCase = DeleteFoodEntryUseCase(
         foodEntryRepository: foodEntryRepository,
+        awardXPUseCase: awardXPUseCase,
         healthSync: healthSyncService,
         analytics: analytics
     )
     private(set) lazy var deleteWaterEntryUseCase: DeleteWaterEntryUseCase = DeleteWaterEntryUseCase(
         waterEntryRepository: waterEntryRepository,
+        awardXPUseCase: awardXPUseCase,
         healthSync: healthSyncService
     )
     private(set) lazy var deleteWorkoutEntryUseCase: DeleteWorkoutEntryUseCase = DeleteWorkoutEntryUseCase(
         workoutEntryRepository: workoutEntryRepository,
+        awardXPUseCase: awardXPUseCase,
         healthSync: healthSyncService
     )
     private(set) lazy var fetchWeightHistoryUseCase: FetchWeightHistoryUseCase = FetchWeightHistoryUseCase(
@@ -317,7 +325,8 @@ final class DIContainer {
     )
     private(set) lazy var deleteProgressPhotoUseCase: DeleteProgressPhotoUseCase = DeleteProgressPhotoUseCase(
         progressPhotoRepository: progressPhotoRepository,
-        fileStore: progressPhotoFileStore
+        fileStore: progressPhotoFileStore,
+        awardXPUseCase: awardXPUseCase
     )
     private(set) lazy var deleteUserPreferenceUseCase: DeleteUserPreferenceUseCase = DeleteUserPreferenceUseCase(
         userPreferenceRepository: userPreferenceRepository
@@ -395,7 +404,10 @@ final class DIContainer {
         healthSync: healthSyncService,
         appSettingsStore: appSettingsStore,
         requestAuthorizationUseCase: requestHealthSyncAuthorizationUseCase,
-        syncHealthDataUseCase: syncHealthDataUseCase
+        syncHealthDataUseCase: syncHealthDataUseCase,
+        isOnboardingCompleted: { [weak self] in
+            (try? self?.fetchOnboardingStateUseCase.execute())?.onboardingCompleted ?? false
+        }
     )
 
     private(set) lazy var spoonacularBarcodeLookupService: SpoonacularBarcodeLookupService = SpoonacularBarcodeLookupService(
@@ -572,6 +584,7 @@ final class DIContainer {
 
     func makeAIAssistantViewModel(
         recipeContext: Recipe? = nil,
+        mealPlanContext: MealPlan? = nil,
         initialInput: String? = nil,
         isPersistentSession: Bool = false
     ) -> AIAssistantViewModel {
@@ -580,6 +593,7 @@ final class DIContainer {
             fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
             logWaterUseCase: logWaterUseCase,
             recipeContext: recipeContext,
+            mealPlanContext: mealPlanContext,
             initialInput: initialInput,
             buildAIAssistantUserContextUseCase: buildAIAssistantUserContextUseCase,
             parseAIAssistantActionsUseCase: parseAIAssistantActionsUseCase,

@@ -6,6 +6,7 @@ final class HealthSyncController {
     private let appSettingsStore: AppSettingsStoring
     private let requestAuthorizationUseCase: RequestHealthSyncAuthorizationUseCase
     private let syncHealthDataUseCase: SyncHealthDataUseCase
+    private let isOnboardingCompleted: () -> Bool
     private var currentSync: Task<Void, Error>?
     private var needsAnotherSync = false
 
@@ -13,17 +14,22 @@ final class HealthSyncController {
         healthSync: HealthSyncing,
         appSettingsStore: AppSettingsStoring,
         requestAuthorizationUseCase: RequestHealthSyncAuthorizationUseCase,
-        syncHealthDataUseCase: SyncHealthDataUseCase
+        syncHealthDataUseCase: SyncHealthDataUseCase,
+        isOnboardingCompleted: @escaping () -> Bool = { true }
     ) {
         self.healthSync = healthSync
         self.appSettingsStore = appSettingsStore
         self.requestAuthorizationUseCase = requestAuthorizationUseCase
         self.syncHealthDataUseCase = syncHealthDataUseCase
+        self.isOnboardingCompleted = isOnboardingCompleted
     }
 
     func bootstrap() { refreshOnForeground() }
 
     func refreshOnForeground() {
+        // Onboarding asks for Health itself, on its own screen. Prompting here put the system
+        // sheet in front of the welcome screen on a first launch.
+        guard isOnboardingCompleted() else { return }
         Task {
             await prepareAuthorizationIfNeeded()
             _ = requestAuthorizationUseCase.refreshFromStore()

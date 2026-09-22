@@ -6,11 +6,14 @@ final class RecipesViewModel {
     let selectedTab = Observable(RecipeHubTab.all)
     let browseSections = Observable<[RecipeBrowseSection]>([])
     let savedRecipes = Observable<[Recipe]>([])
+    let visibleSavedRecipes = Observable<[Recipe]>([])
     let mealPlans = Observable<[MealPlan]>([])
+    let visibleMealPlans = Observable<[MealPlan]>([])
     let resultRecipes = Observable<[Recipe]>([])
     let suggestionTitles = Observable<[String]>([])
     let filterChips = Observable<[RecipeFilterChip]>([])
     let isLoading = Observable(false)
+    let isLoadingMoreResults = Observable(false)
     let isRecording = Observable(false)
     let canConfirmQuery = Observable(false)
     let showsFilterResults = Observable(false)
@@ -33,6 +36,10 @@ final class RecipesViewModel {
     private let transcribeFoodVoiceUseCase: TranscribeFoodVoiceUseCase
     private var filters = RecipeSearchFilters.empty
     private var searchTask: Task<Void, Never>?
+    private var searchingTab: RecipeHubTab?
+    private var resultsPaging: RecipeResultsPaging?
+    private var loadMoreTask: Task<Void, Never>?
+    private var tabSearches: [RecipeHubTab: TabSearch] = [:]
     private var browseTask: Task<Void, Never>?
     private var receivedLiveVoice = false
     private var speechEndTask: Task<Void, Never>?
@@ -67,8 +74,27 @@ final class RecipesViewModel {
         }
     }
 
+    var isSearchingLocally: Bool {
+        searchesLocally && !trimmedQuery.isEmpty
+    }
+
+    var hidesTabs: Bool {
+        showsFilterResults.value && filters.hasActiveConstraints
+    }
+
     func selectTab(_ tab: RecipeHubTab) {
+        var resumesSearch = false
+        if tab != selectedTab.value {
+            Analytics.tracker.track(.recipeHubTabSelected(tab: String(describing: tab)))
+            cancelVoice()
+            canConfirmQuery.value = false
+            storeSearch(for: selectedTab.value)
+            resumesSearch = restoreSearch(for: tab)
+        }
         selectedTab.value = tab
+        if resumesSearch {
+            searchTapped()
+        }
         if !showsFilterResults.value {
             suggestionTitles.value = []
         }
@@ -81,6 +107,11 @@ final class RecipesViewModel {
             canConfirmQuery.value = false
         }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if searchesLocally {
+            suggestionTitles.value = []
+            filterLocalItems()
+            return
+        }
         if trimmed.isEmpty, !filters.hasActiveConstraints {
             showsFilterResults.value = false
             showsEmptyResults.value = false
@@ -98,29 +129,79 @@ final class RecipesViewModel {
     func searchTapped() {
         cancelVoice()
         canConfirmQuery.value = false
+        if searchesLocally {
+            filterLocalItems()
+            return
+        }
         searchTask?.cancel()
         let query = queryText.value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty || filters.hasActiveConstraints else { return }
+        cancelLoadMore()
+        resultsPaging = nil
         showsFilterResults.value = true
         filterChips.value = filters.resultChips
         showsEmptyResults.value = false
         resultRecipes.value = []
         isLoading.value = true
         suggestionTitles.value = []
+        let tab = selectedTab.value
+        let searchFilters = filters
+        searchingTab = tab
         searchTask = Task { @MainActor in
-            let recipes = (try? await searchRecipesUseCase.execute(query: query, filters: filters)) ?? []
+            let page = await searchRecipesUseCase.page(query: query, filters: searchFilters, offset: 0)
             guard !Task.isCancelled else { return }
-            resultRecipes.value = recipes
-            showsEmptyResults.value = recipes.isEmpty
-            isLoading.value = false
+            searchingTab = nil
+            let recipes = page.recipes
+            let paging = RecipeResultsPaging(query: query, filters: searchFilters, nextOffset: page.nextOffset, hasMore: page.hasMore)
+            if selectedTab.value == tab {
+                resultsPaging = paging
+                resultRecipes.value = recipes
+                showsEmptyResults.value = recipes.isEmpty && !page.hasMore
+                isLoading.value = false
+                if recipes.isEmpty, page.hasMore {
+                    loadMoreResultsIfNeeded()
+                }
+            } else {
+                tabSearches[tab]?.results = recipes
+                tabSearches[tab]?.showsEmpty = recipes.isEmpty
+                tabSearches[tab]?.isLoading = false
+                tabSearches[tab]?.paging = paging
+            }
             Analytics.tracker.track(.foodSearchPerformed(queryLength: query.count, resultCount: recipes.count))
+        }
+    }
+
+    func loadMoreResultsIfNeeded() {
+        guard showsFilterResults.value, !isLoading.value, !isLoadingMoreResults.value,
+              searchingTab == nil, let paging = resultsPaging, paging.hasMore else { return }
+        isLoadingMoreResults.value = true
+        loadMoreTask = Task { @MainActor in
+            let page = await searchRecipesUseCase.page(query: paging.query, filters: paging.filters, offset: paging.nextOffset)
+            guard !Task.isCancelled, resultsPaging == paging else { return }
+            let existing = Set(resultRecipes.value.compactMap(\.externalId))
+            let appended = page.recipes.filter { recipe in
+                guard let id = recipe.externalId else { return true }
+                return !existing.contains(id)
+            }
+            var next = paging
+            next.nextOffset = page.nextOffset
+            next.hasMore = page.hasMore && page.nextOffset > paging.nextOffset
+            resultsPaging = next
+            if !appended.isEmpty {
+                resultRecipes.value += appended
+            }
+            showsEmptyResults.value = resultRecipes.value.isEmpty && !next.hasMore
+            isLoadingMoreResults.value = false
+            if appended.isEmpty, next.hasMore {
+                loadMoreResultsIfNeeded()
+            }
         }
     }
 
     func applyFilters(_ filters: RecipeSearchFilters) {
         self.filters = filters
         filterChips.value = filters.resultChips
-        showsFilterResults.value = filters.hasActiveConstraints || !queryText.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        showsFilterResults.value = filters.hasActiveConstraints || (!trimmedQuery.isEmpty && !searchesLocally)
         if showsFilterResults.value {
             searchTapped()
         } else {
@@ -170,11 +251,11 @@ final class RecipesViewModel {
 
     func reloadAfterCreate() {
         savedRecipes.value = (try? recipeRepository.fetchSaved()) ?? []
+        filterLocalItems()
     }
 
     func reloadAfterMealPlanCreate() {
-        mealPlans.value = (try? fetchMealPlansUseCase.execute()) ?? []
-        selectedTab.value = .mealPlans
+        selectTab(.mealPlans)
     }
 
     func filtersTapped() {
@@ -211,9 +292,62 @@ final class RecipesViewModel {
         }
     }
 
+    private func storeSearch(for tab: RecipeHubTab) {
+        let loading = searchingTab == tab
+        tabSearches[tab] = TabSearch(
+            query: queryText.value,
+            showsResults: showsFilterResults.value,
+            results: resultRecipes.value,
+            showsEmpty: showsEmptyResults.value,
+            isLoading: loading,
+            paging: resultsPaging
+        )
+        if loading {
+            isLoading.value = false
+        }
+        cancelLoadMore()
+    }
+
+    private func cancelLoadMore() {
+        loadMoreTask?.cancel()
+        loadMoreTask = nil
+        if isLoadingMoreResults.value {
+            isLoadingMoreResults.value = false
+        }
+    }
+
+    private func restoreSearch(for tab: RecipeHubTab) -> Bool {
+        let search = tabSearches[tab] ?? TabSearch()
+        resultsPaging = search.paging
+        queryText.value = search.query
+        suggestionTitles.value = []
+        resultRecipes.value = search.results
+        showsEmptyResults.value = search.showsEmpty
+        if search.isLoading {
+            isLoading.value = true
+        }
+        showsFilterResults.value = search.showsResults
+        return search.isLoading && searchingTab != tab
+    }
+
+    private var trimmedQuery: String {
+        queryText.value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var searchesLocally: Bool {
+        selectedTab.value != .all && !filters.hasActiveConstraints
+    }
+
     private func reloadLocal() {
         savedRecipes.value = (try? recipeRepository.fetchSaved()) ?? []
         mealPlans.value = (try? fetchMealPlansUseCase.execute()) ?? []
+        filterLocalItems()
+    }
+
+    private func filterLocalItems() {
+        let query = trimmedQuery
+        visibleSavedRecipes.value = savedRecipes.value.filter { $0.matchesSearch(query) }
+        visibleMealPlans.value = mealPlans.value.filter { $0.matchesSearch(query) }
     }
 
     private func debounceSearch() {
@@ -226,17 +360,22 @@ final class RecipesViewModel {
             }
             return
         }
+        let searchFilters = filters
         searchTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 450_000_000)
             guard !Task.isCancelled else { return }
-            let recipes = (try? await searchRecipesUseCase.execute(query: query, filters: filters)) ?? []
+            let page = await searchRecipesUseCase.page(query: query, filters: searchFilters, offset: 0)
             guard !Task.isCancelled else { return }
-            suggestionTitles.value = Array(recipes.prefix(4).map(\.title))
-            if filters.hasActiveConstraints {
+            if searchFilters.hasActiveConstraints {
+                cancelLoadMore()
+                resultsPaging = RecipeResultsPaging(query: query, filters: searchFilters, nextOffset: page.nextOffset, hasMore: page.hasMore)
                 showsFilterResults.value = true
-                filterChips.value = filters.resultChips
-                resultRecipes.value = recipes
-                showsEmptyResults.value = recipes.isEmpty
+                filterChips.value = searchFilters.resultChips
+                resultRecipes.value = page.recipes
+                showsEmptyResults.value = page.recipes.isEmpty && !page.hasMore
+                if page.recipes.isEmpty, page.hasMore {
+                    loadMoreResultsIfNeeded()
+                }
             }
         }
     }
@@ -341,4 +480,20 @@ final class RecipesViewModel {
         voiceRecorder.onPartialTranscript = nil
         voiceRecorder.onUtteranceFinal = nil
     }
+}
+
+private struct TabSearch {
+    var query = ""
+    var showsResults = false
+    var results: [Recipe] = []
+    var showsEmpty = false
+    var isLoading = false
+    var paging: RecipeResultsPaging?
+}
+
+private struct RecipeResultsPaging: Equatable {
+    let query: String
+    let filters: RecipeSearchFilters
+    var nextOffset: Int
+    var hasMore: Bool
 }

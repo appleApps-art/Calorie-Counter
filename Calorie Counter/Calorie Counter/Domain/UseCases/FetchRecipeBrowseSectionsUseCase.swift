@@ -30,7 +30,7 @@ final class FetchRecipeBrowseSectionsUseCase {
         let lastGood = cache?.locale == locale ? cache?.sections : nil
         let task = Task { @MainActor in
             var sections = (try? await service.fetchSections(locale: locale)) ?? []
-            if sections.isEmpty {
+            if sections.isEmpty, NetworkMonitor.shared.isOnline {
                 try? await Task.sleep(nanoseconds: 1_200_000_000)
                 sections = (try? await service.fetchSections(locale: locale)) ?? []
             }
@@ -72,9 +72,15 @@ final class FetchRecipeBrowseSectionsUseCase {
                     self.pageCache[key] = (page, Date())
                     return page
                 }
+                guard NetworkMonitor.shared.isOnline else { break }
                 if attempt == 0 { try? await Task.sleep(nanoseconds: 500_000_000) }
             }
             if let cached, Date().timeIntervalSince(cached.storedAt) < 86_400 { return cached.page }
+            // Offline the section still opens with the recipes the tab already showed for it.
+            if offset == 0, !NetworkMonitor.shared.isOnline,
+               let preview = self.peek(locale: locale)?.first(where: { $0.id == kind })?.recipes, !preview.isEmpty {
+                return RecipeSectionPage(recipes: preview, nextOffset: preview.count, hasMore: false, isRetryableFailure: true)
+            }
             return RecipeSectionPage(recipes: [], nextOffset: offset, hasMore: false, isRetryableFailure: true)
         }
         pageInflight[key] = task

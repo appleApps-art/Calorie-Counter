@@ -38,6 +38,7 @@ final class AddFoodEntryViewController: BaseViewController, UITextFieldDelegate,
     private let savedAlert = StatusAlertOverlay()
     private let viewModel: AddFoodEntryViewModel
     private var calendarView: UICalendarView?
+    private var mealRows: [NutritionFactRowView] = []
     private var calendarDateBadge: UILabel?
     private var stepperCapsule: UIView?
     private var didInstallCalendar = false
@@ -467,14 +468,27 @@ final class AddFoodEntryViewController: BaseViewController, UITextFieldDelegate,
     }
 
     private func renderMeals() {
-        mealStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        viewModel.mealTypes.enumerated().forEach { index, meal in
-            let row = NutritionFactRowView()
-            row.configureMeal(title: meal.localizedTitle, selected: meal == viewModel.selectedMeal.value, showsSeparator: index > 0)
-            row.addAction(UIAction { [weak self] _ in
-                self?.viewModel.selectMeal(meal)
-            }, for: .touchUpInside)
-            mealStackView.addArrangedSubview(row)
+        let meals = viewModel.mealTypes
+        if mealRows.count != meals.count {
+            mealStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            mealRows = meals.enumerated().map { index, meal in
+                let row = NutritionFactRowView()
+                row.configureMeal(
+                    title: meal.localizedTitle,
+                    selected: meal == viewModel.selectedMeal.value,
+                    showsSeparator: index > 0
+                )
+                row.addAction(UIAction { [weak self] _ in
+                    self?.viewModel.selectMeal(meal)
+                }, for: .touchUpInside)
+                mealStackView.addArrangedSubview(row)
+                return row
+            }
+            return
+        }
+        // Picking a meal only moves the checkmark; rebuilding the rows would resize the section.
+        zip(meals, mealRows).forEach { meal, row in
+            row.setMealSelected(meal == viewModel.selectedMeal.value)
         }
     }
 
@@ -767,14 +781,8 @@ final class AddFoodEntryViewController: BaseViewController, UITextFieldDelegate,
         scrollView.verticalScrollIndicatorInsets.bottom = inset
     }
 
-    private func makePortionKeyboardDoneBar() -> UIToolbar {
-        let bar = UIToolbar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 44))
-        bar.items = [
-            UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-            UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissKeyboard))
-        ]
-        bar.sizeToFit()
-        return bar
+    private func makePortionKeyboardDoneBar() -> UIView {
+        OnboardingStyle.makeKeyboardDoneBar(width: view.bounds.width, target: self, action: #selector(dismissKeyboard))
     }
 
     private func installKeyboardDismissPan() {

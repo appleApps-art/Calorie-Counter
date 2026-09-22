@@ -143,12 +143,17 @@ final class CreateRecipeFormViewModel {
         dictation.clearConfirmIfEmpty(text)
     }
 
+    /// "огірки, помідори, капуста" is three products, not one long tag.
     func addCustomIngredient(_ name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        let parts = name
+            .split(whereSeparator: { $0 == "," || $0 == ";" || $0.isNewline })
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !parts.isEmpty else { return }
         var next = customIngredients.value
-        if !next.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) {
-            next.append(trimmed)
+        parts.forEach { part in
+            guard !next.contains(where: { $0.caseInsensitiveCompare(part) == .orderedSame }) else { return }
+            next.append(part)
         }
         customIngredients.value = next
         ingredientQuery.value = ""
@@ -212,10 +217,34 @@ final class CreateRecipeFormViewModel {
         }
     }
 
+    /// A recipe is cooked from products, so it cannot be made from none; a meal plan can.
+    /// A product typed into the field but not yet confirmed still counts.
+    func acceptPendingIngredientAndCheckMissing() -> Bool {
+        if source.value == .custom {
+            addCustomIngredient(ingredientQuery.value)
+        }
+        guard kind == .recipe else { return false }
+        return makeInput().ingredients.isEmpty
+    }
+
+    var missingIngredientsMessage: String {
+        guard source.value == .pantry else { return L10n.tr("recipes.create.noIngredientsCustom") }
+        return pantryItems.value.isEmpty
+            ? L10n.tr("recipes.create.noIngredientsEmptyPantry")
+            : L10n.tr("recipes.create.noIngredientsPantry")
+    }
+
     func createTapped() {
         guard !isLoading.value else { return }
         isLoading.value = true
         let input = makeInput()
+        let kindName = kind == .recipe ? "recipe" : "meal_plan"
+        Analytics.tracker.track(.recipeCreateStarted(
+            kind: kindName,
+            source: String(describing: source.value),
+            ingredientCount: input.ingredients.count
+        ))
+        let started = Date()
         Task { @MainActor in
             var recipe: Recipe?
             var plan: MealPlan?
@@ -228,6 +257,12 @@ final class CreateRecipeFormViewModel {
                 }
             } catch {
             }
+            Analytics.tracker.track(.recipeCreateFinished(
+                kind: kindName,
+                success: recipe != nil || plan != nil,
+                origin: recipe.map { $0.origin.isAIRecipe ? "ai" : "catalog" },
+                seconds: Int(Date().timeIntervalSince(started).rounded())
+            ))
             onCreateFinished?(recipe, plan)
         }
     }

@@ -24,6 +24,7 @@ enum QARoute: String, CaseIterable {
     case pantryAdd
     case fridgeResult
     case pantryEdit
+    case pantryProduct
     case recipesCreate
     case recipesCreateRecipe
     case recipesCreateCustom
@@ -32,6 +33,8 @@ enum QARoute: String, CaseIterable {
     case recipeDetailIngredients
     case recipeDetailInstructions
     case mealPlanPreview
+    case mealPlanSwap
+    case mealPlanSwapLoading
     case home
     case homeGlassVolume
     case progress
@@ -67,6 +70,7 @@ enum QARoute: String, CaseIterable {
     case logWorkoutDate
     case rewards
     case rewardDetail
+    case rewardCelebration
     case onboardingWelcome
     case onboardingGoal
     case onboardingSex

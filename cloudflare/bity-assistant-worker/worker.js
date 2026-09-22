@@ -12,7 +12,7 @@
  * - BITY_BUCKET      bucket `bity`: food-search-catalog/spoonacular/v4/<lang>.json;
  *                    food-search-catalog.json (static JSON catalog fallback);
  *                    ai-recipe-cache/v1/* (durable AI recipes);
- *                    recipe-sections/v10/<locale>.json (All-tab Spoonacular sections)
+ *                    recipe-sections/v10/<locale>.json (All-tab Spoonacular sectiчons)
  *
  * KV (optional):
  * - RECIPE_CACHE     fast layer for AI recipe index + docs; R2 is the durable store
@@ -121,12 +121,12 @@ const foodSearchSpoonacularInflight = new Map();
 
 const OPENAI_BASE = "https://api.openai.com/v1";
 const TAVILY_SEARCH_URL = "https://api.tavily.com/search";
-const DEFAULT_MODEL = "gpt-5.6-luna";
+const DEFAULT_MODEL = "gpt-5.6-terra";
 const DEFAULT_CHAT_MODEL = "gpt-6-astra";
 const DEFAULT_VISION_MODEL = "gpt-6-astra";
-const DEFAULT_VISION_FALLBACK_MODEL = "gpt-4o-mini";
-const DEFAULT_TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe";
-const DEFAULT_TRANSLATE_MODEL = "gpt-5-nano";
+const DEFAULT_VISION_FALLBACK_MODEL = "gpt-5.6-luna";
+const DEFAULT_TRANSCRIBE_MODEL = "gpt-transcribe";
+const DEFAULT_TRANSLATE_MODEL = "gpt-5.6-luna";
 const FOOD_QUERY_TRANSLATE_TTL = 2_592_000;
 const RECIPE_CACHE_KEY_PREFIX = "https://bity.internal/ai-recipe/v6/";
 const RECIPE_CACHE_R2_PREFIX = "ai-recipe-cache/v6/";
@@ -163,7 +163,9 @@ const DISPLAY_LANGUAGE_NAMES = {
   hr: "Croatian",
   sl: "Slovenian",
   ja: "Japanese",
-  zh: "Chinese",
+  zh: "Simplified Chinese",
+  "zh-hant": "Traditional Chinese",
+  "pt-br": "Brazilian Portuguese",
   ko: "Korean",
   th: "Thai",
   vi: "Vietnamese",
@@ -191,7 +193,8 @@ function openaiTranslateBody(model, extra = {}) {
   const body = { model, ...extra };
   if (isGPT5Model(model)) {
     delete body.temperature;
-    if (!body.reasoning_effort) body.reasoning_effort = "minimal";
+    // The original GPT-5 family accepts "minimal"; GPT-5.x releases replaced it with "none".
+    if (!body.reasoning_effort) body.reasoning_effort = /^gpt-5-/i.test(model) ? "minimal" : "none";
   } else if (body.temperature == null) {
     body.temperature = 0;
   }
@@ -245,6 +248,7 @@ ROLE
 ============================================================
 - Help users with nutrition Q&A, meal suggestions within remaining calories, food swaps, recipe ideas, food photo analysis, and food-logging proposals.
 - Be concise, practical, and friendly.
+- Never use long dashes (— or –). Use a comma, a colon, a full stop or a plain hyphen (-) instead.
 - You are NOT a doctor or medical professional. Do not diagnose disease or prescribe treatment.
 - If asked for medical advice, give general nutrition information and recommend consulting a professional.
 
@@ -266,6 +270,10 @@ Use it as source of truth for:
 - today's diary (meals, consumed/remaining calories, macros, water)
 - preferences (allergies, dislikes, diet, lose/maintain/gain)
 - profile (sex, age, height, weight) when present
+- mealPlans: every meal plan the user keeps, with days[].meals[] (mealType, title, calories, protein,
+  carbs, fats) and days[].totals. Answer questions about "my plan" from this list on any screen; never
+  invent a plan or a dish that is not there.
+- mealPlan: the plan the user opened for editing, in the same shape.
 
 Rules:
 - Never invent diary entries that are not in context.
@@ -296,6 +304,7 @@ For actions that change user data, you only PROPOSE structured payloads via tool
 - propose_meal_suggestions
 - propose_recipe_save
 - propose_recipe_ingredient_swap
+- propose_meal_plan_swap
 - propose_water_log
 - propose_preference_save
 
@@ -369,14 +378,31 @@ CAPABILITIES / INTENTS
   - Call propose_recipe_ingredient_swap (NOT propose_food_replace, NOT propose_food_log).
   - Keep amount/unit comparable; estimate replacement macros and updatedRecipeCalories when possible.
 
-8) Preferences / memory facts
+8) Meal plans
+- USER_CONTEXT_JSON.mealPlans is the user's real plans: use their titles, day counts and meal counts as given.
+- When mealPlan is present, the user is editing that plan. Answer about its days and dishes from it.
+- To change a dish inside that plan, call propose_meal_plan_swap with the day number, mealType and the
+  current dish title from mealPlan, plus the replacement (title and macros). The app applies the swap.
+- Keep the replacement close to the meal it replaces in calories unless the user asked otherwise, and
+  respect allergies and dislikes. Do not use propose_food_log or propose_food_replace for plan edits.
+- Name a replacement the way a menu would: 2-4 words ("Omelette with spinach"), never a sentence
+  or a description in brackets. Always give its calories, protein, carbs and fats.
+- Judging a plan: compare each day's totals with goals (calorieTarget, proteinTarget, carbsTarget,
+  fatsTarget). A day is balanced when calories are within 10% of the target, protein is at least 90%
+  of the target, and fats and carbs are within 20%. Say a plan is balanced when its days are; only
+  call out a real gap, with the numbers, and offer the swap that closes it. Do not judge a plan by
+  dish names or cuisine alone.
+- Never claim a plan was changed; the app confirms it.
+
+9) Preferences / memory facts
 - Call propose_preference_save for durable preferences.
 
-9) Progress / remaining summary
+10) Progress / remaining summary
 - Use remaining kcal/macros/water from context. Do not fabricate percentages.
 
 INTENT ROUTING (priority)
 1) Recipe ingredient replace (recipe present in context) -> propose_recipe_ingredient_swap
+1b) Change a dish in the open meal plan (mealPlan present in context) -> propose_meal_plan_swap
 2) Plain water intake -> propose_water_log
 3) User ate/drank caloric food/drink -> propose_food_log
 4) Change existing diary item -> propose_food_replace
@@ -467,6 +493,7 @@ const TOOLS = [
                 name: { type: "string" },
                 grams: { type: "number" },
                 milliliters: { type: "number" },
+                quantity: { type: "string", description: "Short human-readable amount in the user's language when grams or milliliters are unknown, e.g. \"3 pcs\", \"1 pack\", \"0.5 l\"." },
               },
               required: ["name"],
             },
@@ -588,7 +615,7 @@ const TOOLS = [
     function: {
       name: "propose_meal_suggestions",
       description:
-        "Propose recipe or product cards in the user's language. Use exactly 1 option for a single dish. For an explicit meal list or full-day menu, return one option per requested meal with its own mealType; do not skip meals based on time. For remaining-calorie day fill without an explicit meal list, return one option per remaining meal section. Include calories, protein, carbs, fats, ingredients, and cooking steps. Omit imageURL for original recipes. The server attaches a web food photo in the background.",
+        "Propose recipe or product cards in the user's language. Use exactly 1 option for a single dish. For an explicit meal list or full-day menu, return one option per requested meal with its own mealType; do not skip meals based on time. For remaining-calorie day fill without an explicit meal list, return one option per remaining meal section. Include calories, protein, carbs, fats, fiber (g), sugar (g), sodium (mg), ingredients, and cooking steps. Omit imageURL for original recipes. The server attaches a web food photo in the background.",
       parameters: {
         type: "object",
         properties: {
@@ -608,6 +635,9 @@ const TOOLS = [
                 protein: { type: "number" },
                 carbs: { type: "number" },
                 fats: { type: "number" },
+                fiber: { type: "number", description: "grams per portion" },
+                sugar: { type: "number", description: "grams per portion" },
+                sodium: { type: "number", description: "milligrams per portion" },
                 cookTimeMinutes: { type: "number" },
                 externalRecipeId: { type: "string" },
                 imageURL: { type: "string" },
@@ -636,6 +666,9 @@ const TOOLS = [
           protein: { type: "number" },
           carbs: { type: "number" },
           fats: { type: "number" },
+          fiber: { type: "number", description: "grams per serving" },
+          sugar: { type: "number", description: "grams per serving" },
+          sodium: { type: "number", description: "milligrams per serving" },
           cookTimeMinutes: { type: "number" },
           externalRecipeId: { type: "string" },
           ingredients: { type: "array", items: { type: "string" } },
@@ -684,6 +717,38 @@ const TOOLS = [
           reason: { type: "string" },
         },
         required: ["originalIngredient", "replacement"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "propose_meal_plan_swap",
+      description:
+        "Propose replacing one dish inside USER_CONTEXT_JSON.mealPlan. Use for meal-plan editing only, not for the diary.",
+      parameters: {
+        type: "object",
+        properties: {
+          planId: { type: "string" },
+          dayNumber: { type: "integer", description: "1-based day of the plan, as in mealPlan.days[].number" },
+          mealType: { type: "string", enum: ["breakfast", "lunch", "dinner", "snacks"] },
+          currentTitle: { type: "string", description: "Title of the dish being replaced, exactly as in the plan" },
+          replacement: {
+            type: "object",
+            properties: {
+              title: { type: "string", description: "Short menu name, 2-4 words, in the user's language" },
+              calories: { type: "number" },
+              protein: { type: "number" },
+              carbs: { type: "number" },
+              fats: { type: "number" },
+              ingredients: { type: "array", items: { type: "string" } },
+              steps: { type: "array", items: { type: "string" } },
+            },
+            required: ["title", "calories", "protein", "carbs", "fats"],
+          },
+          reason: { type: "string" },
+        },
+        required: ["replacement"],
       },
     },
   },
@@ -802,7 +867,12 @@ Use names from real Ukrainian menus and cookbooks.
 Famous dishes keep their usual name. Example: Ratatouille / Baked Ratatouille → Рататуй. Never «Запечена рататуй» (broken gender calque).
 Do not calque English baked/roasted/grilled/easy/homemade onto the dish unless Ukrainian cooks actually say that.
 Adjectives must agree in gender with the dish (рататуй is masculine).
-No leftover English: Instant Pot → мультиварка, muffin → мафін, wings → крильця, bowl → миска, casserole → запіканка. Write quinoa as кіноа, pesto as песто.`;
+No leftover English: Instant Pot → мультиварка, muffin → мафін, wings → крильця, bowl → миска, casserole → запіканка. Write quinoa as кіноа, pesto as песто.
+English culinary idioms are names, not words to translate literally. Use what the dish is:
+Deviled Eggs → Фаршировані яйця (never «з бабкою» or «диявольські»), Pigs in a Blanket → Сосиски в тісті, Toad in the Hole → Сосиски в клярі, Angel Hair Pasta → Паста капеліні, Dirty Rice → Рис по-креольськи, Sloppy Joe → Сендвіч слоппі джо, Hush Puppies → Кукурудзяні пончики, Monkey Bread → Мавпячий хліб.
+Keep established loan names: Eggs Benedict → Яйця Бенедикт, Frittata → Фріттата, Quiche → Кіш, Shakshuka → Шакшука, Tiramisu → Тірамісу, Caprese → Капрезе, Tzatziki → Цацикі, Hummus → Хумус, Pancakes → Панкейки, Sandwich → Сендвіч (never «Сендві»).
+Word order must be natural Ukrainian: noun first, then «з …» (Strawberry Honey Pancakes → Панкейки з полуницею та медом, never «Короткого меду з полуницею млинці»).
+Never keep the English source, a question mark, or brand-like fragments (GR, TM) in the title. If unsure of a dish, describe it plainly by its main ingredients in Ukrainian.`;
 
 const RECIPE_DETAIL_TRANSLATE_INSTRUCTIONS = `You are translating a full cooking recipe for a recipe app: summary, ingredient names, ingredient lines, units, and every cooking step.
 Do not translate or rewrite the recipe title. The title is handled separately.
@@ -1756,7 +1826,8 @@ export default {
       if (request.method === "POST" && url.pathname === "/v1/food/search") {
         const body = await request.json();
         const query = typeof body?.query === "string" ? body.query.trim() : "";
-        if (!query) {
+        const recipeFilters = recipeSearchFilterParams(body?.filters);
+        if (!query && !Object.keys(recipeFilters).length) {
           return cors(json({ error: "query is required" }, 400));
         }
         if (query.length > 200) {
@@ -1771,9 +1842,20 @@ export default {
           query,
           locale: body?.locale || "",
           scope: body?.scope || "all",
+          filters: recipeFilters,
+          offset: body?.offset,
           userContext: body?.userContext || null,
         });
         return cors(await classifiedFoodResponse(json(result), env, ctx, body?.locale));
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/recipes/create") {
+        const input = recipeCreateInput(await request.json().catch(() => null));
+        if (!input.ingredients.length) {
+          return cors(json({ error: "ingredients are required" }, 400));
+        }
+        const result = await createRecipeFromIngredients(env, ctx, url.origin, input);
+        return cors(json(result, result.recipe ? 200 : 502));
       }
 
       if (request.method === "POST" && url.pathname === "/v1/food/details") {
@@ -2139,12 +2221,22 @@ async function handleSpoonacularProxy(url, env, ctx) {
   const upstream = new URLSearchParams();
   upstream.set("apiKey", apiKey);
 
-  if (path === "/v1/spoonacular/recipes/search") {
+  if (path === "/v1/spoonacular/pantry/search") {
+    upstreamPath = "/recipes/findByIngredients";
+    copyParam(params, upstream, "ingredients");
+    if (!(upstream.get("ingredients") || "").trim()) {
+      return json({ error: "ingredients are required" }, 400);
+    }
+    upstream.set("number", cappedNumber(params.get("number"), 30, 30));
+    upstream.set("ranking", "2");
+    upstream.set("ignorePantry", "true");
+  } else if (path === "/v1/spoonacular/recipes/search") {
     upstreamPath = "/recipes/complexSearch";
     copyParam(params, upstream, "query");
     upstream.set("number", cappedNumber(params.get("number"), 10, 30));
     copyParam(params, upstream, "minCalories");
     copyParam(params, upstream, "maxCalories");
+    copyParam(params, upstream, "minProtein");
     copyParam(params, upstream, "diet");
     copyParam(params, upstream, "intolerances");
     copyParam(params, upstream, "cuisine");
@@ -2152,6 +2244,12 @@ async function handleSpoonacularProxy(url, env, ctx) {
     copyParam(params, upstream, "includeIngredients");
     copyParam(params, upstream, "excludeIngredients");
     copyParam(params, upstream, "maxReadyTime");
+    copyParam(params, upstream, "offset");
+    // A meal-plan search filters instead of searching by words, so the ranking has to come from here.
+    copyParam(params, upstream, "sort");
+    copyParam(params, upstream, "sortDirection");
+    // Recipes without steps cannot be opened in the app.
+    upstream.set("instructionsRequired", "true");
     if (params.get("lite") !== "1") {
       upstream.set("addRecipeNutrition", "true");
       upstream.set("addRecipeInformation", "true");
@@ -2198,9 +2296,12 @@ async function handleSpoonacularProxy(url, env, ctx) {
   const hasRecipeFilters =
     path === "/v1/spoonacular/recipes/search" &&
     (upstream.get("includeIngredients") ||
+      upstream.get("excludeIngredients") ||
       upstream.get("cuisine") ||
       upstream.get("type") ||
-      upstream.get("diet"));
+      upstream.get("diet") ||
+      upstream.get("maxReadyTime") ||
+      upstream.get("maxCalories"));
   if (!params.get("query") && upstreamPath.includes("search") && !upstream.get("query") && !hasRecipeFilters) {
     return json({ error: "query is required" }, 400);
   }
@@ -2208,21 +2309,31 @@ async function handleSpoonacularProxy(url, env, ctx) {
   if (isSpoonacularSearchPath(path)) {
     const originalQuery = (upstream.get("query") || "").trim();
     if (originalQuery) {
-      const englishQuery = await englishFoodSearchQuery(env, originalQuery, params.get("locale"));
+      const englishQuery = await englishFoodSearchQuery(
+        env,
+        originalQuery,
+        params.get("locale"),
+        path === "/v1/spoonacular/recipes/search" ? "recipe" : "food"
+      );
       if (englishQuery) {
         upstream.set("query", englishQuery);
       }
     }
-    const includeIngredients = (upstream.get("includeIngredients") || "").trim();
-    if (includeIngredients) {
-      const englishIngredients = await englishFoodSearchQuery(
-        env,
-        includeIngredients,
-        params.get("locale")
+  }
+
+  if (isSpoonacularSearchPath(path) || path === "/v1/spoonacular/pantry/search") {
+    for (const name of ["includeIngredients", "excludeIngredients", "ingredients"]) {
+      const ingredients = (upstream.get(name) || "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (!ingredients.length) continue;
+      // Spoonacular needs one comma-separated English name per ingredient; translating the joined
+      // list lets the model merge or drop items.
+      const english = await Promise.all(
+        ingredients.map((ingredient) => englishFoodSearchQuery(env, ingredient, params.get("locale")))
       );
-      if (englishIngredients) {
-        upstream.set("includeIngredients", englishIngredients);
-      }
+      upstream.set(name, english.filter(Boolean).join(","));
     }
   }
 
@@ -2298,6 +2409,9 @@ async function handleSpoonacularProxy(url, env, ctx) {
     }
   }
 
+  if (path === "/v1/spoonacular/pantry/search" && Array.isArray(data)) {
+    data = { results: data };
+  }
   const localized = await localizeSpoonacularPayload(env, path, data, locale, lite);
   const payload = JSON.stringify(localized);
   const headers = {
@@ -2361,7 +2475,16 @@ function isSpoonacularSearchPath(path) {
 
 function localeLanguage(locale) {
   if (!locale) return "";
-  return String(locale).trim().replace(/_/g, "-").split("-")[0].toLowerCase();
+  const parts = String(locale).trim().replace(/_/g, "-").split("-").map((part) => part.toLowerCase());
+  const language = parts[0];
+  // Traditional and Simplified Chinese, and Brazilian Portuguese, are separate app languages:
+  // they get their own wording and their own cached translations.
+  if (language === "zh") {
+    const traditional = parts.includes("hant") || parts.some((part) => ["tw", "hk", "mo"].includes(part));
+    return traditional ? "zh-hant" : "zh";
+  }
+  if (language === "pt" && parts.includes("br")) return "pt-br";
+  return language;
 }
 
 function isAsciiFoodQuery(query) {
@@ -2443,32 +2566,41 @@ function sanitizeTranslatedFoodQuery(text, fallback) {
   return line.slice(0, 80);
 }
 
-function foodQueryTranslateCacheRequest(query) {
-  const cacheURL = new URL("https://bity.internal/food-query-en-v3");
+function foodQueryTranslateCacheRequest(query, kind = "food") {
+  // Recipe titles and grocery names translate differently, so they never share a cache entry.
+  const cacheURL = new URL(
+    kind === "recipe" ? "https://bity.internal/recipe-query-en-v1" : "https://bity.internal/food-query-en-v3"
+  );
   cacheURL.searchParams.set("q", query.trim().toLowerCase());
   return new Request(cacheURL.toString(), { method: "GET" });
 }
 
-async function englishFoodSearchQuery(env, query, locale) {
+async function englishFoodSearchQuery(env, query, locale, kind = "food") {
   const trimmed = String(query || "").trim();
   if (!trimmed) return trimmed;
   if (!shouldTranslateFoodQuery(trimmed, locale)) return trimmed;
   if (!env?.OPENAI_API_KEY) return trimmed;
 
-  const cacheKey = trimmed.toLowerCase();
+  const cacheKey = `${kind}:${trimmed.toLowerCase()}`;
   const inflight = foodQueryTranslateInflight.get(cacheKey);
   if (inflight) return inflight;
 
-  const pending = translateFoodQueryToEnglish(env, trimmed).finally(() => {
+  const pending = translateFoodQueryToEnglish(env, trimmed, kind).finally(() => {
     foodQueryTranslateInflight.delete(cacheKey);
   });
   foodQueryTranslateInflight.set(cacheKey, pending);
   return pending;
 }
 
-async function translateFoodQueryToEnglish(env, query) {
+const FOOD_QUERY_TRANSLATE_INSTRUCTIONS =
+  "Turn this grocery product, ingredient, or recipe search query into a short English phrase for a food catalog. Return only the phrase, 1–8 words. Keep the same intent. Prefer a product or ingredient name over a recipe title. A food category is a valid query. If the query is already English, return it unchanged. Never return an empty string.";
+
+const RECIPE_QUERY_TRANSLATE_INSTRUCTIONS =
+  "Turn this recipe search query into the English dish name a recipe website would use as the recipe title. Return only the dish name, 1–5 words. Keep the same dish; use its usual international name (рататуй → ratatouille, сирники → syrniki, лазанья → lasagna). Never turn a dish into a grocery product, never add packaging, brand, or cooking-state words (canned, dry, raw, meat, stew). Do not add ingredients or descriptions the query does not contain. If the query is an ingredient, return just that ingredient (курка → chicken). If the query is already English, return it unchanged. Never return an empty string.";
+
+async function translateFoodQueryToEnglish(env, query, kind = "food") {
   const cache = caches.default;
-  const cacheRequest = foodQueryTranslateCacheRequest(query);
+  const cacheRequest = foodQueryTranslateCacheRequest(query, kind);
   const cached = await cache.match(cacheRequest);
   if (cached) {
     const text = (await cached.text()).trim();
@@ -2489,7 +2621,7 @@ async function translateFoodQueryToEnglish(env, query) {
             {
               role: "system",
               content:
-                "Turn this grocery product, ingredient, or recipe search query into a short English phrase for a food catalog. Return only the phrase, 1–8 words. Keep the same intent. Prefer a product or ingredient name over a recipe title. A food category is a valid query. If the query is already English, return it unchanged. Never return an empty string.",
+                kind === "recipe" ? RECIPE_QUERY_TRANSLATE_INSTRUCTIONS : FOOD_QUERY_TRANSLATE_INSTRUCTIONS,
             },
             { role: "user", content: query },
           ],
@@ -3128,7 +3260,7 @@ function isAlreadyInLanguage(text, language) {
   if (language === "el") return /[\u0370-\u03FF]{3,}/.test(value);
   if (language === "he") return /[\u0590-\u05FF]{3,}/.test(value);
   if (language === "ar") return /[\u0600-\u06FF]{3,}/.test(value);
-  if (language === "zh") return /[\u4E00-\u9FFF]{2,}/.test(value);
+  if (language === "zh" || language === "zh-hant") return /[\u4E00-\u9FFF]{2,}/.test(value);
   if (language === "ja") return /[\u3040-\u30FF\u4E00-\u9FFF]{2,}/.test(value);
   if (language === "ko") return /[\uAC00-\uD7AF]{2,}/.test(value);
   if (language === "th") return /[\u0E00-\u0E7F]{3,}/.test(value);
@@ -3613,6 +3745,9 @@ function dishItemToMealOption(item) {
     protein: Number(item?.protein) || 0,
     carbs: Number(item?.carbs) || 0,
     fats: Number(item?.fats) || 0,
+    ...(Number.isFinite(Number(item?.fiber)) && item?.fiber != null ? { fiber: Number(item.fiber) } : {}),
+    ...(Number.isFinite(Number(item?.sugar)) && item?.sugar != null ? { sugar: Number(item.sugar) } : {}),
+    ...(Number.isFinite(Number(item?.sodium)) && item?.sodium != null ? { sodium: Number(item.sodium) } : {}),
     cookTimeMinutes: item?.cookTimeMinutes ?? null,
     externalRecipeId: String(item?.externalId || "").trim(),
     imageURL: String(item?.imageURL || "").trim(),
@@ -3678,7 +3813,7 @@ async function runChatCompletions(input) {
       role: "system",
       content: hasImage
         ? input.inventoryMode
-          ? "FORCE_TOOL: A fridge or pantry photo is attached. Identify every distinct grocery product. MUST call propose_food_log exactly once with source=\"photo\". Put each product in ingredients with a short name in the user's language. Do not treat the photo as one plated dish. Do not claim it is already saved."
+          ? "FORCE_TOOL: A fridge or pantry photo is attached. Identify every distinct grocery product. MUST call propose_food_log exactly once with source=\"photo\". Put each product in ingredients with a short name in the user's language, one entry per product, never the same product twice. Do not treat the photo as one plated dish. Do not claim it is already saved."
           : "FORCE_TOOL: A food photo is attached. Identify the food, estimate portion and nutrition, and MUST call propose_food_log exactly once with source=\"photo\", realistic confidence, servingLabel, ingredients (name + grams or milliliters), tags (high-fiber, low-sodium, gluten-free, vegan when true), and alternative when a healthier swap is realistic. Do not claim it is already saved."
         : "FORCE_TOOL: This user message is a food/drink log request. You MUST call propose_food_log exactly once. Cooked dishes and named meals (борщ, soup, broth, курячий бульйон, salad, stew) MUST set kind=\"recipe\" with ingredients (name + grams) and cooking steps. Prepared broth is a recipe even when measured in ml; never substitute a bouillon cube, powder, or concentrate unless explicitly requested. Grocery items, fruit, packaged foods, and drinks MUST set kind=\"product\" (prefer ml for drinks). Do not invent imageURL. The server attaches or generates a photo. Do not claim it is already saved.",
     });
@@ -3744,7 +3879,8 @@ async function runChatCompletions(input) {
       input.model,
       messages,
       toolChoice,
-      input.fallbackModel
+      input.fallbackModel,
+      input.reasoningEffort || null
     );
     lastModel = data.model || input.model;
     lastUsage = data.usage || lastUsage;
@@ -3947,21 +4083,21 @@ function assistantContentForClient(choice, toolCalls) {
   return titles.map((title, index) => `${index + 1}. ${title}`).join("\n");
 }
 
-async function requestChatCompletion(apiKey, model, messages, toolChoice, fallbackModel) {
+async function requestChatCompletion(apiKey, model, messages, toolChoice, fallbackModel, reasoningEffort) {
   try {
-    return await requestChatCompletionOnce(apiKey, model, messages, toolChoice);
+    return await requestChatCompletionOnce(apiKey, model, messages, toolChoice, reasoningEffort);
   } catch (error) {
     const fallback = String(fallbackModel || "").trim();
     if (fallback && fallback !== model && isUnsupportedVisionError(error)) {
-      return requestChatCompletionOnce(apiKey, fallback, messages, toolChoice);
+      return requestChatCompletionOnce(apiKey, fallback, messages, toolChoice, reasoningEffort);
     }
     throw error;
   }
 }
 
-async function requestChatCompletionOnce(apiKey, model, messages, toolChoice) {
+async function requestChatCompletionOnce(apiKey, model, messages, toolChoice, reasoningEffort) {
   if (isGPT6Model(model)) {
-    return requestResponsesCompletion(apiKey, model, messages, toolChoice);
+    return requestResponsesCompletion(apiKey, model, messages, toolChoice, reasoningEffort);
   }
   const body = {
     model,
@@ -3971,7 +4107,7 @@ async function requestChatCompletionOnce(apiKey, model, messages, toolChoice) {
     temperature: 0.4,
   };
   if (isGPT5Model(model)) {
-    body.reasoning_effort = "none";
+    body.reasoning_effort = reasoningEffort || "none";
   }
   const response = await fetch(`${OPENAI_BASE}/chat/completions`, {
     method: "POST",
@@ -3996,14 +4132,14 @@ async function requestChatCompletionOnce(apiKey, model, messages, toolChoice) {
   return data;
 }
 
-async function requestResponsesCompletion(apiKey, model, messages, toolChoice) {
+async function requestResponsesCompletion(apiKey, model, messages, toolChoice, reasoningEffort) {
   const { instructions, input } = chatMessagesToResponsesInput(messages);
   const body = {
     model,
     input,
     tools: responsesToolsFromChat(TOOLS),
     tool_choice: responsesToolChoice(toolChoice),
-    reasoning: { effort: "low" },
+    reasoning: { effort: reasoningEffort || "low" },
     store: false,
   };
   if (instructions) body.instructions = instructions;
@@ -5053,14 +5189,16 @@ function parseIngredientList(value) {
     .map((item) => {
       if (typeof item === "string") {
         const name = item.trim();
-        return name ? { name, grams: null, milliliters: null } : null;
+        return name ? { name, grams: null, milliliters: null, quantity: null } : null;
       }
       const name = typeof item?.name === "string" ? item.name.trim() : "";
       if (!name) return null;
+      const quantity = typeof item?.quantity === "string" ? item.quantity.trim() : "";
       return {
         name,
         grams: item.grams == null ? null : Math.max(0, asNumber(item.grams)),
         milliliters: item.milliliters == null ? null : Math.max(0, asNumber(item.milliliters)),
+        quantity: quantity || null,
       };
     })
     .filter(Boolean);
@@ -5600,10 +5738,13 @@ async function resolveFoodLogWithCatalog(input) {
 
 async function analyzeForcedFoodLog(input) {
   const source = input.source || "photo";
+  // Counting and reading labels on a whole fridge shelf needs more thinking than a single plate.
+  const reasoningEffort = input.inventoryMode ? "medium" : null;
   const first = await runChatCompletions({
     apiKey: input.apiKey,
     model: input.model,
     fallbackModel: input.fallbackModel || null,
+    reasoningEffort,
     message: input.message,
     history: [],
     userContext: input.userContext,
@@ -5621,9 +5762,11 @@ async function analyzeForcedFoodLog(input) {
       apiKey: input.apiKey,
       model: input.model,
       fallbackModel: input.fallbackModel || null,
-      message:
-        input.message +
-        ` Return propose_food_log now with name, mealType, calories, protein, carbs, fats, confidence, source=${source}.`,
+      reasoningEffort,
+      message: input.inventoryMode
+        ? `${input.message} Return propose_food_log now: ingredients must hold every product you identified, one entry per product, each name in the language stated above, source=${source}.`
+        : input.message +
+          ` Return propose_food_log now with name, mealType, calories, protein, carbs, fats, confidence, source=${source}.`,
       history: [],
       userContext: input.userContext,
       imageBase64: input.imageBase64 || null,
@@ -5658,7 +5801,14 @@ async function analyzeFoodPhoto(input) {
     ...input,
     source: "photo",
   });
-  if (input.inventoryMode) return result;
+  if (input.inventoryMode) {
+    const ingredients = await sanitizeInventoryIngredients(
+      input.env,
+      result.analysis?.ingredients,
+      input.userContext?.locale
+    );
+    return { ...result, analysis: { ...result.analysis, ingredients } };
+  }
   return {
     ...result,
     analysis: await overlaySpoonacularCatalog(
@@ -5668,14 +5818,527 @@ async function analyzeFoodPhoto(input) {
   };
 }
 
+function fridgeInventoryRules(language) {
+  return [
+    `This photo is a fridge, pantry, or grocery shelf — not a plated meal. List its contents as a grocery inventory.`,
+    `1. One entry per real product. Never list the same product twice, not even with different wording, spelling, or preparation: salmon, smoked salmon, and salmon fillet are ONE entry. When you cannot tell whether two things are the same product, list it once.`,
+    `2. Every product name MUST be written in ${language}. Never leave a name in English or any other language.`,
+    `3. Use the short everyday grocery name (tomatoes, milk, yogurt, cheese). No brands, no packaging words, no cooked-dish names, no adjectives that you are guessing.`,
+    `4. Never express uncertainty: no question marks, no "maybe", no "looks like", no two options separated by a slash. If you cannot tell what a product is, leave it out.`,
+    `5. Do not guess what is inside closed, opaque, or unlabeled packaging. List only what you can actually see or read.`,
+    `6. quantity is a short label in ${language} describing how much is visible ("3 pcs", "1 pack", "0.5 l"). Count countable units. Set grams or milliliters ONLY when the packaging states them. Never invent a round number: leave quantity, grams, and milliliters out when you do not know them.`,
+    `7. Skip everything that is not food: shelves, drawers, unidentifiable jars, cutlery, appliances.`,
+    `Call propose_food_log exactly once: name is a short summary in ${language}, ingredients lists every product you identified, source="photo". Nutrition numbers are not used for an inventory — send zeros.`,
+  ].join(" ");
+}
+
 function fridgeInventoryUserMessage(userContext, note) {
-  const language = recipeReplyLanguage(userContext);
-  const base =
-    `This photo is a fridge, pantry, or grocery shelf — not a plated meal. ` +
-    `Identify every distinct edible product you can see. Write each product name in ${language} as a short grocery name (tomato, milk, yogurt, cheese). ` +
-    `Do not combine items into one cooked dish. Call propose_food_log once: name is a short summary in ${language}; ` +
-    `ingredients must list every visible product (name required; grams optional). source="photo".`;
+  const base = fridgeInventoryRules(recipeReplyLanguage(userContext));
   return note ? `${base} User note: ${note}` : base;
+}
+
+const INVENTORY_MAX_ITEMS = 40;
+const INVENTORY_MAX_NAME_WORDS = 4;
+const INVENTORY_MAX_NAME_LENGTH = 48;
+const INVENTORY_HEDGE_PREFIX =
+  /^(?:maybe|possibly|probably|likely|perhaps|some kind of|looks like|можливо|мабуть|ймовірно|схоже на|схоже|напевно|вероятно|возможно|похоже на|похоже)\s+/i;
+function foldInventoryWord(word) {
+  return String(word || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+const INVENTORY_NON_FOOD_NAMES = new Set([
+  "shelf", "shelves", "fridge", "refrigerator", "freezer", "drawer", "drawers", "door",
+  "container", "containers", "jar", "jars", "bottle", "bottles", "box", "boxes",
+  "package", "packages", "packaging", "bag", "bags", "plate", "plates", "bowl", "bowls",
+  "cutlery", "fork", "knife", "spoon", "napkin", "towel", "food", "groceries", "leftovers",
+  "полиця", "полиці", "холодильник", "морозильник", "морозилка", "шухляда", "дверцята",
+  "контейнер", "контейнери", "банка", "банки", "пляшка", "пляшки", "коробка", "коробки",
+  "упаковка", "упаковки", "пакет", "пакети", "тарілка", "тарілки", "миска", "миски",
+  "виделка", "ніж", "ложка", "серветка", "рушник", "їжа", "продукти", "залишки",
+].map(foldInventoryWord));
+const INVENTORY_QUALIFIER_WORDS = new Set([
+  "smoked", "fresh", "frozen", "chilled", "raw", "cooked", "boiled", "baked", "grilled",
+  "sliced", "chopped", "whole", "fillet", "filet", "pack", "packed", "plain", "natural",
+  "копчений", "копчена", "копчене", "свіжий", "свіжа", "свіже", "заморожений", "заморожена",
+  "заморожене", "охолоджений", "охолоджена", "варений", "варена", "варене", "смажений",
+  "смажена", "печений", "печена", "нарізаний", "нарізана", "цілий", "ціла", "філе",
+  "звичайний", "звичайна", "звичайне", "натуральний", "натуральна", "натуральне",
+].map(foldInventoryWord));
+const INVENTORY_SCRIPT_LANGUAGES = ["uk", "ru", "bg", "sr", "el", "he", "ar", "zh", "ja", "ko", "th", "hi"];
+
+function cleanInventoryName(raw) {
+  let name = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!name) return "";
+  // "salmon / trout" and "salmon or trout" are the model hedging between two guesses.
+  name = name.split(/\s*\/\s*|\s+(?:or|або|чи|или)\s+/i)[0];
+  // Drop "(maybe)" but keep an amount like "(1 l)".
+  name = name.replace(/\((?![^)]*\d)[^)]*\)/g, " ");
+  name = name.replace(/[?¿!*~]+/g, " ").replace(/\s+/g, " ").trim();
+  let previous = "";
+  while (name !== previous) {
+    previous = name;
+    name = name.replace(INVENTORY_HEDGE_PREFIX, "");
+  }
+  name = name.replace(/^[\s,.;:—–-]+/, "").replace(/[\s,.;:—–-]+$/, "").trim();
+  // Stripping a hedge ("можливо сир") would otherwise leave a lowercase name in the list.
+  return name ? name[0].toLocaleUpperCase() + name.slice(1) : name;
+}
+
+function isNonFoodInventoryName(name) {
+  return INVENTORY_NON_FOOD_NAMES.has(foldInventoryWord(name));
+}
+
+function inventoryNameTokens(name) {
+  return foldInventoryWord(name)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+}
+
+function inventoryItemKey(name) {
+  return inventoryNameTokens(name).sort().join(" ");
+}
+
+// "smoked salmon" and "salmon" are the same product on a shelf; "coconut milk" and "milk" are not,
+// so only a known preparation word may be dropped when matching.
+function isSameInventoryProduct(left, right) {
+  const leftTokens = inventoryNameTokens(left);
+  const rightTokens = inventoryNameTokens(right);
+  if (!leftTokens.length || !rightTokens.length) return false;
+  const [shorter, longer] =
+    leftTokens.length <= rightTokens.length ? [leftTokens, rightTokens] : [rightTokens, leftTokens];
+  const longerSet = new Set(longer);
+  if (!shorter.every((token) => longerSet.has(token))) return false;
+  const shorterSet = new Set(shorter);
+  return longer.every((token) => shorterSet.has(token) || INVENTORY_QUALIFIER_WORDS.has(token));
+}
+
+function dedupeInventoryItems(items) {
+  const kept = [];
+  const keys = new Set();
+  for (const item of items) {
+    const key = inventoryItemKey(item.name);
+    const existing = keys.has(key)
+      ? kept.find((candidate) => inventoryItemKey(candidate.name) === key)
+      : kept.find((candidate) => isSameInventoryProduct(candidate.name, item.name));
+    if (existing) {
+      if (existing.grams == null && item.grams != null) existing.grams = item.grams;
+      if (existing.milliliters == null && item.milliliters != null) existing.milliliters = item.milliliters;
+      if (!existing.quantity && item.quantity) existing.quantity = item.quantity;
+      continue;
+    }
+    keys.add(key);
+    kept.push(item);
+  }
+  return kept;
+}
+
+// One identical weight on every product is the model filling the field in, not a measurement.
+function stripDefaultInventoryAmounts(items) {
+  if (items.length < 3) return items;
+  const grams = items.map((item) => item.grams);
+  if (grams.every((value) => value != null) && new Set(grams).size === 1) {
+    return items.map((item) => ({ ...item, grams: null }));
+  }
+  return items;
+}
+
+async function localizeInventoryNames(env, items, language) {
+  if (!env?.OPENAI_API_KEY || !INVENTORY_SCRIPT_LANGUAGES.includes(language)) return items;
+  const foreign = [...new Set(
+    items.map((item) => item.name).filter((name) => !isAlreadyInLanguage(name, language))
+  )];
+  if (!foreign.length) return items;
+  const map = await withTimeout(translateFoodDisplayTexts(env, foreign, language), 6000, null);
+  if (!map) return items;
+  return items.map((item) => {
+    const translated = String(map[item.name] || "").trim();
+    return translated && isAlreadyInLanguage(translated, language)
+      ? { ...item, name: translated }
+      : item;
+  });
+}
+
+async function sanitizeInventoryIngredients(env, ingredients, locale) {
+  const cleaned = [];
+  for (const item of ingredients || []) {
+    const name = cleanInventoryName(item?.name);
+    if (!name || name.length > INVENTORY_MAX_NAME_LENGTH) continue;
+    if (isNonFoodInventoryName(name)) continue;
+    if (inventoryNameTokens(name).length > INVENTORY_MAX_NAME_WORDS) continue;
+    cleaned.push({ ...item, name });
+  }
+  const localized = await localizeInventoryNames(env, cleaned, localeLanguage(locale));
+  return stripDefaultInventoryAmounts(dedupeInventoryItems(localized)).slice(0, INVENTORY_MAX_ITEMS);
+}
+
+const RECIPE_CREATE_CACHE_VERSION = "v4";
+const RECIPE_CREATE_MAX_INGREDIENTS = 20;
+const RECIPE_CREATE_CATALOG_CANDIDATES = 4;
+const RECIPE_CREATE_CATALOG_TIMEOUT_MS = 10000;
+const RECIPE_CREATE_AI_TIMEOUT_MS = 25000;
+const RECIPE_CREATE_STAPLES = ["water", "salt", "pepper", "oil"];
+const RECIPE_CREATE_DISH_TYPES = {
+  breakfast: ["breakfast", "brunch", "morning meal"],
+  "main course": ["main course", "main dish", "lunch", "dinner"],
+  snack: ["snack", "appetizer", "fingerfood", "starter", "antipasti", "antipasto", "hor d'oeuvre"],
+};
+const RECIPE_CREATE_ASIAN_CUISINES = ["asian", "chinese", "japanese", "korean", "thai", "vietnamese", "indian"];
+const RECIPE_CREATE_STAPLE_PATTERN = new RegExp(
+  "(?:^|[^\\p{L}])(?:" +
+    [
+      "water", "ice", "вода", "води", "воду", "воді", "водою", "лід", "льоду",
+      "salt", "sea salt", "kosher salt", "сіль", "солі", "сіллю", "соль",
+      "pepper", "black pepper", "ground pepper", "чорний перець", "чорного перцю", "мелений перець",
+      "меленого перцю", "перець чорний", "перець мелений",
+      "oil", "olive oil", "vegetable oil", "canola oil", "sunflower oil", "cooking oil", "cooking spray",
+      "олія", "олії", "олією", "олію",
+    ].join("|") +
+    ")(?:$|[^\\p{L}])",
+  "u"
+);
+// A bell or chili pepper, or a flavoured oil, is a real ingredient rather than seasoning.
+const RECIPE_CREATE_NOT_STAPLE = /bell|red pepper|green pepper|yellow pepper|chil|jalap|sweet|sesame|truffle|coconut|болгарськ|солодк|гостр|чилі|кунжут|кокос/u;
+
+function recipeCreateInput(body) {
+  const text = (value) => (typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "");
+  const positive = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? Math.round(number) : null;
+  };
+  const seen = new Set();
+  const ingredients = (Array.isArray(body?.ingredients) ? body.ingredients : [])
+    .map((value) => text(value).slice(0, 60))
+    .filter((value) => value && !seen.has(value.toLowerCase()) && seen.add(value.toLowerCase()))
+    .slice(0, RECIPE_CREATE_MAX_INGREDIENTS);
+  return {
+    ingredients,
+    type: text(body?.type).toLowerCase(),
+    cuisine: text(body?.cuisine).toLowerCase(),
+    diet: text(body?.diet).toLowerCase(),
+    maxReadyTime: positive(body?.maxReadyTime),
+    maxCalories: positive(body?.maxCalories),
+    details: text(body?.details).slice(0, 300),
+    locale: text(body?.locale) || "en",
+  };
+}
+
+async function recipeCreateStorageKey(input) {
+  const key = JSON.stringify({
+    ...input,
+    ingredients: input.ingredients.map((value) => value.toLowerCase()).sort(),
+  });
+  return `recipe-create/${RECIPE_CREATE_CACHE_VERSION}/${await sha256Hex(key)}`;
+}
+
+/**
+ * Builds one recipe from what the user actually has. A catalog recipe that needs nothing beyond
+ * their products (and water, salt, pepper, oil) wins because it carries a real photo and measured
+ * nutrition; otherwise the AI writes one from the same list. Both run at once so the fallback does
+ * not add its latency to the wait.
+ */
+async function createRecipeFromIngredients(env, ctx, origin, input) {
+  // Created recipes are kept for good: R2 holds every one, the edge cache only makes repeats fast.
+  const storageKey = await recipeCreateStorageKey(input);
+  const stored = await withTimeout(recipeCacheGetJSON(env, storageKey), 1500, null);
+  if (stored?.recipe) return { ...stored, cached: true };
+
+  const controller = new AbortController();
+  const generated = env.OPENAI_API_KEY
+    ? aiRecipeFromIngredients(env, input, controller.signal).catch(() => null)
+    : Promise.resolve(null);
+  const catalogId = env.SPOONACULAR_API_KEY
+    ? await withTimeout(catalogRecipeIdFromIngredients(env, ctx, input), RECIPE_CREATE_CATALOG_TIMEOUT_MS, null)
+    : null;
+
+  let result = null;
+  if (catalogId) {
+    const recipe = await catalogRecipeInformation(env, ctx, catalogId, input.locale);
+    if (recipe && catalogRecipeIsComplete(recipe)) {
+      controller.abort();
+      result = { source: "catalog", recipe };
+    }
+  }
+  if (!result) {
+    const recipe = await generated;
+    if (recipe) {
+      recipe.image = (await prepareAssistantFoodImage(env, origin, recipe.title).catch(() => null))
+        || (await withTimeout(findFallbackDishImageURL(env, ctx, recipe.title), 6000, null));
+      if (recipe.image) result = { source: "ai", recipe };
+    }
+  }
+  if (!result) return { error: "recipe_unavailable" };
+
+  const saving = recipeCachePutJSON(env, storageKey, result).catch(() => null);
+  if (ctx?.waitUntil) ctx.waitUntil(saving);
+  else await saving;
+  return { ...result, cached: false };
+}
+
+async function catalogRecipeIdFromIngredients(env, ctx, input) {
+  const search = new URL("https://bity.internal/v1/spoonacular/pantry/search");
+  search.searchParams.set("ingredients", input.ingredients.join(","));
+  search.searchParams.set("number", "20");
+  search.searchParams.set("locale", input.locale);
+  search.searchParams.set("lite", "1");
+  const [response, englishNames] = await Promise.all([
+    handleSpoonacularProxy(search, env, ctx),
+    Promise.all(input.ingredients.map((name) => englishFoodSearchQuery(env, name, input.locale))),
+  ]);
+  if (!response?.ok) return null;
+  const data = await response.json().catch(() => null);
+  // ignorePantry already discounts staples; zero missed means the dish needs nothing else.
+  const candidates = (Array.isArray(data?.results) ? data.results : [])
+    .filter((item) => item?.id && Number(item.missedIngredientCount) === 0)
+    .slice(0, RECIPE_CREATE_CATALOG_CANDIDATES);
+  if (!candidates.length) return null;
+  const allowed = [...input.ingredients, ...englishNames.filter(Boolean)];
+  const details = await Promise.all(
+    candidates.map((item) => catalogRecipeInformation(env, ctx, item.id, "en"))
+  );
+  return details.find((recipe) => recipe && catalogRecipeFits(recipe, input, allowed))?.id || null;
+}
+
+async function catalogRecipeInformation(env, ctx, id, locale) {
+  const url = new URL(`https://bity.internal/v1/spoonacular/recipes/${id}`);
+  url.searchParams.set("locale", locale || "en");
+  const response = await handleSpoonacularProxy(url, env, ctx).catch(() => null);
+  if (!response?.ok) return null;
+  return response.json().catch(() => null);
+}
+
+function recipeNutrients(recipe) {
+  return new Map(
+    (recipe?.nutrition?.nutrients || []).map((nutrient) => [
+      String(nutrient?.name || "").toLowerCase(),
+      Number(nutrient?.amount),
+    ])
+  );
+}
+
+function catalogRecipeIsComplete(recipe) {
+  if (!isDisplayableRecipeImage(recipe?.image)) return false;
+  const steps = (recipe?.analyzedInstructions || [])
+    .flatMap((block) => block?.steps || [])
+    .filter((step) => String(step?.step || "").trim());
+  if (steps.length < 2 || !(recipe?.extendedIngredients || []).length) return false;
+  const nutrients = recipeNutrients(recipe);
+  return nutrients.get("calories") > 0
+    && ["protein", "carbohydrates", "fat"].every((name) => Number.isFinite(nutrients.get(name)));
+}
+
+function catalogRecipeFits(recipe, input, allowedNames) {
+  if (!catalogRecipeIsComplete(recipe)) return false;
+  const calories = recipeNutrients(recipe).get("calories");
+  if (input.maxCalories && calories > input.maxCalories) return false;
+  if (input.maxReadyTime && Number(recipe.readyInMinutes) > input.maxReadyTime) return false;
+  if (input.type) {
+    const accepted = input.type.split(",").flatMap((type) => RECIPE_CREATE_DISH_TYPES[type.trim()] || [type.trim()]);
+    if (!(recipe.dishTypes || []).some((type) => accepted.includes(String(type).toLowerCase()))) return false;
+  }
+  if (input.diet === "vegetarian" && recipe.vegetarian !== true) return false;
+  if (input.diet === "vegan" && recipe.vegan !== true) return false;
+  if (input.cuisine) {
+    const wanted = input.cuisine === "asian" ? RECIPE_CREATE_ASIAN_CUISINES : [input.cuisine];
+    if (!(recipe.cuisines || []).some((cuisine) => wanted.includes(String(cuisine).toLowerCase()))) return false;
+  }
+  // Spoonacular's pantry list is wider than ours (butter, flour, sugar), so check every ingredient.
+  return (recipe.extendedIngredients || []).every((ingredient) =>
+    recipeIngredientAllowed(ingredient?.nameClean || ingredient?.name || "", allowedNames)
+  );
+}
+
+function isRecipeStaple(name) {
+  const folded = foldInventoryWord(name);
+  return RECIPE_CREATE_STAPLE_PATTERN.test(folded) && !RECIPE_CREATE_NOT_STAPLE.test(folded);
+}
+
+function ingredientStemsMatch(left, right) {
+  const length = Math.min(left.length, right.length);
+  if (length < 3) return left === right;
+  const stem = Math.max(3, length - 2);
+  return left.slice(0, stem) === right.slice(0, stem);
+}
+
+function recipeIngredientAllowed(name, allowedNames) {
+  const folded = foldInventoryWord(name);
+  if (!folded) return false;
+  if (isRecipeStaple(folded)) return true;
+  const tokens = folded.split(/[^\p{L}\p{N}]+/u).filter((token) => token.length >= 3);
+  return allowedNames.some((allowed) => {
+    const key = foldInventoryWord(allowed);
+    if (!key) return false;
+    if (folded.includes(key) || key.includes(folded)) return true;
+    const allowedTokens = key.split(/[^\p{L}\p{N}]+/u).filter((token) => token.length >= 3);
+    // "eggs"/"egg" and "яйця"/"яйце" differ only by an inflected ending.
+    return tokens.some((token) => allowedTokens.some((other) => ingredientStemsMatch(token, other)));
+  });
+}
+
+function recipeCreateInstructions(language) {
+  return [
+    `You are a chef writing one home recipe for a nutrition app. Write every text field in ${language}.`,
+    `Use ONLY ingredients from the user's list; a subset is fine. The only extras allowed are water, salt, black pepper and cooking oil. Never add anything else: no other vegetables, fruit, spices, herbs, sauces, dairy, bread or garnish.`,
+    `Follow the requested meal type, cuisine, diet, time limit and calorie limit per serving whenever they are given.`,
+    `The title is a real dish name people cook, never a list of ingredients and never a how-to headline.`,
+    `Return JSON {"title": string, "summary": one sentence, "servings": integer, "readyInMinutes": integer, "calories": integer per serving, "protein": grams per serving, "carbs": grams per serving, "fats": grams per serving, "fiber": grams per serving, "sugar": grams per serving, "sodium": milligrams per serving, "ingredients": [{"from": the exact item from the user's list, or "water" | "salt" | "pepper" | "oil", "name": that ingredient's name in ${language}, "amount": number, "unit": "g" | "ml" | "pcs" | "tbsp" | "tsp"}], "steps": [string]}.`,
+    `3 to 8 short steps, one action each. Nutrition must be consistent with the amounts.`,
+  ].join(" ");
+}
+
+function recipeCreateModel(env) {
+  const configured = String(env.OPENAI_RECIPE_MODEL || env.OPENAI_MODEL || "").trim();
+  // Structured JSON goes through chat completions, which GPT-6 models do not serve.
+  return configured && !/^gpt-6/i.test(configured) ? configured : DEFAULT_MODEL;
+}
+
+async function requestRecipeJSON(env, messages, signal) {
+  const model = recipeCreateModel(env);
+  const body = { model, messages, response_format: { type: "json_object" } };
+  if (/^gpt-5/i.test(model)) body.reasoning_effort = /^gpt-5-/i.test(model) ? "minimal" : "low";
+  const timeout = AbortSignal.timeout(RECIPE_CREATE_AI_TIMEOUT_MS);
+  const response = await fetch(`${OPENAI_BASE}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: signal && typeof AbortSignal.any === "function" ? AbortSignal.any([signal, timeout]) : timeout,
+  });
+  if (!response.ok) return null;
+  const data = await response.json().catch(() => null);
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== "string") return null;
+  try {
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+// The app converts grams and millilitres itself; counts and spoons reach the screen as written.
+const RECIPE_CREATE_UNIT_NAMES = {
+  uk: { pcs: "шт", tbsp: "ст. л.", tsp: "ч. л." },
+  ru: { pcs: "шт", tbsp: "ст. л.", tsp: "ч. л." },
+};
+
+function localizedRecipeUnit(unit, locale) {
+  const key = String(unit || "").trim().toLowerCase();
+  return RECIPE_CREATE_UNIT_NAMES[localeLanguage(locale)]?.[key] || unit;
+}
+
+function formatRecipeAmount(value) {
+  return Number.isInteger(value) ? String(value) : String(Math.round(value * 10) / 10);
+}
+
+function normalizeGeneratedRecipe(raw, input) {
+  const text = (value) => (typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "");
+  const number = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : NaN;
+  };
+  const title = text(raw?.title);
+  const steps = (Array.isArray(raw?.steps) ? raw.steps : []).map(text).filter(Boolean).slice(0, 12);
+  const ingredients = (Array.isArray(raw?.ingredients) ? raw.ingredients : [])
+    .map((item) => ({
+      from: text(item?.from),
+      name: text(item?.name) || text(item?.from),
+      amount: number(item?.amount),
+      unit: localizedRecipeUnit(text(item?.unit), input.locale),
+    }))
+    .filter((item) => item.name);
+  const calories = number(raw?.calories);
+  const macros = [number(raw?.protein), number(raw?.carbs), number(raw?.fats)];
+  if (!title || steps.length < 2 || !ingredients.length || !(calories > 0) || !macros.every((value) => value >= 0)) {
+    return null;
+  }
+  const listed = new Set(input.ingredients.map((value) => value.toLowerCase()));
+  const isStaple = (item) => RECIPE_CREATE_STAPLES.includes(item.from.toLowerCase()) || isRecipeStaple(item.name);
+  // The model often names the product in another form than the user typed it ("огірок" for
+  // "огірки", "Tomato" for "tomatoes"), so a product is recognised by its stem, not only verbatim.
+  const isUserProduct = (item) => {
+    const source = item.from.toLowerCase();
+    if (source && listed.has(source)) return true;
+    return [item.from, item.name].some((name) => name && !isRecipeStaple(name)
+      && recipeIngredientAllowed(name, input.ingredients));
+  };
+  const isAllowed = (item) => isStaple(item) || isUserProduct(item);
+  const foreign = ingredients.filter((item) => !isAllowed(item)).map((item) => item.from || item.name);
+  const build = (list) => ({
+    id: 0,
+    title,
+    summary: text(raw?.summary),
+    servings: Math.max(1, Math.round(number(raw?.servings)) || 1),
+    readyInMinutes: Math.max(1, Math.round(number(raw?.readyInMinutes)) || 20),
+    sourceName: "Bity AI",
+    dishTypes: input.type ? input.type.split(",").map((type) => type.trim()).filter(Boolean) : [],
+    vegetarian: input.diet === "vegetarian" || input.diet === "vegan",
+    vegan: input.diet === "vegan",
+    nutrition: {
+      nutrients: [
+        { name: "Calories", amount: Math.round(calories), unit: "kcal" },
+        { name: "Protein", amount: Math.round(macros[0] * 10) / 10, unit: "g" },
+        { name: "Carbohydrates", amount: Math.round(macros[1] * 10) / 10, unit: "g" },
+        { name: "Fat", amount: Math.round(macros[2] * 10) / 10, unit: "g" },
+        // Fiber, sugar and sodium go along when the model gave them, so the app can count them too.
+        ...[["Fiber", raw?.fiber, "g"], ["Sugar", raw?.sugar, "g"], ["Sodium", raw?.sodium, "mg"]]
+          .filter(([, value]) => Number.isFinite(number(value)) && number(value) >= 0 && value != null)
+          .map(([name, value, unit]) => ({ name, amount: Math.round(number(value) * 10) / 10, unit })),
+      ],
+    },
+    extendedIngredients: list.map((item) => {
+      const amount = item.amount > 0 ? item.amount : null;
+      return {
+        id: null,
+        name: item.name,
+        amount,
+        unit: item.unit || null,
+        original: [item.name, amount ? formatRecipeAmount(amount) : "", item.unit].filter(Boolean).join(" "),
+      };
+    }),
+    analyzedInstructions: [{ steps: steps.map((step, index) => ({ number: index + 1, step })) }],
+  });
+  const kept = ingredients.filter((item) => isAllowed(item));
+  // Water, salt, pepper and oil alone are not a recipe from the user's products.
+  const usesProducts = (list) => list.some((item) => isUserProduct(item) && !isStaple(item));
+  return {
+    foreign,
+    recipe: usesProducts(ingredients) ? build(ingredients) : null,
+    withoutForeign: usesProducts(kept) ? build(kept) : null,
+  };
+}
+
+async function aiRecipeFromIngredients(env, input, signal) {
+  const request = {
+    ingredients: input.ingredients,
+    mealType: input.type || null,
+    cuisine: input.cuisine || null,
+    diet: input.diet || null,
+    maxReadyTimeMinutes: input.maxReadyTime,
+    maxCaloriesPerServing: input.maxCalories,
+    wishes: input.details || null,
+  };
+  const messages = [
+    { role: "system", content: recipeCreateInstructions(languageNameFromLocale(input.locale)) },
+    { role: "user", content: JSON.stringify(request) },
+  ];
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const raw = await requestRecipeJSON(env, messages, signal);
+    const normalized = raw ? normalizeGeneratedRecipe(raw, input) : null;
+    if (!normalized) continue;
+    if (!normalized.foreign.length && normalized.recipe) return normalized.recipe;
+    if (attempt === 1) return normalized.withoutForeign;
+    messages.push(
+      { role: "assistant", content: JSON.stringify(raw) },
+      {
+        role: "user",
+        content: normalized.foreign.length
+          ? `These are not in my list: ${normalized.foreign.join(", ")}. Rewrite the recipe with only my ingredients plus water, salt, black pepper or oil.`
+          : `The recipe must be cooked from my ingredients: ${input.ingredients.join(", ")}. Rewrite it so they are in the ingredient list.`,
+      }
+    );
+  }
+  return null;
 }
 
 async function withTimeout(promise, ms, fallback) {
@@ -5717,16 +6380,36 @@ function alreadyHasSearchRecipe(list, item) {
   return (list || []).some((entry) => searchRecipeKey(entry) === key);
 }
 
+const RECIPE_FILTER_PARAMS = ["type", "cuisine", "diet", "maxReadyTime", "maxCalories", "excludeIngredients"];
+// Spoonacular complexSearch rejects offsets above 900.
+const RECIPE_SEARCH_MAX_OFFSET = 900;
+const RECIPE_SEARCH_PAGE_SIZE = 10;
+
+function recipeSearchFilterParams(filters) {
+  const params = {};
+  if (!filters || typeof filters !== "object") return params;
+  for (const key of RECIPE_FILTER_PARAMS) {
+    const value = String(filters[key] ?? "").trim().slice(0, 200);
+    if (value) params[key] = value;
+  }
+  return params;
+}
+
 async function searchDishAllSources(input) {
   const query = String(input.query || "").trim();
-  if (!query) return { items: [] };
+  const filters = recipeSearchFilterParams(input.filters);
+  const hasFilters = Object.keys(filters).length > 0;
+  if (!query && !hasFilters) return { items: [] };
   const locale = input.locale || "";
   const scope = String(input.scope || "all").toLowerCase();
+  const offset = Math.min(RECIPE_SEARCH_MAX_OFFSET, Math.max(0, Math.floor(Number(input.offset) || 0)));
   const wantRecipes = scope !== "foods";
-  const wantFoods = scope !== "recipes";
+  const wantFoods = scope !== "recipes" && Boolean(query) && offset === 0;
   const recipeSearchParams = {
+    ...filters,
     query,
-    number: "10",
+    number: String(RECIPE_SEARCH_PAGE_SIZE),
+    offset: offset ? String(offset) : "",
     locale,
     lite: "1",
   };
@@ -5782,9 +6465,19 @@ async function searchDishAllSources(input) {
     } catch {
     }
   }
-  return {
+  const result = {
     items: [...recipes, ...(Array.isArray(foodItems) ? foodItems : [])],
   };
+  if (wantRecipes) {
+    const pageCount = Array.isArray(recipeJSON?.results) ? recipeJSON.results.length : 0;
+    const total = Number(recipeJSON?.totalResults);
+    result.nextOffset = offset + pageCount;
+    result.hasMore = pageCount > 0
+      && Number.isFinite(total)
+      && result.nextOffset < total
+      && result.nextOffset <= RECIPE_SEARCH_MAX_OFFSET;
+  }
+  return result;
 }
 
 function settledValue(result, fallback) {

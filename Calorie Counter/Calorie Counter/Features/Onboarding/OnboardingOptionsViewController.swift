@@ -47,7 +47,10 @@ final class OnboardingOptionsViewController: BaseViewController {
         super.viewDidLoad()
         configureChrome()
         buildOptions()
-        FlowScrollLayout.install(in: view, keepingBackgrounds: [backgroundImageView])
+        // The design keeps the question and the button in place: only the list of options moves.
+        if let scroll = ScrollSectionLayout.wrap(cardsStackView) {
+            scroll.bottomAnchor.constraint(equalTo: pageControl.topAnchor, constant: .adaptHeight(-16)).isActive = true
+        }
     }
 
     private func configureChrome() {
@@ -86,16 +89,20 @@ final class OnboardingOptionsViewController: BaseViewController {
 
     @objc
     private func optionTapped(_ sender: OnboardingOptionCardView) {
+        guard !sender.isSelected else { return }
+        Haptics.selection()
         cards.forEach { $0.isSelected = ($0 === sender) }
     }
 
     @objc
     private func backTapped() {
+        Haptics.light()
         onBack?()
     }
 
     @objc
     private func continueTapped() {
+        Haptics.light()
         onContinue?(selectedIndex)
     }
 }
@@ -103,7 +110,7 @@ final class OnboardingOptionsViewController: BaseViewController {
 extension OnboardingOptionsViewController {
     static func goal() -> OnboardingOptionsViewController {
         OnboardingOptionsViewController(content: Content(
-            backgroundImageName: "OnboardingBg",
+            backgroundImageName: "startOnboardingBg",
             title: L10n.tr("onboarding.goal.q.title"),
             subtitle: L10n.tr("onboarding.goal.q.subtitle"),
             options: [
@@ -120,7 +127,7 @@ extension OnboardingOptionsViewController {
 
     static func activity() -> OnboardingOptionsViewController {
         OnboardingOptionsViewController(content: Content(
-            backgroundImageName: "OnboardingBg",
+            backgroundImageName: "startOnboardingBg",
             title: L10n.tr("onboarding.activity.q.title"),
             subtitle: L10n.tr("onboarding.activity.q.subtitle"),
             options: [

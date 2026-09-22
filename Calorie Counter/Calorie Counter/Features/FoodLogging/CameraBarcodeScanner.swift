@@ -5,7 +5,6 @@ import UIKit
 final class CameraBarcodeScanner: NSObject, BarcodeScanning {
     var onBarcodeScanned: ((String) -> Void)?
     var onScanFailed: ((Error) -> Void)?
-    var onStillPhotoCaptured: ((Data) -> Void)?
 
     private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "bity.barcode.scanner.session")
@@ -22,9 +21,9 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
     private var lastInterestRect: CGRect = .zero
     private var lastSubjectFocusAt: Date = .distantPast
     private var subjectAreaObserver: NSObjectProtocol?
-    private var wantsStillFrame = false
-    private var stillCropInPreview: CGRect = .zero
-    private var stillPreviewBounds: CGRect = .zero
+    /// The newest camera frame, kept so a read code can freeze the screen on the frame it came from.
+    private var latestFrame: CVPixelBuffer?
+    private let frameContext = CIContext()
 
     func attachPreview(to view: UIView) {
         let layer = previewLayer ?? AVCaptureVideoPreviewLayer(session: session)
@@ -61,8 +60,9 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
     func setAcceptsScans(_ accepts: Bool) {
         acceptsScans = accepts
         if accepts {
-            lastEmittedCode = nil
-            lastEmittedAt = .distantPast
+            // The code just handled stays in front of the camera; it is read again only after a pause,
+            // so a "not found" does not repeat in a loop while other codes still read at once.
+            lastEmittedAt = Date()
         }
     }
 
@@ -72,24 +72,17 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
         }
     }
 
-    func captureStillPhoto(scanFrameInPreview: CGRect) {
-        let previewBounds = previewLayer?.bounds ?? .zero
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            guard self.session.isRunning else {
-                DispatchQueue.main.async {
-                    self.onScanFailed?(BarcodeScannerError.cameraUnavailable)
+    /// The frame on screen right now, turned upright for the portrait preview.
+    func freezeCurrentFrame(_ completion: @escaping (UIImage?) -> Void) {
+        videoOutputQueue.async { [weak self] in
+            var image: UIImage?
+            if let self, let buffer = self.latestFrame {
+                let frame = CIImage(cvPixelBuffer: buffer)
+                if let cgImage = self.frameContext.createCGImage(frame, from: frame.extent) {
+                    image = UIImage(cgImage: cgImage)
                 }
-                return
             }
-            self.videoOutputQueue.async {
-                self.stillCropInPreview = scanFrameInPreview
-                self.stillPreviewBounds = previewBounds
-                self.wantsStillFrame = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-                self?.finishStillCaptureIfNeeded()
-            }
+            DispatchQueue.main.async { completion(image) }
         }
     }
 
@@ -108,6 +101,7 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
                 self.session.stopRunning()
             }
             self.isRunning = false
+            self.videoOutputQueue.async { self.latestFrame = nil }
         }
     }
 
@@ -177,13 +171,14 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
         }
         session.addOutput(output)
         output.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+        // Only the codes printed on food packs. QR codes and Code 39 on the same pack used to be
+        // read first and ended in "invalid barcode" instead of the product.
         let supported: [AVMetadataObject.ObjectType] = [
-            .ean8,
             .ean13,
+            .ean8,
             .upce,
+            .itf14,
             .code128,
-            .code39,
-            .qr,
         ]
         output.metadataObjectTypes = supported.filter { output.availableMetadataObjectTypes.contains($0) }
         applyPortraitRotation(output.connection(with: .video))
@@ -236,15 +231,6 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
         }
     }
 
-    private func finishStillCaptureIfNeeded() {
-        videoOutputQueue.async { [weak self] in
-            guard let self, self.wantsStillFrame else { return }
-            self.wantsStillFrame = false
-            DispatchQueue.main.async {
-                self.emitPreviewSnapshot(cropInPreview: self.stillCropInPreview)
-            }
-        }
-    }
 
     private func applyPortraitRotation(_ connection: AVCaptureConnection?) {
         guard let connection, connection.isVideoRotationAngleSupported(90) else { return }
@@ -266,52 +252,7 @@ final class CameraBarcodeScanner: NSObject, BarcodeScanning {
         }
     }
 
-    private func emitPreviewSnapshot(cropInPreview: CGRect) {
-        guard let previewLayer, previewLayer.bounds.width > 1, previewLayer.bounds.height > 1 else {
-            onScanFailed?(BarcodeScannerError.cameraUnavailable)
-            return
-        }
-        let renderer = UIGraphicsImageRenderer(bounds: previewLayer.bounds)
-        let image = renderer.image { context in
-            previewLayer.render(in: context.cgContext)
-        }
-        let cropped = crop(image, to: cropInPreview, in: previewLayer.bounds) ?? image
-        guard let data = cropped.jpegData(compressionQuality: 0.95), !data.isEmpty else {
-            onScanFailed?(BarcodeScannerError.cameraUnavailable)
-            return
-        }
-        onStillPhotoCaptured?(data)
-    }
 
-    private func crop(_ image: UIImage, to rect: CGRect, in previewBounds: CGRect) -> UIImage? {
-        guard rect.width > 8, rect.height > 8, previewBounds.width > 1, previewBounds.height > 1 else {
-            return image
-        }
-        let scaleX = image.size.width / previewBounds.width
-        let scaleY = image.size.height / previewBounds.height
-        let cropRect = CGRect(
-            x: rect.minX * scaleX,
-            y: rect.minY * scaleY,
-            width: rect.width * scaleX,
-            height: rect.height * scaleY
-        ).integral.intersection(CGRect(origin: .zero, size: image.size))
-        guard cropRect.width > 8, cropRect.height > 8, let cgImage = image.cgImage else {
-            return image
-        }
-        let pixelScale = image.scale
-        let pixelRect = CGRect(
-            x: cropRect.minX * pixelScale,
-            y: cropRect.minY * pixelScale,
-            width: cropRect.width * pixelScale,
-            height: cropRect.height * pixelScale
-        ).integral.intersection(
-            CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height)
-        )
-        guard pixelRect.width > 8, pixelRect.height > 8, let cropped = cgImage.cropping(to: pixelRect) else {
-            return image
-        }
-        return UIImage(cgImage: cropped, scale: image.scale, orientation: image.imageOrientation)
-    }
 }
 
 extension CameraBarcodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -320,26 +261,7 @@ extension CameraBarcodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
-        guard wantsStillFrame, let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        wantsStillFrame = false
-        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let context = CIContext(options: [.useSoftwareRenderer: false])
-        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
-            DispatchQueue.main.async { [weak self] in
-                self?.emitPreviewSnapshot(cropInPreview: self?.stillCropInPreview ?? .zero)
-            }
-            return
-        }
-        let image = UIImage(cgImage: cgImage, scale: 1, orientation: .up)
-        guard let data = image.jpegData(compressionQuality: 0.92), !data.isEmpty else {
-            DispatchQueue.main.async { [weak self] in
-                self?.onScanFailed?(BarcodeScannerError.cameraUnavailable)
-            }
-            return
-        }
-        DispatchQueue.main.async { [weak self] in
-            self?.onStillPhotoCaptured?(data)
-        }
+        latestFrame = CMSampleBufferGetImageBuffer(sampleBuffer)
     }
 }
 
@@ -350,14 +272,19 @@ extension CameraBarcodeScanner: AVCaptureMetadataOutputObjectsDelegate {
         from connection: AVCaptureConnection
     ) {
         guard acceptsScans else { return }
-        guard
-            let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
-            let value = object.stringValue,
-            !value.isEmpty
-        else { return }
+        // A partial or damaged read fails its check digit and is skipped; the next frame usually
+        // reads it whole. Of several codes, the one nearest the middle of the frame wins.
+        let codes = metadataObjects
+            .compactMap { $0 as? AVMetadataMachineReadableCodeObject }
+            .filter { $0.stringValue.map(BarcodeNormalization.isProductCode) ?? false }
+        let center = CGPoint(x: 0.5, y: 0.5)
+        guard let value = codes.min(by: {
+            hypot($0.bounds.midX - center.x, $0.bounds.midY - center.y)
+                < hypot($1.bounds.midX - center.x, $1.bounds.midY - center.y)
+        })?.stringValue else { return }
 
         let now = Date()
-        if value == lastEmittedCode, now.timeIntervalSince(lastEmittedAt) < 2.0 {
+        if value == lastEmittedCode, now.timeIntervalSince(lastEmittedAt) < 2.5 {
             return
         }
         lastEmittedCode = value

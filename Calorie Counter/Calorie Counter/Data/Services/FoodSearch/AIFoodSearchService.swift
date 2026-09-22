@@ -5,6 +5,7 @@ protocol AIFoodSearching {
     func classifyFoods(_ products: [FoodProduct]) async throws -> [FoodProduct]
     func matchingRecipe(title: String, candidates: [Recipe]) async throws -> Recipe?
     func searchRecipes(query: String) async throws -> [Recipe]
+    func searchRecipePage(query: String, parameters: RecipeSearchParameters, offset: Int) async throws -> RecipeSectionPage
     func fetchDefaultCatalog() async throws -> [String: [FoodProduct]]
     func fetchCatalogSection(id: String) async throws -> [FoodProduct]
     func fetchCatalogSectionPage(id: String, offset: Int, limit: Int) async throws -> FoodSearchCatalogPage
@@ -14,10 +15,19 @@ protocol AIFoodSearching {
         source: String,
         kind: String
     ) async throws -> FoodProduct?
+    func createRecipe(_ request: RecipeCreationRequest) async throws -> Recipe?
 }
 
 extension AIFoodSearching {
     func matchingRecipe(title: String, candidates: [Recipe]) async throws -> Recipe? { nil }
+
+    func createRecipe(_ request: RecipeCreationRequest) async throws -> Recipe? { nil }
+
+    func searchRecipePage(query: String, parameters: RecipeSearchParameters, offset: Int) async throws -> RecipeSectionPage {
+        guard offset == 0 else { return RecipeSectionPage(recipes: [], nextOffset: offset, hasMore: false) }
+        let recipes = try await searchRecipes(query: query)
+        return RecipeSectionPage(recipes: recipes, nextOffset: recipes.count, hasMore: false)
+    }
 
     func classifyFoods(_ products: [FoodProduct]) async throws -> [FoodProduct] {
         try products.map { product in
@@ -103,10 +113,35 @@ struct AIFoodSearchRequest: Encodable {
     let query: String
     let locale: String
     let scope: String
+    var filters: RecipeSearchParameters?
+    var offset: Int?
+}
+
+private struct AIFoodSearchPageInfo: Decodable {
+    let nextOffset: Int?
+    let hasMore: Bool?
 }
 
 struct AIFoodSearchResponse: Decodable {
     let items: [AIFoodSearchItem]?
+    let error: String?
+}
+
+/// What the create-recipe form sends: the user's own products and catalog-vocabulary filters.
+struct RecipeCreationRequest: Encodable, Equatable {
+    var ingredients: [String]
+    var type: String?
+    var cuisine: String?
+    var diet: String?
+    var maxReadyTime: Int?
+    var maxCalories: Int?
+    var details: String?
+    var locale: String
+}
+
+struct RecipeCreationResponse: Decodable {
+    let source: String?
+    let recipe: SpoonacularRecipeInformation?
     let error: String?
 }
 
@@ -260,6 +295,19 @@ final class AIFoodSearchService: AIFoodSearching {
         try await fetchItems(query: query, scope: "recipes").compactMap(Self.mapRecipe)
     }
 
+    func searchRecipePage(query: String, parameters: RecipeSearchParameters, offset: Int) async throws -> RecipeSectionPage {
+        guard let data = try await fetchData(query: query, scope: "recipes", filters: parameters, offset: offset) else {
+            return RecipeSectionPage(recipes: [], nextOffset: offset, hasMore: false)
+        }
+        let recipes = Self.decodeItems(from: data, decoder: decoder).compactMap(Self.mapRecipe)
+        let info = try? decoder.decode(AIFoodSearchPageInfo.self, from: data)
+        return RecipeSectionPage(
+            recipes: recipes,
+            nextOffset: info?.nextOffset ?? offset + recipes.count,
+            hasMore: info?.hasMore ?? false
+        )
+    }
+
     func matchingRecipe(title: String, candidates: [Recipe]) async throws -> Recipe? {
         guard !candidates.isEmpty else { return nil }
         guard let url = URL(string: "/v1/food/match-recipe", relativeTo: configuration.baseURL)?.absoluteURL else {
@@ -279,12 +327,7 @@ final class AIFoodSearchService: AIFoodSearching {
         request.timeoutInterval = 30
         if let key = configuration.apiKey, !key.isEmpty { request.setValue(key, forHTTPHeaderField: "x-api-key") }
         request.httpBody = try encoder.encode(AIFoodRecipeMatchRequest(title: title, locale: Locale.deviceIdentifier, candidates: mapped))
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw FoodPhotoAnalysisError.invalidResponse }
-        guard (200...299).contains(http.statusCode) else {
-            let message = (try? decoder.decode(AIFoodSearchResponse.self, from: data))?.error
-            throw FoodPhotoAnalysisError.analysisFailed(message: message ?? "HTTP \(http.statusCode)")
-        }
+        let data = try await keptData(for: request)
         let decoded = try decoder.decode(AIFoodRecipeMatchResponse.self, from: data)
         guard let matchedID = decoded.externalId else { return nil }
         let matches = candidates.filter { $0.externalId == matchedID }
@@ -313,12 +356,7 @@ final class AIFoodSearchService: AIFoodSearching {
             },
             locale: Locale.deviceIdentifier
         ))
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw FoodPhotoAnalysisError.invalidResponse }
-        guard (200...299).contains(http.statusCode) else {
-            let message = (try? decoder.decode(AIFoodSearchResponse.self, from: data))?.error
-            throw FoodPhotoAnalysisError.analysisFailed(message: message ?? "HTTP \(http.statusCode)")
-        }
+        let data = try await keptData(for: request)
         let decoded = try decoder.decode(AIFoodClassificationResponse.self, from: data)
         guard decoded.items.count == products.count else { throw FoodPhotoAnalysisError.invalidResponse }
         return try products.map { product in
@@ -369,25 +407,51 @@ final class AIFoodSearchService: AIFoodSearching {
             throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
         }
 
-        let data: Data
-        let response: URLResponse
+        let data = try await keptData(for: request) { [decoder] in
+            (try? decoder.decode(AIFoodDetailsResponse.self, from: $0))?.error
+        }
+        let decoded = try? decoder.decode(AIFoodDetailsResponse.self, from: data)
+        guard let item = decoded?.item else { return nil }
+        return Self.mapFood(item)
+    }
+
+    func createRecipe(_ body: RecipeCreationRequest) async throws -> Recipe? {
+        guard !body.ingredients.isEmpty,
+              let url = URL(string: "/v1/recipes/create", relativeTo: configuration.baseURL)?.absoluteURL else {
+            return nil
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("BityiOS/1.0", forHTTPHeaderField: "User-Agent")
+        // The server races the catalog against a generated recipe; the slower branch is the AI one.
+        request.timeoutInterval = 45
+        if let apiKey = configuration.apiKey, !apiKey.isEmpty {
+            request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        }
         do {
-            (data, response) = try await session.data(for: request)
+            request.httpBody = try encoder.encode(body)
         } catch {
             throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
         }
+        // The server keeps every created recipe for the same request, so the kept answer is that recipe.
+        let data = try await keptData(for: request) { [decoder] in
+            (try? decoder.decode(RecipeCreationResponse.self, from: $0))?.error
+        }
+        guard let decoded = try? decoder.decode(RecipeCreationResponse.self, from: data) else { return nil }
+        return Self.createdRecipe(decoded)
+    }
 
-        guard let http = response as? HTTPURLResponse else {
-            throw FoodPhotoAnalysisError.invalidResponse
+    static func createdRecipe(_ response: RecipeCreationResponse) -> Recipe? {
+        guard let information = response.recipe else { return nil }
+        var recipe = SpoonacularMapper.mapInformation(information)
+        if response.source == "ai" {
+            // A generated recipe has no catalog id to reload, so it must never be fetched by one.
+            recipe.externalId = nil
+            recipe.origin = .openAI
+            recipe.hasCompleteNutrition = true
         }
-        let decoded = try? decoder.decode(AIFoodDetailsResponse.self, from: data)
-        if !(200...299).contains(http.statusCode) {
-            throw FoodPhotoAnalysisError.analysisFailed(
-                message: decoded?.error ?? "HTTP \(http.statusCode)"
-            )
-        }
-        guard let item = decoded?.item else { return nil }
-        return Self.mapFood(item)
+        return recipe
     }
 
     func fetchDefaultCatalog() async throws -> [String: [FoodProduct]] {
@@ -409,13 +473,32 @@ final class AIFoodSearchService: AIFoodSearching {
         guard !trimmed.isEmpty else {
             return FoodSearchCatalogPage(products: [], nextOffset: offset, hasMore: false)
         }
-        let data = try await getCatalog(
-            path: "/v1/food/search/catalog/\(trimmed)",
-            queryItems: [
-                URLQueryItem(name: "offset", value: String(max(0, offset))),
-                URLQueryItem(name: "limit", value: String(max(1, limit))),
-            ]
-        )
+        let data: Data
+        do {
+            data = try await getCatalog(
+                path: "/v1/food/search/catalog/\(trimmed)",
+                queryItems: [
+                    URLQueryItem(name: "offset", value: String(max(0, offset))),
+                    URLQueryItem(name: "limit", value: String(max(1, limit))),
+                ]
+            )
+        } catch {
+            // Without a connection a category still opens with the foods the app ships with.
+            guard error.isNoConnection, let bundled = Self.bundledCatalogData() else { throw error }
+            let catalog = Self.decodeCatalog(from: bundled, locale: Locale.deviceIdentifier)
+            // "products" is every grocery at once; the app ships them sorted into their categories.
+            let items = trimmed == "products"
+                ? catalog.keys.sorted().flatMap { catalog[$0] ?? [] }
+                : catalog[trimmed] ?? []
+            guard !items.isEmpty else { throw error }
+            let start = min(max(0, offset), items.count)
+            let page = Array(items[start...].prefix(max(1, limit)))
+            return FoodSearchCatalogPage(
+                products: page,
+                nextOffset: start + page.count,
+                hasMore: start + page.count < items.count
+            )
+        }
         return Self.decodeCatalogPage(from: data, id: trimmed, offset: offset, locale: Locale.deviceIdentifier)
     }
 
@@ -480,6 +563,10 @@ final class AIFoodSearchService: AIFoodSearching {
         let deadline = Date().addingTimeInterval(45)
         for attempt in 0..<3 {
             try Task.checkCancellation()
+            guard NetworkMonitor.shared.isOnline else {
+                lastError = NoConnectionError()
+                break
+            }
             let remaining = deadline.timeIntervalSinceNow
             guard remaining > 0 else { break }
             var attemptRequest = request
@@ -508,6 +595,7 @@ final class AIFoodSearchService: AIFoodSearching {
                         storagePolicy: .allowed
                     ), for: request)
                 }
+                OfflineResponseStore.shared.store(data, for: request)
                 return data
             } catch {
                 if Task.isCancelled || (error as? URLError)?.code == .cancelled {
@@ -529,6 +617,12 @@ final class AIFoodSearchService: AIFoodSearching {
         }
         if let cached, Self.isUsableCatalogCache(cached, allowStale: true) {
             return cached.data
+        }
+        // Older than a day is still better than an empty catalog without a connection. Online, a
+        // failing server keeps its own rules above.
+        if !NetworkMonitor.shared.isOnline,
+           let kept = OfflineResponseStore.shared.data(for: request), Self.isCatalogPayload(kept) {
+            return kept
         }
         throw lastError
     }
@@ -556,8 +650,19 @@ final class AIFoodSearchService: AIFoodSearching {
     }
 
     private func fetchItems(query: String, scope: String) async throws -> [AIFoodSearchItem] {
+        guard let data = try await fetchData(query: query, scope: scope) else { return [] }
+        return Self.decodeItems(from: data, decoder: decoder)
+    }
+
+    private func fetchData(
+        query: String,
+        scope: String,
+        filters: RecipeSearchParameters? = nil,
+        offset: Int = 0
+    ) async throws -> Data? {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.count >= 2 else { return [] }
+        let activeFilters = filters?.isEmpty == false ? filters : nil
+        guard trimmed.count >= 2 || (trimmed.isEmpty && activeFilters != nil) else { return nil }
 
         guard let url = URL(string: "/v1/food/search", relativeTo: configuration.baseURL)?.absoluteURL else {
             throw FoodPhotoAnalysisError.invalidResponse
@@ -575,34 +680,41 @@ final class AIFoodSearchService: AIFoodSearching {
         let body = AIFoodSearchRequest(
             query: trimmed,
             locale: Locale.deviceIdentifier,
-            scope: scope
+            scope: scope,
+            filters: activeFilters,
+            offset: offset > 0 ? offset : nil
         )
         do {
             request.httpBody = try encoder.encode(body)
         } catch {
             throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
         }
+        return try await keptData(for: request)
+    }
 
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
+    /// Sends a read-only request and returns the body of a successful answer. The answer is kept,
+    /// so the same request still has one without a connection.
+    private func keptData(
+        for request: URLRequest,
+        serverMessage: ((Data) -> String?)? = nil
+    ) async throws -> Data {
+        try await OfflineFallback.data(for: request) { [session, decoder] in
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await session.data(for: request)
+            } catch {
+                throw FoodPhotoAnalysisError.transport(message: error.localizedDescription)
+            }
+            guard let http = response as? HTTPURLResponse else {
+                throw FoodPhotoAnalysisError.invalidResponse
+            }
+            guard (200...299).contains(http.statusCode) else {
+                let message = serverMessage?(data) ?? (try? decoder.decode(AIFoodSearchResponse.self, from: data))?.error
+                throw FoodPhotoAnalysisError.analysisFailed(message: message ?? "HTTP \(http.statusCode)")
+            }
+            return data
         }
-
-        guard let http = response as? HTTPURLResponse else {
-            throw FoodPhotoAnalysisError.invalidResponse
-        }
-
-        let items = Self.decodeItems(from: data, decoder: decoder)
-        if !(200...299).contains(http.statusCode) {
-            let message = (try? decoder.decode(AIFoodSearchResponse.self, from: data))?.error
-            throw FoodPhotoAnalysisError.analysisFailed(
-                message: message ?? "HTTP \(http.statusCode)"
-            )
-        }
-        return items
     }
 
     static func decodeCatalogPage(

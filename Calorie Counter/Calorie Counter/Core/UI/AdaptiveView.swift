@@ -80,10 +80,16 @@ final class AdaptiveView: UIView {
         refreshChrome()
     }
 
+    /// Chrome drawn by the owner (a selection pill, a fill) has to follow this view's own layout:
+    /// a view controller's viewDidLayoutSubviews runs before nested views such as the content of a
+    /// scroll view have their final frames.
+    var onLayoutSubviews: (() -> Void)?
+
     override func layoutSubviews() {
         super.layoutSubviews()
         refreshCornerRadius()
         layoutBackdropBlur()
+        onLayoutSubviews?()
         guard bounds != lastGlassBounds else { return }
         lastGlassBounds = bounds
         refreshGlassAndShadow()

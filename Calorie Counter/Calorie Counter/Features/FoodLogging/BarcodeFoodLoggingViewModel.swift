@@ -73,6 +73,7 @@ final class BarcodeFoodLoggingViewModel {
             do {
                 let product = try await lookupBarcodeProductUseCase.execute(barcode: normalized)
                 guard generation == lookupGeneration, !Task.isCancelled else { return }
+                Analytics.tracker.track(.recognized("barcode"))
                 let draft = await makeDraft(from: product)
                 guard generation == lookupGeneration, !Task.isCancelled else { return }
                 statusText.value = L10n.tr("barcode.camera.recognized")
@@ -82,6 +83,7 @@ final class BarcodeFoodLoggingViewModel {
             } catch {
                 guard generation == lookupGeneration, !Task.isCancelled else { return }
                 Analytics.tracker.track(.foodLogFailed(method: "barcode"))
+                Analytics.tracker.track(.recognitionFailed("barcode", error: error))
                 fail(with: error.localizedDescription)
             }
         }

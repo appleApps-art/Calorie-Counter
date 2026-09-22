@@ -1,4 +1,5 @@
 import AmplitudeSwift
+import UserNotifications
 import UIKit
 
 @main
@@ -9,6 +10,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
+        NetworkMonitor.shared.start()
+        UNUserNotificationCenter.current().delegate = NotificationAnalyticsDelegate.shared
         let analytics = AmplitudeAnalyticsService()
         self.analytics = analytics
         Analytics.hub.base = analytics

@@ -22,7 +22,11 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
 
     private let viewModel: RecipesViewModel
     private var isShowingBrowseSkeletons = false
+    private var showsOfflineEmpty = false
+    private var reportedOfflineContext: String?
     private var isShowingSearchSkeletons = false
+    private var renderedGridContent: RecipeGridContent?
+    private var isShowingPaginationSkeletons = false
     private var pulseWaves: [UIView] = []
     private var browseRenderID = 0
     private var gridRenderID = 0
@@ -40,6 +44,9 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(networkChanged), name: NetworkMonitor.didChange, object: nil
+        )
         view.backgroundColor = UIColor { $0.userInterfaceStyle == .dark ? .black : UIColor(red: 231/255, green: 1, blue: 252/255, alpha: 1) }
         view.subviews.compactMap { $0 as? HomeBackgroundView }.forEach { $0.isHidden = true }
         configureChrome()
@@ -75,10 +82,10 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             self?.renderBrowse(sections)
             self?.applyPhase()
         }
-        viewModel.savedRecipes.bind { [weak self] _ in
+        viewModel.visibleSavedRecipes.bind { [weak self] _ in
             self?.applyPhase()
         }
-        viewModel.mealPlans.bind { [weak self] _ in
+        viewModel.visibleMealPlans.bind { [weak self] _ in
             self?.applyPhase()
         }
         viewModel.resultRecipes.bind { [weak self] _ in
@@ -103,6 +110,9 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             self?.applyPhase()
         }
         viewModel.showsEmptyResults.bind { [weak self] _ in
+            self?.applyPhase()
+        }
+        viewModel.isLoadingMoreResults.bind { [weak self] _ in
             self?.applyPhase()
         }
     }
@@ -165,6 +175,7 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
         chipsScroll.delegate = self
         installHeaderChrome()
         scrollView.backgroundColor = .clear
+        scrollView.delegate = self
         scrollView.clipsToBounds = true
         scrollView.contentInsetAdjustmentBehavior = .never
         if #available(iOS 26.0, *) {
@@ -187,6 +198,10 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if scrollView === self.scrollView {
+            loadMoreResultsIfNearBottom()
+            return
+        }
         guard scrollView === chipsScroll else { return }
         OnboardingStyle.applyChatChipsEdgeFade(to: chipsScroll)
     }
@@ -317,7 +332,12 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
     }
 
     private func emptyActionTapped() {
-        if viewModel.selectedTab.value == .mealPlans, !viewModel.showsFilterResults.value {
+        if showsOfflineEmpty {
+            Analytics.tracker.track(.retryTapped(context: "recipes"))
+            viewModel.reloadVisible()
+            return
+        }
+        if viewModel.selectedTab.value == .mealPlans, !viewModel.showsFilterResults.value, !viewModel.isSearchingLocally {
             viewModel.createMealPlanTapped()
         } else {
             viewModel.createRecipeTapped()
@@ -336,6 +356,28 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             titleNumberOfLines: 1
         )
         updateEmptyActionClearance()
+    }
+
+    /// Recipes to browse and search come from the backend; saved recipes and meal plans never need it.
+    private func configureOfflineEmpty() {
+        showsOfflineEmpty = true
+        let context = viewModel.showsFilterResults.value ? "recipes_search" : "recipes_browse"
+        if reportedOfflineContext != context {
+            reportedOfflineContext = context
+            Analytics.tracker.track(.offlineStateShown(context: context))
+        }
+        emptySection.setContentTopInset(100)
+        emptySection.setMessageWidth(300)
+        emptySection.configureOffline(illustrationName: "emptyImage1")
+        emptySection.layoutIfNeeded()
+        updateEmptyActionClearance()
+    }
+
+    @objc private func networkChanged() {
+        if NetworkMonitor.shared.isOnline, showsOfflineEmpty {
+            viewModel.reloadVisible()
+        }
+        applyPhase()
     }
 
     private func configureFilterEmpty() {
@@ -462,8 +504,11 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
     }
 
     private func applyPhase() {
+        showsOfflineEmpty = false
+        defer { if !showsOfflineEmpty { reportedOfflineContext = nil } }
+        let offline = !NetworkMonitor.shared.isOnline
         let filtering = viewModel.showsFilterResults.value
-        segmentControl.isHidden = filtering
+        segmentControl.isHidden = viewModel.hidesTabs
         chipsScroll.isHidden = viewModel.filterChips.value.isEmpty
         chipsHeightConstraint.designConstant = viewModel.filterChips.value.isEmpty ? 0 : 34
         if filtering {
@@ -479,15 +524,19 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             let empty = viewModel.showsEmptyResults.value
             emptySection.isHidden = !empty
             gridStack.isHidden = empty
-            if empty {
+            if empty, offline {
+                configureOfflineEmpty()
+            } else if empty {
                 configureFilterEmpty()
             } else {
                 renderGrid(recipes: viewModel.resultRecipes.value)
             }
+            renderPaginationSkeletons()
             scrollView.isHidden = !emptySection.isHidden
             return
         }
         isShowingSearchSkeletons = false
+        removePaginationSkeletons()
         switch viewModel.selectedTab.value {
         case .all:
             emptySection.isHidden = true
@@ -495,15 +544,21 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             if viewModel.isLoading.value, viewModel.browseSections.value.isEmpty {
                 browseStack.isHidden = false
                 showBrowseSkeletonsIfNeeded()
+            } else if viewModel.browseSections.value.isEmpty, offline {
+                browseStack.isHidden = true
+                emptySection.isHidden = false
+                configureOfflineEmpty()
             } else {
                 browseStack.isHidden = viewModel.browseSections.value.isEmpty
             }
         case .saved:
             browseStack.isHidden = true
-            let recipes = viewModel.savedRecipes.value
+            let recipes = viewModel.visibleSavedRecipes.value
             emptySection.isHidden = !recipes.isEmpty
             gridStack.isHidden = recipes.isEmpty
-            if recipes.isEmpty {
+            if recipes.isEmpty, viewModel.isSearchingLocally {
+                configureFilterEmpty()
+            } else if recipes.isEmpty {
                 configureSavedStyleEmpty(
                     title: L10n.tr("recipes.savedEmptyTitle"),
                     subtitle: L10n.tr("recipes.savedEmptySubtitle"),
@@ -514,10 +569,12 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             }
         case .mealPlans:
             browseStack.isHidden = true
-            let plans = viewModel.mealPlans.value
+            let plans = viewModel.visibleMealPlans.value
             emptySection.isHidden = !plans.isEmpty
             gridStack.isHidden = plans.isEmpty
-            if plans.isEmpty {
+            if plans.isEmpty, viewModel.isSearchingLocally {
+                configureFilterEmpty()
+            } else if plans.isEmpty {
                 configureSavedStyleEmpty(
                     title: L10n.tr("recipes.mealPlanEmptyTitle"),
                     subtitle: L10n.tr("recipes.mealPlanEmptySubtitle"),
@@ -541,9 +598,38 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
         }
     }
 
+    private func renderPaginationSkeletons() {
+        guard viewModel.isLoadingMoreResults.value else {
+            removePaginationSkeletons()
+            DispatchQueue.main.async { [weak self] in
+                self?.loadMoreResultsIfNearBottom()
+            }
+            return
+        }
+        guard !isShowingPaginationSkeletons else { return }
+        isShowingPaginationSkeletons = true
+        gridStack.isHidden = false
+        RecipeCardGrid.appendSkeletonCards(to: gridStack, count: RecipeCardGrid.paginationSkeletonCount)
+    }
+
+    private func removePaginationSkeletons() {
+        guard isShowingPaginationSkeletons else { return }
+        isShowingPaginationSkeletons = false
+        RecipeCardGrid.removeSkeletonRows(from: gridStack)
+    }
+
+    private func loadMoreResultsIfNearBottom() {
+        guard viewModel.showsFilterResults.value, !scrollView.isHidden else { return }
+        let gap = scrollView.contentSize.height - (scrollView.contentOffset.y + scrollView.bounds.height)
+        if gap < .adaptHeight(320) {
+            viewModel.loadMoreResultsIfNeeded()
+        }
+    }
+
     private func showSearchSkeletonsIfNeeded() {
         guard !isShowingSearchSkeletons else { return }
         isShowingSearchSkeletons = true
+        renderedGridContent = nil
         gridStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         RecipeCardGrid.appendSkeletonCards(to: gridStack, count: RecipeCardGrid.initialSkeletonCount)
     }
@@ -605,6 +691,8 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
     }
 
     private func renderGrid(recipes: [Recipe]) {
+        guard renderedGridContent != .recipes(recipes) else { return }
+        renderedGridContent = .recipes(recipes)
         gridRenderID += 1
         let renderID = gridRenderID
         if recipes.isEmpty {
@@ -618,23 +706,37 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             var rowIndex = 0
             while start < recipes.count {
                 guard self.gridRenderID == renderID else { return }
-                self.applyGridRow(recipes: recipes, start: start, at: rowIndex)
+                self.applyGridRow(itemCount: recipes.count, start: start, at: rowIndex) { card, index in
+                    let recipe = recipes[index]
+                    card.configure(recipe)
+                    card.onSelect = { [weak self] in
+                        self?.viewModel.selectRecipe(recipe)
+                    }
+                }
                 start += 2
                 rowIndex += 1
                 await Task.yield()
             }
             guard self.gridRenderID == renderID else { return }
-            let neededRows = (recipes.count + 1) / 2
-            while self.gridStack.arrangedSubviews.count > neededRows {
-                let extra = self.gridStack.arrangedSubviews.last!
-                self.gridStack.removeArrangedSubview(extra)
-                extra.removeFromSuperview()
-            }
+            self.trimGridRows(to: (recipes.count + 1) / 2)
             self.isShowingSearchSkeletons = false
         }
     }
 
-    private func applyGridRow(recipes: [Recipe], start: Int, at rowIndex: Int) {
+    private func trimGridRows(to neededRows: Int) {
+        while gridStack.arrangedSubviews.count > neededRows {
+            let extra = gridStack.arrangedSubviews.last!
+            gridStack.removeArrangedSubview(extra)
+            extra.removeFromSuperview()
+        }
+    }
+
+    private func applyGridRow(
+        itemCount: Int,
+        start: Int,
+        at rowIndex: Int,
+        configure: (RecipeCardView, Int) -> Void
+    ) {
         let row: UIStackView
         if rowIndex < gridStack.arrangedSubviews.count,
            let existing = gridStack.arrangedSubviews[rowIndex] as? UIStackView {
@@ -647,9 +749,9 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
             gridStack.addArrangedSubview(row)
         }
         row.tag = 0
-        applyGridCard(in: row, at: 0, recipe: recipes[start])
-        if recipes.indices.contains(start + 1) {
-            applyGridCard(in: row, at: 1, recipe: recipes[start + 1])
+        configure(gridCard(in: row, at: 0), start)
+        if start + 1 < itemCount {
+            configure(gridCard(in: row, at: 1), start + 1)
             while row.arrangedSubviews.count > 2 {
                 let extra = row.arrangedSubviews.last!
                 row.removeArrangedSubview(extra)
@@ -665,7 +767,7 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
         }
     }
 
-    private func applyGridCard(in row: UIStackView, at index: Int, recipe: Recipe) {
+    private func gridCard(in row: UIStackView, at index: Int) -> RecipeCardView {
         let card: RecipeCardView
         if index < row.arrangedSubviews.count, let existing = row.arrangedSubviews[index] as? RecipeCardView {
             card = existing
@@ -681,37 +783,23 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
                 row.addArrangedSubview(card)
             }
         }
-        card.configure(recipe)
-        card.onSelect = { [weak self] in
-            self?.viewModel.selectRecipe(recipe)
-        }
+        return card
     }
 
     private func renderPlans(_ plans: [MealPlan]) {
-        gridStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        stride(from: 0, to: plans.count, by: 2).forEach { index in
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.distribution = .fillEqually
-            row.spacing = .adaptWidth(8)
-            let left = RecipeCardView()
-            left.configure(plans[index])
-            left.onSelect = { [weak self] in
-                self?.viewModel.selectMealPlan(plans[index])
-            }
-            row.addArrangedSubview(left)
-            if plans.indices.contains(index + 1) {
-                let right = RecipeCardView()
-                right.configure(plans[index + 1])
-                right.onSelect = { [weak self] in
-                    self?.viewModel.selectMealPlan(plans[index + 1])
+        guard renderedGridContent != .plans(plans) else { return }
+        renderedGridContent = .plans(plans)
+        gridRenderID += 1
+        stride(from: 0, to: plans.count, by: 2).enumerated().forEach { rowIndex, start in
+            applyGridRow(itemCount: plans.count, start: start, at: rowIndex) { card, index in
+                let plan = plans[index]
+                card.configure(plan)
+                card.onSelect = { [weak self] in
+                    self?.viewModel.selectMealPlan(plan)
                 }
-                row.addArrangedSubview(right)
-            } else {
-                row.addArrangedSubview(UIView())
             }
-            gridStack.addArrangedSubview(row)
         }
+        trimGridRows(to: (plans.count + 1) / 2)
     }
 
     private func renderSuggestions(_ titles: [String]) {
@@ -789,3 +877,8 @@ extension RecipesViewController {
     }
 }
 #endif
+
+private enum RecipeGridContent: Equatable {
+    case recipes([Recipe])
+    case plans([MealPlan])
+}

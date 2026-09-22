@@ -234,6 +234,8 @@ protocol RewardsRepositoryProtocol {
     func save(_ state: RewardState) throws
     func fetchEvents() throws -> [XPEvent]
     func append(_ event: XPEvent) throws
+    /// Removes the XP events earned by one diary entry and returns them.
+    func removeEvents(relatedID: UUID) throws -> [XPEvent]
 }
 
 final class RewardsRepository: RewardsRepositoryProtocol {
@@ -278,5 +280,17 @@ final class RewardsRepository: RewardsRepositoryProtocol {
         let object = CDXPEvent(context: context)
         XPEventMapper.apply(event, to: object)
         try coreDataStack.saveContext()
+    }
+
+    func removeEvents(relatedID: UUID) throws -> [XPEvent] {
+        let context = coreDataStack.viewContext
+        let request = CDXPEvent.fetchRequest()
+        request.predicate = NSPredicate(format: "relatedID == %@", relatedID as CVarArg)
+        let objects = try context.fetch(request)
+        guard !objects.isEmpty else { return [] }
+        let removed = objects.compactMap(XPEventMapper.map)
+        objects.forEach(context.delete)
+        try coreDataStack.saveContext()
+        return removed
     }
 }

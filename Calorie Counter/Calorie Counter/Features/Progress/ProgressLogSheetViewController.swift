@@ -37,10 +37,7 @@ final class ProgressLogSheetViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.dynamic(
-            light: UIColor(white: 0.96, alpha: 0.35),
-            dark: UIColor.black.withAlphaComponent(0.6)
-        )
+        view.backgroundColor = AppColor.sheetGlassTint
         [scanFoodCard, scanBarcodeCard, searchCard, voiceCard].forEach { $0.useLiveGlass = false }
         navTitleLabel.text = L10n.tr("progress.log.title")
         OnboardingStyle.lockFigmaFont(
