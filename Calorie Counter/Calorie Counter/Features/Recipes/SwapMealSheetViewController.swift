@@ -32,7 +32,7 @@ final class SwapMealSheetViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.sheetGlassTint
+        applySheetBackground(AppColor.sheetGlassTint)
         buildChrome()
         buildContent()
     }

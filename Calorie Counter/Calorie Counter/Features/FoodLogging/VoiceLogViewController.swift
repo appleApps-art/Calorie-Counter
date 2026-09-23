@@ -57,6 +57,7 @@ final class VoiceLogViewController: BaseViewController, UITextViewDelegate {
     }
 
     override var analyticsScreen: AnalyticsScreen? { .voiceLog }
+    override var hidesFloatingTabBar: Bool { true }
 
     override func viewDidLoad() {
         super.viewDidLoad()

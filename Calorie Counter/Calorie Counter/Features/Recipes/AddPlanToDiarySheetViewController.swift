@@ -42,7 +42,7 @@ final class AddPlanToDiarySheetViewController: UIViewController, UICalendarSelec
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.sheetGlassTint
+        applySheetBackground(AppColor.sheetGlassTint)
         build()
         renderDates()
     }
@@ -195,10 +195,8 @@ final class AddPlanToDiarySheetViewController: UIViewController, UICalendarSelec
             separatorView.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: .adaptHeight(16)),
             separatorView.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
             calendarView.topAnchor.constraint(equalTo: separatorView.bottomAnchor, constant: .adaptHeight(3)),
-            calendarView.leadingAnchor.constraint(equalTo: datesCard.leadingAnchor),
-            calendarView.trailingAnchor.constraint(equalTo: datesCard.trailingAnchor),
             calendarView.bottomAnchor.constraint(equalTo: datesCard.bottomAnchor, constant: .adaptHeight(-8))
-        ])
+        ] + calendarView.horizontalConstraints(in: datesCard, inset: 0))
     }
 
     // MARK: - Contents

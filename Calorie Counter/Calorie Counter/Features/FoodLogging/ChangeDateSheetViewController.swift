@@ -37,7 +37,7 @@ final class ChangeDateSheetViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.sheetGlassTint
+        applySheetBackground(AppColor.sheetGlassTint)
         titleLabel.text = L10n.tr("product.entry.changeDateTitle")
         titleLabel.textAlignment = .center
         OnboardingStyle.lockFigmaFont(titleLabel, size: 17, weight: .semibold, color: AppColor.labelVibrantPrimary, kern: -0.43)
@@ -96,10 +96,8 @@ final class ChangeDateSheetViewController: BaseViewController {
         calendarHost.addSubview(calendarView)
         NSLayoutConstraint.activate([
             calendarView.topAnchor.constraint(equalTo: calendarHost.topAnchor),
-            calendarView.leadingAnchor.constraint(equalTo: calendarHost.leadingAnchor),
-            calendarView.trailingAnchor.constraint(equalTo: calendarHost.trailingAnchor),
             calendarView.bottomAnchor.constraint(equalTo: calendarHost.bottomAnchor)
-        ])
+        ] + calendarView.horizontalConstraints(in: calendarHost, inset: 0))
         if allowsMultipleSelection {
             calendarView.selectionBehavior = UICalendarSelectionMultiDate(delegate: self)
         } else {

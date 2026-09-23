@@ -75,7 +75,12 @@ final class ProgressViewModel {
             let status = await refreshSubscriptionStatusUseCase.execute()
             await MainActor.run {
                 self.isPremium.value = status.isPremium
-                self.publishInsight()
+                if status.isPremium {
+                    self.publishInsight()
+                } else {
+                    self.lockPeriodsIfFree()
+                    self.publish()
+                }
             }
         }
     }
@@ -86,11 +91,7 @@ final class ProgressViewModel {
         if premium != isPremium.value {
             isPremium.value = premium
         }
-        if !premium {
-            caloriePeriod.value = .week
-            expenditurePeriod.value = .week
-            weightPeriod.value = .week
-        }
+        lockPeriodsIfFree()
         do {
             summary = try fetchProgressSummaryUseCase.execute()
             publish()
@@ -100,26 +101,40 @@ final class ProgressViewModel {
     }
 
     func selectCaloriePeriod(_ period: ProgressChartPeriod) {
-        guard allows(period, retry: { [weak self] in self?.selectCaloriePeriod(period) }) else { return }
+        guard allows(period, current: caloriePeriod.value, retry: { [weak self] in self?.selectCaloriePeriod(period) }) else { return }
         caloriePeriod.value = period
         publishCalories()
     }
 
     func selectExpenditurePeriod(_ period: ProgressChartPeriod) {
-        guard allows(period, retry: { [weak self] in self?.selectExpenditurePeriod(period) }) else { return }
+        guard allows(period, current: expenditurePeriod.value, retry: { [weak self] in self?.selectExpenditurePeriod(period) }) else { return }
         expenditurePeriod.value = period
         publishExpenditure()
     }
 
     func selectWeightPeriod(_ period: ProgressChartPeriod) {
-        guard allows(period, retry: { [weak self] in self?.selectWeightPeriod(period) }) else { return }
+        guard allows(period, current: weightPeriod.value, retry: { [weak self] in self?.selectWeightPeriod(period) }) else { return }
         weightPeriod.value = period
         publishWeight()
     }
 
-    /// A free account keeps the week view; longer trends are part of Premium analytics.
-    private func allows(_ period: ProgressChartPeriod, retry: @escaping () -> Void) -> Bool {
-        guard period != .week, !isPremium.value else { return true }
+    /// A free account sees a blurred month of its own data as a preview of Premium analytics;
+    /// switching the period is part of Premium.
+    static let lockedPeriod = ProgressChartPeriod.month
+
+    private func lockPeriodsIfFree() {
+        guard !isPremium.value else { return }
+        caloriePeriod.value = Self.lockedPeriod
+        expenditurePeriod.value = Self.lockedPeriod
+        weightPeriod.value = Self.lockedPeriod
+    }
+
+    private func allows(
+        _ period: ProgressChartPeriod,
+        current: ProgressChartPeriod,
+        retry: @escaping () -> Void
+    ) -> Bool {
+        guard !isPremium.value, period != current else { return true }
         onRequirePremium?(retry)
         return false
     }

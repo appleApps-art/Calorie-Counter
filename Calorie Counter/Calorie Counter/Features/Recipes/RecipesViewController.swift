@@ -29,6 +29,10 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
     private var isShowingPaginationSkeletons = false
     private var pulseWaves: [UIView] = []
     private var browseRenderID = 0
+    private var renderedBrowseCardsPerRow = 2
+    private var browseCardsPerRow: Int {
+        RecipeBrowseSectionView.rowLayout(width: browseStack.bounds.width, in: browseStack).count
+    }
     private var gridRenderID = 0
     private let headerBackdropView = UIView()
     private let headerFadeGradient = CAGradientLayer()
@@ -189,6 +193,13 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        let cardsPerRow = browseCardsPerRow
+        if cardsPerRow != renderedBrowseCardsPerRow {
+            renderedBrowseCardsPerRow = cardsPerRow
+            if !viewModel.browseSections.value.isEmpty {
+                renderBrowse(viewModel.browseSections.value)
+            }
+        }
         OnboardingStyle.applyChatChipsEdgeFade(to: chipsScroll)
         layoutHeaderChrome()
         updateEmptyActionClearance()
@@ -665,7 +676,7 @@ final class RecipesViewController: BaseViewController, UITextFieldDelegate, UISc
         at index: Int,
         renderID: Int
     ) async {
-        let recipes = Array(section.recipes.prefix(2))
+        let recipes = Array(section.recipes.prefix(browseCardsPerRow))
         let view: RecipeBrowseSectionView
         if index < browseStack.arrangedSubviews.count,
            let existing = browseStack.arrangedSubviews[index] as? RecipeBrowseSectionView {
@@ -871,6 +882,7 @@ extension RecipesViewController {
     }
 
     func qaSearch(_ query: String) {
+        loadViewIfNeeded()
         searchTextField.text = query
         viewModel.updateQuery(query)
         viewModel.searchTapped()

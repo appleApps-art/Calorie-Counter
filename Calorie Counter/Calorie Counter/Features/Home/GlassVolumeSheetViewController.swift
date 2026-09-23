@@ -35,7 +35,7 @@ final class GlassVolumeSheetViewController: BaseViewController, UITextFieldDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         // Tint the native sheet material without replacing its live glass backdrop.
-        view.backgroundColor = AppColor.dynamic(light: .clear, dark: UIColor.black.withAlphaComponent(0.6))
+        applySheetBackground(AppColor.dynamic(light: .clear, dark: UIColor.black.withAlphaComponent(0.6)))
         disableCardLiveGlass()
         inputCard.cardFillColor = AppColor.backgroundsPrimaryElevated
         chipsCard.cardFillColor = AppColor.gray6

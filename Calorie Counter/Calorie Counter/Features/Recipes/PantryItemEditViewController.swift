@@ -219,10 +219,8 @@ final class PantryItemEditViewController: BaseViewController, UICalendarSelectio
             pickerHost.trailingAnchor.constraint(equalTo: calendarHost.trailingAnchor),
             pickerHost.bottomAnchor.constraint(equalTo: calendarHost.bottomAnchor),
             calendarView.topAnchor.constraint(equalTo: pickerHost.topAnchor, constant: .adaptHeight(3)),
-            calendarView.leadingAnchor.constraint(equalTo: pickerHost.leadingAnchor, constant: .adaptWidth(4)),
-            calendarView.trailingAnchor.constraint(equalTo: pickerHost.trailingAnchor, constant: -.adaptWidth(4)),
             calendarView.bottomAnchor.constraint(equalTo: pickerHost.bottomAnchor, constant: -.adaptHeight(8))
-        ])
+        ] + calendarView.horizontalConstraints(in: pickerHost, inset: .adaptWidth(4)))
 
         if let height = calendarHost.constraints.first(where: { $0.firstAttribute == .height && $0.secondItem == nil }) {
             let headerHeight = CGFloat.adaptHeight(66) + 1 / UIScreen.main.scale

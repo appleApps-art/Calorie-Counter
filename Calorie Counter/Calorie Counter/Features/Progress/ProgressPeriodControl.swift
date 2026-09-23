@@ -68,7 +68,7 @@ final class ProgressPeriodControl: UIView {
 
     private func configureTrack() {
         guard let trackView else { return }
-        trackView.backgroundColor = AppColor.backgroundsPrimary
+        trackView.backgroundColor = AppColor.progressSurface
         trackView.clipsToBounds = true
         trackView.layer.masksToBounds = true
         trackView.layer.cornerCurve = .continuous
@@ -129,7 +129,7 @@ final class ProgressPeriodControl: UIView {
             )
             label.textAlignment = .center
         }
-        trackView?.backgroundColor = AppColor.backgroundsPrimary
+        trackView?.backgroundColor = AppColor.progressSurface
         indicatorView.backgroundColor = AppColor.labelsPrimary
         layoutIndicator()
         setNeedsLayout()

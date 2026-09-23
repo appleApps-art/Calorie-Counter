@@ -93,16 +93,31 @@ final class RecipeBrowseSectionView: UIView {
         seeMoreButton.isEnabled = showsSeeMore
     }
 
+    /// Cards in one row: two on a phone, as designed. A wider canvas (iPad) fits more, stretched
+    /// to fill the row instead of leaving half of it empty.
+    static func rowLayout(width: CGFloat, in view: UIView) -> (count: Int, cardWidth: CGFloat) {
+        let designWidth = CGFloat.adaptWidth(181, in: view)
+        let spacing = CGFloat.adaptWidth(8, in: view)
+        let fitting = width > 0 ? Int((width + spacing) / (designWidth + spacing)) : 0
+        guard fitting > 2 else { return (2, designWidth) }
+        let cardWidth = ((width - spacing * CGFloat(fitting - 1)) / CGFloat(fitting)).rounded(.down)
+        return (fitting, cardWidth)
+    }
+
+    private var cardWidth: CGFloat {
+        Self.rowLayout(width: bounds.width, in: self).cardWidth
+    }
+
     private func addCard(_ card: RecipeCardView) {
         cardsStack.addArrangedSubview(card)
-        let width = card.widthAnchor.constraint(equalToConstant: .adaptWidth(181, in: self))
+        let width = card.widthAnchor.constraint(equalToConstant: cardWidth)
         width.identifier = "responsive-recipe-card-width"
         width.isActive = true
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        let width = CGFloat.adaptWidth(181, in: self)
+        let width = cardWidth
         for card in cardsStack.arrangedSubviews {
             if let constraint = card.constraints.first(where: { $0.identifier == "responsive-recipe-card-width" }),
                abs(constraint.constant - width) > 0.5 {

@@ -58,6 +58,18 @@ enum AppColor {
     static let card = color("BityCard", light: (255, 255, 255), dark: (0, 0, 0))
     static let hairline = color("BityHairline", light: (0, 0, 0, 0.12), dark: (255, 255, 255, 0.17))
     static let backgroundsPrimary = dynamic(light: .white, dark: .black)
+    /// Progress in dark mode (Figma 441:47938): grey cards on a black canvas. Light keeps the app's
+    /// mint canvas and white cards.
+    static var progressCanvas: UIColor {
+        UIColor { trait in
+            trait.userInterfaceStyle == .dark ? .black : canvas.resolvedColor(with: trait)
+        }
+    }
+    static var progressSurface: UIColor {
+        UIColor { trait in
+            trait.userInterfaceStyle == .dark ? gray6.resolvedColor(with: trait) : .white
+        }
+    }
     static var backgroundsPrimaryElevated: UIColor {
         UIColor { trait in
             trait.userInterfaceStyle == .dark

@@ -23,7 +23,7 @@ final class BarcodeManualEntryViewController: BaseViewController, UITextFieldDel
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.sheetGlassTint
+        applySheetBackground(AppColor.sheetGlassTint)
         titleLabel.text = L10n.tr("barcode.manual.title")
         titleLabel.textAlignment = .center
         titleLabel.adjustsFontSizeToFitWidth = true

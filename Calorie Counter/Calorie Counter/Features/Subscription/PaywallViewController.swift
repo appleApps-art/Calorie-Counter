@@ -235,6 +235,8 @@ final class PaywallViewController: UIViewController {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
+        let stackBottom = stack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        stackBottom.priority = .required - 1
         NSLayoutConstraint.activate([
             bottomPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -243,7 +245,9 @@ final class PaywallViewController: UIViewController {
             bottomPanel.topAnchor.constraint(equalTo: stack.topAnchor, constant: -.adaptHeight(16)),
             stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: .adaptWidth(16)),
             stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -.adaptWidth(16)),
-            stack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            stackBottom,
+            // Screens without a home indicator have no bottom safe area; keep the links off the edge.
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -.adaptHeight(8)),
             ctaButton.heightAnchor.constraint(equalToConstant: .adaptHeight(50)),
             cancelLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 18),
             termsButton.heightAnchor.constraint(equalToConstant: 18),
@@ -254,6 +258,8 @@ final class PaywallViewController: UIViewController {
     private func styleLink(_ button: UIButton, title: String) {
         var config = UIButton.Configuration.plain()
         config.contentInsets = .zero
+        // One line: at 18 pt tall a wrapped second line was cut off on a narrow phone.
+        config.titleLineBreakMode = .byTruncatingTail
         config.attributedTitle = AttributedString(
             title,
             attributes: AttributeContainer([

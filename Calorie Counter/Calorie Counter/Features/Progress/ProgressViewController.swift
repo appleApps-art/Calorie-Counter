@@ -61,7 +61,9 @@ final class ProgressViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.canvas
+        view.backgroundColor = AppColor.progressCanvas
+        // Dark mode is black behind the grey cards (Figma 441:47938); light keeps the mint canvas.
+        view.subviews.compactMap { $0 as? HomeBackgroundView }.forEach { $0.usesPrimaryBackgroundInDark = true }
         configureChrome()
         viewModel.viewDidLoad()
     }
@@ -232,11 +234,7 @@ final class ProgressViewController: BaseViewController {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (controller: ProgressViewController, _) in
             controller.applyInsightBadge()
         }
-        OnboardingStyle.stylePrimaryButton(
-            upgradeButton,
-            title: L10n.tr("progress.lock.upgrade"),
-            systemImage: "play.fill"
-        )
+        configureLockCard()
         upgradeButton.addTarget(self, action: #selector(upgradeTapped), for: .touchUpInside)
         seeAllButton.setTitle(L10n.tr("progress.seeAll"), for: .normal)
         seeAllButton.setTitleColor(AppColor.teal, for: .normal)
@@ -291,10 +289,65 @@ final class ProgressViewController: BaseViewController {
         expenditureChartView.onSelect = { _ in }
         weightChartView.onSelect = { _ in }
         lockCard.accessibilityLabel = L10n.tr("progress.lock.accessibility")
+        applySurfaces(in: view)
         caloriesPeriodControl.selectedPeriod = .week
         expenditurePeriodControl.selectedPeriod = .week
         weightPeriodControl.selectedPeriod = .week
         refreshPhotosChrome(hasPhotos: false)
+    }
+
+    /// Cards, stat tiles and the lock card share one surface: white in light mode, grey on the
+    /// black canvas in dark mode. The insight card keeps its own glass.
+    private func applySurfaces(in root: UIView) {
+        for subview in root.subviews {
+            if let card = subview as? AdaptiveView, card.applyCardShadow, card !== insightCard {
+                card.cardFillColor = AppColor.progressSurface
+            }
+            applySurfaces(in: subview)
+        }
+    }
+
+    /// Figma Cards/LockedOverlay: lock glyph, title, subtitle and a full-width Medium upgrade button
+    /// on a solid card.
+    private func configureLockCard() {
+        lockCard.useLiveGlass = false
+        if let message = lockTitleLabel.superview as? UIStackView, !(message.arrangedSubviews.first is UIImageView) {
+            let lock = UIImageView(image: UIImage(
+                systemName: "lock.fill",
+                withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
+            ))
+            lock.tintColor = AppColor.labelsPrimary
+            lock.contentMode = .center
+            lock.isAccessibilityElement = false
+            message.insertArrangedSubview(lock, at: 0)
+        }
+        OnboardingStyle.stylePrimaryButton(upgradeButton, title: L10n.tr("progress.lock.upgrade"))
+        upgradeButton.configuration?.buttonSize = .medium
+        upgradeButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 7, leading: 14, bottom: 7, trailing: 14)
+        upgradeButton.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = .systemFont(ofSize: .adaptFont(15), weight: .semibold)
+            return outgoing
+        }
+        guard let content = upgradeButton.superview else { return }
+        upgradeButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            upgradeButton.widthAnchor.constraint(equalTo: content.widthAnchor),
+            upgradeButton.heightAnchor.constraint(equalToConstant: .adaptHeight(34))
+        ])
+        // The design card is 180 pt; a translated title on two lines needs it to grow instead of
+        // pushing the button out of the card.
+        if let fixedHeight = lockCard.constraints.first(where: { $0.firstAttribute == .height && $0.secondItem == nil }) {
+            fixedHeight.isActive = false
+            let preferred = lockCard.heightAnchor.constraint(equalToConstant: .adaptHeight(180))
+            preferred.priority = .defaultLow
+            NSLayoutConstraint.activate([
+                preferred,
+                lockCard.heightAnchor.constraint(greaterThanOrEqualToConstant: .adaptHeight(180)),
+                content.topAnchor.constraint(greaterThanOrEqualTo: lockCard.topAnchor, constant: .adaptHeight(16)),
+                lockCard.bottomAnchor.constraint(greaterThanOrEqualTo: content.bottomAnchor, constant: .adaptHeight(16))
+            ])
+        }
     }
 
     private func applyInsightBadge() {
@@ -345,6 +398,11 @@ final class ProgressViewController: BaseViewController {
         let insight = viewModel.insightText.value
         lockCard.isHidden = premium
         insightCard.isHidden = !premium || insight == nil
+        caloriesChartView.isLocked = !premium
+        expenditureChartView.isLocked = !premium
+        weightChartView.isLocked = !premium
+        [burnedStatView, avgStatView, bestStatView, startStatView, currentStatView, changeStatView]
+            .forEach { $0?.isRedacted = !premium }
         insightBodyLabel.text = insight
         OnboardingStyle.lockFigmaFont(
             insightBodyLabel,

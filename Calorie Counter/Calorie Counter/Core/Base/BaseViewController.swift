@@ -7,6 +7,9 @@ class BaseViewController: UIViewController {
 
     var analyticsScreen: AnalyticsScreen? { nil }
     var keyboardDismissExcludedViews: [UIView] { [] }
+    /// Full-screen camera and voice screens. On iPad the tab bar floats at the top of the window,
+    /// where `hidesBottomBarWhenPushed` leaves it in place over their controls.
+    var hidesFloatingTabBar: Bool { false }
 
     init(nibName: String) {
         super.init(nibName: nibName, bundle: nil)
@@ -27,7 +30,17 @@ class BaseViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        if hidesFloatingTabBar {
+            setFloatingTabBarHidden(true, animated: animated)
+        }
         (tabBarController as? MainTabBarController)?.refreshTabBarChrome(for: self)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if hidesFloatingTabBar {
+            setFloatingTabBarHidden(false, animated: animated)
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -56,6 +69,12 @@ class BaseViewController: UIViewController {
         guard boundsSize != lastAdaptiveBounds else { return }
         lastAdaptiveBounds = boundsSize
         view.refreshAdaptiveLayout()
+    }
+
+    private func setFloatingTabBarHidden(_ hidden: Bool, animated: Bool) {
+        guard traitCollection.userInterfaceIdiom == .pad, #available(iOS 18.0, *),
+              let tabBarController, tabBarController.isTabBarHidden != hidden else { return }
+        tabBarController.setTabBarHidden(hidden, animated: animated)
     }
 
     private func compensateHiddenTabBarSafeArea() {

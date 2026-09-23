@@ -255,7 +255,7 @@ final class CreateRecipeFormViewController: BaseViewController, UITextFieldDeleg
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         if viewModel.kind == .mealPlan {
-            calendarView.frame = calendarContainer.bounds
+            calendarView.frame = UICalendarView.frame(in: calendarContainer.bounds)
         }
         if !isAnimatingContent {
             layoutSourceTrack()

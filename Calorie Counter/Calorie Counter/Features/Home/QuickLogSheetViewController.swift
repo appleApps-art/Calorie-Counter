@@ -39,7 +39,7 @@ final class QuickLogSheetViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.dynamic(light: .clear, dark: UIColor.black.withAlphaComponent(0.6))
+        applySheetBackground(AppColor.dynamic(light: .clear, dark: UIColor.black.withAlphaComponent(0.6)))
         disableCardLiveGlass()
         navTitleLabel.text = L10n.tr(titleKey)
         OnboardingStyle.lockFigmaFont(

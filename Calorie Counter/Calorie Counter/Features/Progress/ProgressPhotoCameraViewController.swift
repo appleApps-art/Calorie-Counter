@@ -29,6 +29,7 @@ final class ProgressPhotoCameraViewController: BaseViewController, PHPickerViewC
     }
 
     override var analyticsScreen: AnalyticsScreen? { .progressPhoto }
+    override var hidesFloatingTabBar: Bool { true }
 
     override func viewDidLoad() {
         super.viewDidLoad()

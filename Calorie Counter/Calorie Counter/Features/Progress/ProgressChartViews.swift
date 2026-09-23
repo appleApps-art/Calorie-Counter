@@ -1,4 +1,24 @@
+import CoreImage
+import CoreImage.CIFilterBuiltins
 import UIKit
+
+/// The design's "Unavailable chart blur" (Figma foreground blur 16, a Gaussian of 8 pt) that hides
+/// free-tier analytics while leaving their shape readable as a preview.
+enum ProgressLockedBlur {
+    static let radius: CGFloat = 8
+    private static let context = CIContext()
+
+    static func blurred(_ image: UIImage) -> UIImage? {
+        guard let cgImage = image.cgImage else { return nil }
+        let input = CIImage(cgImage: cgImage)
+        let filter = CIFilter.gaussianBlur()
+        filter.inputImage = input.clampedToExtent()
+        filter.radius = Float(radius * image.scale)
+        guard let output = filter.outputImage?.cropped(to: input.extent),
+              let blurred = context.createCGImage(output, from: input.extent) else { return nil }
+        return UIImage(cgImage: blurred, scale: image.scale, orientation: .up)
+    }
+}
 
 private enum ProgressChartLayout {
     static var yGutter: CGFloat { .adaptWidth(34) }
@@ -94,6 +114,15 @@ final class ProgressStackedBarChartView: UIView {
         didSet { setNeedsDisplay(); refreshCallout() }
     }
     var onSelect: ((Int?) -> Void)?
+    /// Free tier: the marks draw blurred and do not respond to taps, so no gated value is revealed.
+    var isLocked = false {
+        didSet {
+            guard isLocked != oldValue else { return }
+            if isLocked { selectedIndex = nil }
+            accessibilityElementsHidden = isLocked
+            setNeedsDisplay()
+        }
+    }
 
     private let callout = ProgressChartCalloutView()
 
@@ -121,7 +150,9 @@ final class ProgressStackedBarChartView: UIView {
         let plot = ProgressChartLayout.plotRect(in: bounds, scale: scale)
         drawGrid(in: plot)
         drawTarget(in: plot, scale: scale)
-        drawStacks(in: plot, scale: scale, context: context)
+        drawMarks(locked: isLocked, in: context) { context in
+            drawStacks(in: plot, scale: scale, context: context)
+        }
         drawYAxis(scale: scale)
         drawXAxis(in: plot)
         if let selectedIndex, columns.indices.contains(selectedIndex) {
@@ -137,6 +168,7 @@ final class ProgressStackedBarChartView: UIView {
     }
 
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard !isLocked else { return }
         let location = gesture.location(in: self)
         let plot = ProgressChartLayout.plotRect(in: bounds, scale: barScale)
         guard !columns.isEmpty, plot.width > 0 else { return }
@@ -222,6 +254,15 @@ final class ProgressBarChartView: UIView {
         didSet { setNeedsDisplay(); refreshCallout() }
     }
     var onSelect: ((Int?) -> Void)?
+    /// Free tier: the marks draw blurred and do not respond to taps, so no gated value is revealed.
+    var isLocked = false {
+        didSet {
+            guard isLocked != oldValue else { return }
+            if isLocked { selectedIndex = nil }
+            accessibilityElementsHidden = isLocked
+            setNeedsDisplay()
+        }
+    }
 
     private let callout = ProgressChartCalloutView()
 
@@ -249,16 +290,18 @@ final class ProgressBarChartView: UIView {
         drawGrid(in: plot)
         drawTarget(in: plot, scale: scale)
         let layout = ProgressChartLayout.barLayout(count: columns.count, plotWidth: plot.width)
-        for (index, column) in columns.enumerated() {
-            let x = plot.minX + CGFloat(index) * (layout.width + layout.gap)
-            let height = scale.height(for: column.value, in: plot)
-            guard height > 0.5 else { continue }
-            let dimmed = selectedIndex != nil && selectedIndex != index
-            let alpha = dimmed ? ProgressChartLayout.dimmedAlpha : ProgressChartLayout.selectedAlpha
-            let bar = CGRect(x: x, y: plot.maxY - height, width: layout.width, height: height)
-            let path = ProgressChartLayout.roundedTopPath(in: bar)
-            AppColor.teal.withAlphaComponent(alpha).setFill()
-            path.fill()
+        drawMarks(locked: isLocked, in: UIGraphicsGetCurrentContext()) { _ in
+            for (index, column) in columns.enumerated() {
+                let x = plot.minX + CGFloat(index) * (layout.width + layout.gap)
+                let height = scale.height(for: column.value, in: plot)
+                guard height > 0.5 else { continue }
+                let dimmed = selectedIndex != nil && selectedIndex != index
+                let alpha = dimmed ? ProgressChartLayout.dimmedAlpha : ProgressChartLayout.selectedAlpha
+                let bar = CGRect(x: x, y: plot.maxY - height, width: layout.width, height: height)
+                let path = ProgressChartLayout.roundedTopPath(in: bar)
+                AppColor.teal.withAlphaComponent(alpha).setFill()
+                path.fill()
+            }
         }
         drawYAxis(scale: scale)
         drawXAxis(in: plot)
@@ -275,6 +318,7 @@ final class ProgressBarChartView: UIView {
     }
 
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard !isLocked else { return }
         let location = gesture.location(in: self)
         let plot = ProgressChartLayout.plotRect(in: bounds, scale: barScale)
         guard !columns.isEmpty, plot.width > 0 else { return }
@@ -318,6 +362,15 @@ final class ProgressLineChartView: UIView {
         didSet { setNeedsDisplay(); refreshCallout() }
     }
     var onSelect: ((Int?) -> Void)?
+    /// Free tier: the marks draw blurred and do not respond to taps, so no gated value is revealed.
+    var isLocked = false {
+        didSet {
+            guard isLocked != oldValue else { return }
+            if isLocked { selectedIndex = nil }
+            accessibilityElementsHidden = isLocked
+            setNeedsDisplay()
+        }
+    }
 
     private let callout = ProgressChartCalloutView()
 
@@ -351,27 +404,29 @@ final class ProgressLineChartView: UIView {
         let inset = ProgressChartLayout.pointSize / 2
         let linePlot = plot.insetBy(dx: inset, dy: inset)
         let points = pointPositions(in: linePlot, scale: scale)
-        let path = UIBezierPath()
-        path.lineWidth = 2
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        points.enumerated().forEach { index, point in
-            if index == 0 {
-                path.move(to: point)
-            } else {
-                path.addLine(to: point)
+        drawMarks(locked: isLocked, in: UIGraphicsGetCurrentContext()) { _ in
+            let path = UIBezierPath()
+            path.lineWidth = 2
+            path.lineJoinStyle = .round
+            path.lineCapStyle = .round
+            points.enumerated().forEach { index, point in
+                if index == 0 {
+                    path.move(to: point)
+                } else {
+                    path.addLine(to: point)
+                }
             }
-        }
-        AppColor.teal.setStroke()
-        path.stroke()
-        let point = ProgressChartLayout.pointSize
-        let radius = point / 2
-        for (index, origin) in points.enumerated() {
-            let dimmed = selectedIndex != nil && selectedIndex != index
-            let alpha = dimmed ? ProgressChartLayout.dimmedAlpha : ProgressChartLayout.selectedAlpha
-            let dot = UIBezierPath(ovalIn: CGRect(x: origin.x - radius, y: origin.y - radius, width: point, height: point))
-            AppColor.teal.withAlphaComponent(alpha).setFill()
-            dot.fill()
+            AppColor.teal.setStroke()
+            path.stroke()
+            let point = ProgressChartLayout.pointSize
+            let radius = point / 2
+            for (index, origin) in points.enumerated() {
+                let dimmed = selectedIndex != nil && selectedIndex != index
+                let alpha = dimmed ? ProgressChartLayout.dimmedAlpha : ProgressChartLayout.selectedAlpha
+                let dot = UIBezierPath(ovalIn: CGRect(x: origin.x - radius, y: origin.y - radius, width: point, height: point))
+                AppColor.teal.withAlphaComponent(alpha).setFill()
+                dot.fill()
+            }
         }
         drawYAxis(scale: scale)
         drawXAxis(in: plot)
@@ -386,6 +441,7 @@ final class ProgressLineChartView: UIView {
     }
 
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard !isLocked else { return }
         let location = gesture.location(in: self)
         guard !columns.isEmpty else { return }
         let scale = lineScale
@@ -503,6 +559,23 @@ private extension UIView {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (view: UIView, _) in
             view.setNeedsDisplay()
         }
+    }
+
+    /// Draws the data marks. A locked chart renders them offscreen and draws them blurred; the grid,
+    /// target rule and axes around them stay sharp, as in the design.
+    func drawMarks(locked: Bool, in context: CGContext?, _ marks: (CGContext) -> Void) {
+        guard let context else { return }
+        guard locked else {
+            marks(context)
+            return
+        }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = traitCollection.displayScale
+        format.opaque = false
+        let image = UIGraphicsImageRenderer(bounds: bounds, format: format).image { renderer in
+            marks(renderer.cgContext)
+        }
+        ProgressLockedBlur.blurred(image)?.draw(in: bounds)
     }
 
     func drawGrid(in plot: CGRect) {

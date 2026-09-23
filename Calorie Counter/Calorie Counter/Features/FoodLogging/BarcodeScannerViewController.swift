@@ -44,6 +44,7 @@ final class BarcodeScannerViewController: BaseViewController, PHPickerViewContro
     }
 
     override var analyticsScreen: AnalyticsScreen? { .barcodeScanner }
+    override var hidesFloatingTabBar: Bool { true }
 
     override func viewDidLoad() {
         super.viewDidLoad()

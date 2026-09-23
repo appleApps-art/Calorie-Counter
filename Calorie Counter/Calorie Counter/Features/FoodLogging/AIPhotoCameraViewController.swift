@@ -73,6 +73,7 @@ final class AIPhotoCameraViewController: BaseViewController, PHPickerViewControl
     }
 
     override var analyticsScreen: AnalyticsScreen? { .aiPhoto }
+    override var hidesFloatingTabBar: Bool { true }
 
     override func viewDidLoad() {
         super.viewDidLoad()

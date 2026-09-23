@@ -37,7 +37,7 @@ final class AddToPantrySheetViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = AppColor.sheetGlassTint
+        applySheetBackground(AppColor.sheetGlassTint)
         [scanFoodCard, scanBarcodeCard, searchCard, voiceCard].forEach { $0.useLiveGlass = false }
         navTitleLabel.text = L10n.tr("pantry.addTitle")
         OnboardingStyle.lockFigmaFont(navTitleLabel, size: 17, weight: .semibold, color: AppColor.labelVibrantPrimary, kern: -0.43)

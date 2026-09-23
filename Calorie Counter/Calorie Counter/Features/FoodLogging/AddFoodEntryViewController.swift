@@ -572,10 +572,8 @@ final class AddFoodEntryViewController: BaseViewController, UITextFieldDelegate,
             pickerHost.trailingAnchor.constraint(equalTo: calendarHost.trailingAnchor),
             pickerHost.bottomAnchor.constraint(equalTo: calendarHost.bottomAnchor),
             calendarView.topAnchor.constraint(equalTo: pickerHost.topAnchor, constant: .adaptHeight(3)),
-            calendarView.leadingAnchor.constraint(equalTo: pickerHost.leadingAnchor, constant: .adaptWidth(4)),
-            calendarView.trailingAnchor.constraint(equalTo: pickerHost.trailingAnchor, constant: -.adaptWidth(4)),
             calendarView.bottomAnchor.constraint(equalTo: pickerHost.bottomAnchor, constant: -.adaptHeight(8))
-        ])
+        ] + calendarView.horizontalConstraints(in: pickerHost, inset: .adaptWidth(4)))
         let selection = UICalendarSelectionMultiDate(delegate: self)
         calendarView.selectionBehavior = selection
         let start = Calendar.current.date(byAdding: .year, value: -2, to: Date()) ?? Date.distantPast
