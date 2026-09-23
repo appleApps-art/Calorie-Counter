@@ -8,3 +8,10 @@
 "widget.water" = "الماء";
 "widget.grams" = "غ";
 "widget.milliliters" = "مل";
+"meal.breakfast" = "الفطور";
+"meal.lunch" = "الغداء";
+"meal.dinner" = "العشاء";
+"meal.snacks" = "الوجبات الخفيفة";
+"widget.kcalValue" = "‏%d سعرة";
+"widget.over" = "زيادة";
+"widget.streakAccessibility" = "‏سلسلة %d يوم";

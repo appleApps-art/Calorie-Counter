@@ -11,6 +11,7 @@
 		F04E1304302BA6EC00CD4F00 /* AdaptyUI in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1302302BA6EC00CD4F00 /* AdaptyUI */; };
 		F04E1307302BA6EC00CD4F00 /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1306302BA6EC00CD4F00 /* AmplitudeSwift */; };
 		F04E1602302BA6EC00CD4F00 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F04E1601302BA6EC00CD4F00 /* Lottie */; };
+		F04E1908302BA6EC00CD4F00 /* BityWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F04E1400302BA6EC00CD4F00 /* BityWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -21,7 +22,28 @@
 			remoteGlobalIDString = F04E1217302BA6EC00CD4F00;
 			remoteInfo = "Calorie Counter";
 		};
+		F04E190A302BA6EC00CD4F00 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F04E1210302BA6EC00CD4F00 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F04E1900302BA6EC00CD4F00;
+			remoteInfo = BityWidget;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F04E1907302BA6EC00CD4F00 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F04E1908302BA6EC00CD4F00 /* BityWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		F04E1218302BA6EC00CD4F00 /* Calorie Counter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Calorie Counter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -33,10 +55,16 @@
 		F04E122A302BA6ED00CD4F00 /* Exceptions for "Calorie Counter" folder in "Calorie Counter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Data/Services/Widget/WidgetSnapshotController.swift,
 				Resources/Info.plist,
 			);
 			target = F04E1217302BA6EC00CD4F00 /* Calorie Counter */;
+		};
+		F04E190B302BA6EC00CD4F00 /* Exceptions for "BityWidget" folder in "BityWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F04E1900302BA6EC00CD4F00 /* BityWidget */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -51,6 +79,9 @@
 		};
 		F04E1402302BA6EC00CD4F00 /* BityWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F04E190B302BA6EC00CD4F00 /* Exceptions for "BityWidget" folder in "BityWidget" target */,
+			);
 			path = BityWidget;
 			sourceTree = "<group>";
 		};
@@ -79,6 +110,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F04E1508302BA6EC00CD4F00 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F04E1902302BA6EC00CD4F00 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -119,13 +157,16 @@
 				F04E1214302BA6EC00CD4F00 /* Sources */,
 				F04E1215302BA6EC00CD4F00 /* Frameworks */,
 				F04E1216302BA6EC00CD4F00 /* Resources */,
+				F04E1907302BA6EC00CD4F00 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F04E1909302BA6EC00CD4F00 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F04E121A302BA6EC00CD4F00 /* Calorie Counter */,
+				F04E1413302BA6EC00CD4F00 /* WidgetShared */,
 			);
 			name = "Calorie Counter";
 			packageProductDependencies = (
@@ -161,6 +202,29 @@
 			productReference = F04E1500302BA6EC00CD4F00 /* Calorie CounterTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		F04E1900302BA6EC00CD4F00 /* BityWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F04E1904302BA6EC00CD4F00 /* Build configuration list for PBXNativeTarget "BityWidget" */;
+			buildPhases = (
+				F04E1901302BA6EC00CD4F00 /* Sources */,
+				F04E1902302BA6EC00CD4F00 /* Frameworks */,
+				F04E1903302BA6EC00CD4F00 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F04E1402302BA6EC00CD4F00 /* BityWidget */,
+				F04E1413302BA6EC00CD4F00 /* WidgetShared */,
+			);
+			name = BityWidget;
+			packageProductDependencies = (
+			);
+			productName = BityWidget;
+			productReference = F04E1400302BA6EC00CD4F00 /* BityWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -177,6 +241,9 @@
 					F04E1501302BA6EC00CD4F00 = {
 						CreatedOnToolsVersion = 26.6;
 						TestTargetID = F04E1217302BA6EC00CD4F00;
+					};
+					F04E1900302BA6EC00CD4F00 = {
+						CreatedOnToolsVersion = 26.6;
 					};
 				};
 			};
@@ -213,6 +280,7 @@
 			projectRoot = "";
 			targets = (
 				F04E1217302BA6EC00CD4F00 /* Calorie Counter */,
+				F04E1900302BA6EC00CD4F00 /* BityWidget */,
 				F04E1501302BA6EC00CD4F00 /* Calorie CounterTests */,
 			);
 		};
@@ -227,6 +295,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F04E1509302BA6EC00CD4F00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F04E1903302BA6EC00CD4F00 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -250,6 +325,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F04E1901302BA6EC00CD4F00 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -257,6 +339,11 @@
 			isa = PBXTargetDependency;
 			target = F04E1217302BA6EC00CD4F00 /* Calorie Counter */;
 			targetProxy = F04E1506302BA6EC00CD4F00 /* PBXContainerItemProxy */;
+		};
+		F04E1909302BA6EC00CD4F00 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F04E1900302BA6EC00CD4F00 /* BityWidget */;
+			targetProxy = F04E190A302BA6EC00CD4F00 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -507,6 +594,67 @@
 			};
 			name = Release;
 		};
+		F04E1905302BA6EC00CD4F00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BityWidget/BityWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RMUS7YURR8;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BityWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Bity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = builder.app.BityWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F04E1906302BA6EC00CD4F00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BityWidget/BityWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RMUS7YURR8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BityWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Bity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = builder.app.BityWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -533,6 +681,15 @@
 			buildConfigurations = (
 				F04E1503302BA6EC00CD4F00 /* Debug */,
 				F04E1504302BA6EC00CD4F00 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F04E1904302BA6EC00CD4F00 /* Build configuration list for PBXNativeTarget "BityWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F04E1905302BA6EC00CD4F00 /* Debug */,
+				F04E1906302BA6EC00CD4F00 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

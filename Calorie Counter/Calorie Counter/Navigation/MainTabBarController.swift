@@ -253,6 +253,29 @@ final class MainTabBarController: UITabBarController {
         }
     }
 
+    /// A widget or Live Activity tap lands on the same quick log the meal reminders open, already
+    /// pointed at the meal that was tapped.
+    func open(_ deepLink: AppDeepLink) {
+        presentedViewController?.dismiss(animated: false)
+        viewControllers?.forEach { ($0 as? UINavigationController)?.popToRootViewController(animated: false) }
+        selectedIndex = Tab.home.rawValue
+        switch deepLink {
+        case .home:
+            break
+        case .logFood:
+            presentQuickLog(mealType: .snacks)
+        case let .logMeal(meal):
+            presentQuickLog(mealType: MealType(rawValue: meal.rawValue) ?? .snacks)
+        }
+    }
+
+    private func presentQuickLog(mealType: MealType) {
+        let sheet = QuickLogSheetViewController { [weak self] action in
+            self?.handle(action, mealType: mealType, date: Date())
+        }
+        present(sheet, animated: true)
+    }
+
     /// A tapped reminder lands where it asked the user to go: a meal reminder opens the ways to
     /// log that very meal, the weight one opens the weight entry.
     func openReminder(_ kind: ReminderKind) {
@@ -262,10 +285,7 @@ final class MainTabBarController: UITabBarController {
         case .breakfast, .lunch, .dinner:
             let mealType: MealType = kind == .breakfast ? .breakfast : (kind == .lunch ? .lunch : .dinner)
             selectedIndex = Tab.home.rawValue
-            let sheet = QuickLogSheetViewController { [weak self] action in
-                self?.handle(action, mealType: mealType, date: Date())
-            }
-            present(sheet, animated: true)
+            presentQuickLog(mealType: mealType)
         case .weight:
             selectedIndex = Tab.progress.rawValue
             progressCoordinator?.openLogSheet()

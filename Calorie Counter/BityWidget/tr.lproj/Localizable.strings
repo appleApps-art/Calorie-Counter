@@ -8,3 +8,10 @@
 "widget.water" = "Su";
 "widget.grams" = "g";
 "widget.milliliters" = "ml";
+"meal.breakfast" = "Kahvaltı";
+"meal.lunch" = "Öğle yemeği";
+"meal.dinner" = "Akşam yemeği";
+"meal.snacks" = "Atıştırmalıklar";
+"widget.kcalValue" = "%d kcal";
+"widget.over" = "fazla";
+"widget.streakAccessibility" = "%d günlük seri";

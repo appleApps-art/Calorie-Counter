@@ -8,3 +8,10 @@
 "widget.water" = "水分";
 "widget.grams" = "g";
 "widget.milliliters" = "ml";
+"meal.breakfast" = "朝食";
+"meal.lunch" = "昼食";
+"meal.dinner" = "夕食";
+"meal.snacks" = "間食";
+"widget.kcalValue" = "%d kcal";
+"widget.over" = "超過";
+"widget.streakAccessibility" = "%d日連続";

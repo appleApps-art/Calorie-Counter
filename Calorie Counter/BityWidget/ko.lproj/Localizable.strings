@@ -8,3 +8,10 @@
 "widget.water" = "수분";
 "widget.grams" = "g";
 "widget.milliliters" = "ml";
+"meal.breakfast" = "아침";
+"meal.lunch" = "점심";
+"meal.dinner" = "저녁";
+"meal.snacks" = "간식";
+"widget.kcalValue" = "%d kcal";
+"widget.over" = "초과";
+"widget.streakAccessibility" = "%d일 연속";

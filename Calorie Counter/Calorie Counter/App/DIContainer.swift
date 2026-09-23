@@ -4,6 +4,7 @@ final class DIContainer {
     let coreDataStack: CoreDataStack
     private let reminderRefreshHook = CallbackHook()
     private let badgeEvaluationHook = CallbackHook()
+    private let widgetRefreshHook = CallbackHook()
 
     private lazy var foodEntryRepositoryBase: FoodEntryRepositoryProtocol = FoodEntryRepository(
         coreDataStack: coreDataStack
@@ -487,6 +488,19 @@ final class DIContainer {
         return controller
     }()
 
+    private(set) lazy var liveActivityController: LiveActivityController = LiveActivityController()
+    private(set) lazy var widgetSnapshotController: WidgetSnapshotController = {
+        let controller = WidgetSnapshotController(
+            fetchDailyDiaryUseCase: fetchDailyDiaryUseCase,
+            evaluateStreakUseCase: evaluateStreakUseCase,
+            liveActivityController: liveActivityController
+        )
+        widgetRefreshHook.handler = { [weak controller] in
+            controller?.refresh()
+        }
+        return controller
+    }()
+
     init(coreDataStack: CoreDataStack = CoreDataStack()) {
         self.coreDataStack = coreDataStack
     }
@@ -494,6 +508,7 @@ final class DIContainer {
     private func notifyDiaryChanged() {
         reminderRefreshHook.call()
         badgeEvaluationHook.call()
+        widgetRefreshHook.call()
         NotificationCenter.default.post(name: .bityDiaryDidChange, object: nil)
     }
 

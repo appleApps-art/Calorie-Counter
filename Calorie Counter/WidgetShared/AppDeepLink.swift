@@ -5,12 +5,19 @@ enum AppDeepLink: Equatable {
 
     case home
     case logFood
+    /// Opens the quick log sheet already pointed at one meal.
+    case logMeal(WidgetMealKind)
 
     init?(url: URL) {
         guard url.scheme == Self.scheme else { return nil }
         switch url.host {
         case "log":
-            self = .logFood
+            let meal = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .first { $0.name == "meal" }?
+                .value
+                .flatMap(WidgetMealKind.init(rawValue:))
+            self = meal.map(AppDeepLink.logMeal) ?? .logFood
         default:
             self = .home
         }
@@ -19,9 +26,11 @@ enum AppDeepLink: Equatable {
     var url: URL {
         switch self {
         case .home:
-            return URL(string: "bity://home")!
+            return URL(string: "\(Self.scheme)://home")!
         case .logFood:
-            return URL(string: "bity://log")!
+            return URL(string: "\(Self.scheme)://log")!
+        case let .logMeal(meal):
+            return URL(string: "\(Self.scheme)://log?meal=\(meal.rawValue)")!
         }
     }
 }

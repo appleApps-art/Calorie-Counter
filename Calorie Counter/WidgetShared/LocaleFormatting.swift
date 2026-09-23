@@ -1,0 +1,18 @@
+import Foundation
+
+extension Locale {
+    /// The user's locale for numbers and dates, always with the digits 0-9. Translations write
+    /// numbers too ("%d/100", "100 г"), and Arabic-Indic digits from an Arabic region would sit
+    /// next to them on the same line.
+    nonisolated static var appFormatting: Locale {
+        Locale.current.withLatinDigits()
+    }
+
+    /// The same locale writing digits as 0-9 (store prices come in the storefront's locale).
+    nonisolated func withLatinDigits() -> Locale {
+        guard numberingSystem.identifier != "latn" else { return self }
+        var components = Locale.Components(locale: self)
+        components.numberingSystem = "latn"
+        return Locale(components: components)
+    }
+}

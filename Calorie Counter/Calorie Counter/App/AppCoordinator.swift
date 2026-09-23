@@ -7,6 +7,7 @@ final class AppCoordinator {
     private var onboardingCoordinator: OnboardingFlowCoordinator?
     private var didShowMain = false
     private var backgroundedAt: Date?
+    private var pendingDeepLink: AppDeepLink?
     private let badgeUnlockPresenter: BadgeUnlockPresenter
     private let appRatingPrompt: AppRatingPromptController
 
@@ -92,9 +93,11 @@ final class AppCoordinator {
         }
         DispatchQueue.main.async { [weak self] in
             self?.presentPendingBadgeUnlocks()
+            self?.deliverPendingDeepLink()
         }
         container.reminderScheduleController.bootstrap()
         container.healthSyncController.bootstrap()
+        container.widgetSnapshotController.refresh()
         var properties: [String: Any] = [
             "onboarding_completed": true,
             "is_premium": container.subscriptionService.currentStatus().isPremium,
@@ -106,6 +109,19 @@ final class AppCoordinator {
             if let activity = profile.activityLevel?.rawValue { properties["activity_level"] = activity }
         }
         Analytics.tracker.setUserProperties(properties)
+    }
+
+    /// Arrives from the widget, the Live Activity or any `bity://` link. Before the main UI is up
+    /// it waits, so a cold start from a Live Activity tap still lands on the right screen.
+    func handle(_ deepLink: AppDeepLink) {
+        pendingDeepLink = deepLink
+        deliverPendingDeepLink()
+    }
+
+    private func deliverPendingDeepLink() {
+        guard let deepLink = pendingDeepLink, didShowMain, let tabBarController else { return }
+        pendingDeepLink = nil
+        tabBarController.open(deepLink)
     }
 
     func handleSceneDidEnterBackground() {

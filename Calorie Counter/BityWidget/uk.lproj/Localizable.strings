@@ -8,3 +8,10 @@
 "widget.water" = "Вода";
 "widget.grams" = "г";
 "widget.milliliters" = "мл";
+"meal.breakfast" = "Сніданок";
+"meal.lunch" = "Обід";
+"meal.dinner" = "Вечеря";
+"meal.snacks" = "Перекуси";
+"widget.kcalValue" = "%d ккал";
+"widget.over" = "перебір";
+"widget.streakAccessibility" = "Серія %d днів";

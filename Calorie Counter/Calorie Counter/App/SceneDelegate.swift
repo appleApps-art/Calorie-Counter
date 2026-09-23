@@ -22,6 +22,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.appCoordinator = coordinator
         AppAppearance.apply(container.appSettingsStore.settings.appearanceMode)
         coordinator.start()
+        handle(connectionOptions.urlContexts)
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        handle(URLContexts)
+    }
+
+    private func handle(_ contexts: Set<UIOpenURLContext>) {
+        guard let deepLink = contexts.compactMap({ AppDeepLink(url: $0.url) }).first else { return }
+        appCoordinator?.handle(deepLink)
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
@@ -50,6 +60,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidBecomeActive(_ scene: UIScene) {
         container?.reminderScheduleController.refreshOnForeground()
         container?.healthSyncController.refreshOnForeground()
+        // A Live Activity cannot be started from the background and iOS retires it after a few
+        // hours, so coming forward is the moment to put it back up.
+        container?.widgetSnapshotController.refresh()
         appCoordinator?.handleSceneDidBecomeActive()
     }
 }

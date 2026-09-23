@@ -498,6 +498,7 @@ final class RecipesCoordinator {
         }
     }
 
+    #if DEBUG
     private func qaSwapMeal(showsSheet: Bool) {
         guard let slot = mealPlanViewModel?.selectedDay.value?.slots.first else { return }
         if showsSheet {
@@ -506,6 +507,7 @@ final class RecipesCoordinator {
             mealPlanViewModel?.swappingRecipeIndex.value = slot.recipeIndex
         }
     }
+    #endif
 
     private func showMealPlanPreview(_ plan: MealPlan, replacingCreateForm: Bool = false) {
         Analytics.tracker.track(.mealPlanOpened)

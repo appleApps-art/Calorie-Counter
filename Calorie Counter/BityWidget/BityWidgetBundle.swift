@@ -5,6 +5,7 @@ import WidgetKit
 struct BityWidgetBundle: WidgetBundle {
     var body: some Widget {
         BityDiaryWidget()
+        DayLiveActivity()
     }
 }
 

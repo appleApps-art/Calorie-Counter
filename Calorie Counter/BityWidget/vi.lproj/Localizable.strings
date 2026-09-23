@@ -8,3 +8,10 @@
 "widget.water" = "Nước";
 "widget.grams" = "g";
 "widget.milliliters" = "ml";
+"meal.breakfast" = "Bữa sáng";
+"meal.lunch" = "Bữa trưa";
+"meal.dinner" = "Bữa tối";
+"meal.snacks" = "Bữa phụ";
+"widget.kcalValue" = "%d kcal";
+"widget.over" = "vượt";
+"widget.streakAccessibility" = "Chuỗi %d ngày";

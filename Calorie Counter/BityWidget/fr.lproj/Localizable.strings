@@ -8,3 +8,10 @@
 "widget.water" = "Eau";
 "widget.grams" = "g";
 "widget.milliliters" = "ml";
+"meal.breakfast" = "Petit-déjeuner";
+"meal.lunch" = "Déjeuner";
+"meal.dinner" = "Dîner";
+"meal.snacks" = "En-cas";
+"widget.kcalValue" = "%d kcal";
+"widget.over" = "en trop";
+"widget.streakAccessibility" = "Série de %d jours";
